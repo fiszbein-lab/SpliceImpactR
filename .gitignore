@@ -4,3 +4,5 @@
 .Ruserdata
 SpliceImpactR.Rproj
 inst/*.png
+genData.R
+R/newDataLoader.R
