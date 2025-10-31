@@ -1140,8 +1140,6 @@ get_annotation <- function(
     tx_fa <- transcript_path
     aa_fa <- translation_path
 
-    if (fetch_sequences && (is.null(tx_fa) || is.null(aa_fa)))
-      stop("load='path' requires transcript_path= and translation_path= when fetch_sequences=TRUE")
   }
 
   message("[STEP] Reading GTF: ", gtf_file)
