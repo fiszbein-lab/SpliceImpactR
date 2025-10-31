@@ -172,7 +172,7 @@ domain_plot <- plot_enriched_domains_counts(enriched_domains, top_n = 20)
 
 ```
 
-## Isoform-Isoform interaction nextwork
+## Isoform-Isoform interaction network
 For PPI analysis, we first obtain protein-protein interaction domain miner (ppidm)
 And use those domain-domain interactions to predict ppis 
 ```

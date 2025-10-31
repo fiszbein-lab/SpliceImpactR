@@ -19,46 +19,37 @@ Description: Works by taking in processed data from the HIT Index and/or rMATS
     holistic analyses regarding the impact of different RNA processing events. 
 License: GPL-3
 Encoding: UTF-8
-Imports: 
-    readr,
-    ggpubr, 
-    msa, 
-    data.table, 
-    Biostrings, 
-    parallel, 
-    igraph,
-    rtracklayer,
-    tidyr,
-    ggplot2,
-    dplyr,
-    grDevices,
-    stats,
-    utils,
-    stringr,
-    biomaRt,
-    R.utils,
-    AnnotationDbi,
+Imports:
+    data.table,
+    BiocFileCache,
+    BiocParallel,
+    Biostrings,
+    GenomicRanges,
+    IRanges,
     PFAM.db,
-    purrr,
-    pheatmap,
-    grid,
-    ComplexUpset,
-    tibble,
-    methods
+    dplyr,
+    ggplot2,
+    ggpubr,
+    patchwork,
+    pwalign,
+    rtracklayer,
+    scales,
+    stats,
+    tidyr,
+    tools,
+    utils,
+    S4Vectors
 RoxygenNote: 7.3.2
 biocViews: AlternativeSplicing, DifferentialSplicing, StatisticalMethod, 
     Alignment
 Suggests: 
     testthat,
     knitr,
-    tidyverse,
-    devtools,
-    BiocStyle,
-    lmtest,
-    httr,
-    scales,
-    circlize,
-    MASS,
-    pscl
+    rmarkdown,
+    Biocstyle,
+    cowplot,
+    stringr,
+    readr,
+    tibble
 VignetteBuilder: knitr
 Config/testthat/edition: 3
