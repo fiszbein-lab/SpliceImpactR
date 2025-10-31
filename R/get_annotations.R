@@ -1180,20 +1180,9 @@ get_annotation <- function(
 #' get_example_data("test_signalp.csv")
 #'
 #' @export
-#  get_example_data <- function(filename) {
-#   # Locate extdata folder inside the installed package
-#   data_dir <- system.file("extdata", package = "SpliceImpactR")
-#   if (data_dir == "") stop("extdata directory not found in SpliceImpactR")
-#
-#   # Build full file path
-#   fpath <- file.path(data_dir, filename)
-#   if (!file.exists(fpath)) stop("File not found in extdata: ", filename)
-#
-#   return(fpath)
-# }
-get_example_data <- function(filename) {
+ get_example_data <- function(filename) {
   # Locate extdata folder inside the installed package
-  data_dir <- "/projectnb2/evolution/zwakefield/SpliceImpactR/inst/extdata/"
+  data_dir <- system.file("extdata", package = "SpliceImpactR")
   if (data_dir == "") stop("extdata directory not found in SpliceImpactR")
 
   # Build full file path
@@ -1202,6 +1191,17 @@ get_example_data <- function(filename) {
 
   return(fpath)
 }
+# get_example_data <- function(filename) {
+#   # Locate extdata folder inside the installed package
+#   data_dir <- "/projectnb2/evolution/zwakefield/SpliceImpactR/inst/extdata/"
+#   if (data_dir == "") stop("extdata directory not found in SpliceImpactR")
+#
+#   # Build full file path
+#   fpath <- file.path(data_dir, filename)
+#   if (!file.exists(fpath)) stop("File not found in extdata: ", filename)
+#
+#   return(fpath)
+# }
 
 
 #' Helper to fetch test dirs for vignettes / tests
@@ -1213,27 +1213,10 @@ get_example_data <- function(filename) {
 #' check_extdata_dir("rawData")
 #'
 #'
-#  check_extdata_dir <- function(dir_name,
-#                                package = "SpliceImpactR",
-#                                error = TRUE) {
-#   base_dir <- system.file("extdata", package = package)
-#   if (base_dir == "") {
-#     msg <- sprintf("No extdata folder found for package '%s'.", package)
-#     if (error) stop(msg, call. = FALSE) else return(FALSE)
-#   }
-#
-#   full_dir <- file.path(base_dir, dir_name)
-#   if (!dir.exists(full_dir)) {
-#     msg <- sprintf("Directory not found in extdata: %s", dir_name)
-#     if (error) stop(msg, call. = FALSE) else return(FALSE)
-#   }
-#
-#   return(invisible(full_dir))
-# }
-check_extdata_dir <- function(dir_name,
+ check_extdata_dir <- function(dir_name,
                                package = "SpliceImpactR",
                                error = TRUE) {
-  base_dir <- '/projectnb2/evolution/zwakefield/SpliceImpactR/inst/extdata'
+  base_dir <- system.file("extdata", package = package)
   if (base_dir == "") {
     msg <- sprintf("No extdata folder found for package '%s'.", package)
     if (error) stop(msg, call. = FALSE) else return(FALSE)
@@ -1247,6 +1230,23 @@ check_extdata_dir <- function(dir_name,
 
   return(invisible(full_dir))
 }
+# check_extdata_dir <- function(dir_name,
+#                                package = "SpliceImpactR",
+#                                error = TRUE) {
+#   base_dir <- '/projectnb2/evolution/zwakefield/SpliceImpactR/inst/extdata'
+#   if (base_dir == "") {
+#     msg <- sprintf("No extdata folder found for package '%s'.", package)
+#     if (error) stop(msg, call. = FALSE) else return(FALSE)
+#   }
+#
+#   full_dir <- file.path(base_dir, dir_name)
+#   if (!dir.exists(full_dir)) {
+#     msg <- sprintf("Directory not found in extdata: %s", dir_name)
+#     if (error) stop(msg, call. = FALSE) else return(FALSE)
+#   }
+#
+#   return(invisible(full_dir))
+# }
 
 
 
