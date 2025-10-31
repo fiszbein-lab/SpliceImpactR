@@ -1068,6 +1068,7 @@ add_exon_frames <- function(gtf_df) {
 #' #    base_dir = "/project/annotation_cache/"
 #' #  )
 #'
+#' @importFrom magrittr %>%
 #' @export
 get_annotation <- function(
     load = c("link", "path", "cached", "test"),
