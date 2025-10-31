@@ -68,16 +68,11 @@
 #' Parses rMATS output (.MATS.JC.txt or .MATS.JCEC.txt) for multiple event types
 #' and returns unified event tables ready for downstream inclusion/exclusion processing.
 #'
-#' @param paths Either:
-#'   \itemize{
-#'     \item A character vector of directories or individual rMATS files, OR
-#'     \item A data.frame with columns \code{path}, \code{sample_name}, and \code{condition}.
-#'   }
+#' @param paths A data.frame with columns \code{path}, \code{sample_name}, and \code{condition}.
+
 #' @param use Character scalar, one of \code{"JC"} or \code{"JCEC"}.
 #' @param event_types Event types to include: one or more of
 #'   \code{c("SE", "RI", "A5SS", "A3SS", "MXE")}.
-#' @param precomputed_significance Logical; if TRUE, extract \code{delta_psi}, \code{pvalue},
-#'   and \code{FDR} columns from rMATS output when available.
 #'
 #' @return A `data.table` with unified rMATS event annotations, including columns:
 #' \itemize{
@@ -103,13 +98,12 @@
 #'
 #' @export
 load_rmats <- function(paths,
-                       use = c("JC","JCEC"),
-                       event_types = c("SE","RI","A5SS","A3SS","MXE"),
-                       precomputed_significance = TRUE) {
+                       use = c("JC","JCEC")[2],
+                       event_types = c("SE","RI","A5SS","A3SS","MXE")) {
 
   use <- match.arg(use)
 
-  resolve_files <- function(p) {
+  resolve_files <- function(p, event_types, use) {
     if (file.exists(p) && !dir.exists(p)) return(p)
     if (dir.exists(p)) {
       patt <- sprintf("^(%s)\\.MATS\\.%s\\.txt$", paste(event_types, collapse="|"), use)
@@ -120,37 +114,11 @@ load_rmats <- function(paths,
 
   read_one <- function(f) {
     ev <- sub("\\.MATS\\..*$", "", basename(f))
-    dt <- suppressWarnings(fread(f, sep = "\t", na.strings = c("NA","NaN","")))
+    dt <- suppressWarnings(fread(f, na.strings = c("NA","NaN","")))
     dt[, `:=`(event_type = ev, source_file = f)]
     dt <- dt[, .SD, .SDcols = unique(names(dt))]
     setcolorder(dt, c("event_type", setdiff(names(dt), "event_type")))
     dt
-  }
-
-  # -------- mode A: character vector of paths --------
-  if (is.character(paths)) {
-    files <- unique(unlist(lapply(paths, resolve_files), use.names = FALSE))
-    if (!length(files)) stop("No rMATS files found for use=", use, " in provided paths.")
-    DT <- rbindlist(lapply(files, read_one), use.names = TRUE, fill = TRUE)
-
-    need <- c("ID","chr","strand","event_type")
-    miss <- setdiff(need, names(DT)); if (length(miss)) stop("Missing columns: ", paste(miss, collapse=", "))
-
-    # significance / delta PSI
-    if (isTRUE(precomputed_significance)) {
-      if ("IncLevelDifference" %in% names(DT)) {
-        DT[, delta_psi := suppressWarnings(as.numeric(IncLevelDifference))]
-      } else if (all(c("psi_1_mean","psi_2_mean") %in% names(DT))) {
-        DT[, delta_psi := psi_1_mean - psi_2_mean]
-      }
-      if ("PValue" %in% names(DT)) DT[, pvalue := suppressWarnings(as.numeric(PValue))]
-      if ("FDR"    %in% names(DT)) DT[, fdr    := suppressWarnings(as.numeric(FDR))]
-    }
-
-    DT[, event_id := sprintf("%s:%s", event_type, paste0("INC", as.character(ID)))]
-
-    setkey(DT, event_type, ID)
-    return(DT[])
   }
 
   # -------- mode B: data.frame with path/sample_name/condition --------
@@ -161,8 +129,10 @@ load_rmats <- function(paths,
 
     # In sample-mode, leave compute_summary as-is (user decides); we still parse lists correctly.
     parts <- lapply(seq_len(nrow(paths)), function(i) {
-      pth <- paths$path[i]; samp <- as.character(paths$sample_name[i]); cond <- as.character(paths$condition[i])
-      files <- resolve_files(pth)
+      pth <- paths$path[i]
+      samp <- as.character(paths$sample_name[i])
+      cond <- as.character(paths$condition[i])
+      files <- resolve_files(pth, event_types, use)
       if (!length(files)) stop("No rMATS files found under: ", pth)
       dt <- rbindlist(lapply(files, function(f1) {
         out <- read_one(f1)
@@ -170,16 +140,6 @@ load_rmats <- function(paths,
         return(out[IJC_SAMPLE_1 != 0 | SJC_SAMPLE_1 != 0])
       }), use.names = TRUE, fill = TRUE)
       dt[, `:=`(sample = samp, condition = cond)]
-
-      if (isTRUE(precomputed_significance)) {
-        if ("IncLevelDifference" %in% names(dt)) {
-          dt[, delta_psi := suppressWarnings(as.numeric(IncLevelDifference))]
-        } else if (all(c("psi_1_mean","psi_2_mean") %in% names(dt))) {
-          dt[, delta_psi := psi_1_mean - psi_2_mean]
-        }
-        if ("PValue" %in% names(dt)) dt[, pvalue := suppressWarnings(as.numeric(PValue))]
-        if ("FDR"    %in% names(dt)) dt[, fdr    := suppressWarnings(as.numeric(FDR))]
-      }
 
       # dt[, event_id := sprintf("%s:%s", event_type, as.character(ID))]
       setcolorder(dt, c("sample","condition","event_type", setdiff(names(dt), c("sample","condition","event_type"))))
@@ -413,7 +373,7 @@ get_rmats <- function(DT) {
 
   return(out[, .SD, .SDcols = c("event_id","event_type","form","gene_id","chr","strand",
                          "inc","exc","inclusion_reads","exclusion_reads","psi",
-                         "condition","sample","source_file")])
+                         "sample","condition","source_file")])
 }
 
 

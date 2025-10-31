@@ -2,100 +2,103 @@
 % Please edit documentation in R/get_annotations.R
 \name{get_annotation}
 \alias{get_annotation}
-\title{Load and prepare genomic annotation and sequence data}
+\title{Load and cache GENCODE annotations, sequences, and hybrid exon annotations}
 \usage{
 get_annotation(
-  load = c("link", "path", "dataframe", "test"),
-  gtf_df = NULL,
-  gtf_path = NULL,
-  link = NULL,
+  load = c("link", "path", "cached", "test"),
   base_dir = NULL,
-  species = "human",
+  species = c("human", "mouse")[1],
   release = 45,
-  mode = "download",
-  use_rds_cache = TRUE,
-  fetch_sequences = TRUE,
+  gtf_path = NULL,
   transcript_path = NULL,
   translation_path = NULL,
   filter_tsl = c("1", "2", "3", "4", "5")[1:3]
 )
 }
 \arguments{
-\item{load}{One of \code{test}, \code{"dataframe"}, \code{"path"}, or \code{"link"},
-specifying how to obtain the annotation:
-\itemize{
-  \item \code{"test"} — load minimal annotation for quick testing.
-  \item \code{"dataframe"} — use an in-memory \code{gtf_df} or
-    \code{assets$gtf_df}.
-  \item \code{"path"} — load a local file specified by \code{gtf_path}
-    or \code{assets$paths$gtf_gz}.
-  \item \code{"link"} — download directly from a remote URL or via
-    \code{.si_prepare_assets()}.
-}}
+\item{load}{Character string specifying load mode:
+one of `"link"`, `"path"`, `"cached"`, `"test"`.}
 
-\item{gtf_df}{Optional GTF data.frame already loaded in memory.}
+\item{base_dir}{Directory to cache/load processed objects.}
 
-\item{gtf_path}{Path to a GTF file (gzipped or uncompressed).}
+\item{species}{Species label used in filenames (default `"human"`).}
 
-\item{link}{Remote URL pointing to a GTF resource.}
+\item{release}{GENCODE release version (default `45`).}
 
-\item{base_dir}{Directory used for downloaded or cached assets.
-Defaults to [resolve_output_dir()].}
+\item{gtf_path}{Path to a GTF file when `load = "path"`.}
 
-\item{species}{Character scalar; one of \code{"human"} or
-\code{"mouse"}.}
+\item{transcript_path}{Path to transcript FASTA (.fa/.fa.gz) when `load = "path"`.}
 
-\item{release}{Integer GENCODE release number (e.g. 45).}
+\item{translation_path}{Path to protein FASTA (.fa/.fa.gz) when `load = "path"`.}
 
-\item{mode}{Either \code{"download"} or \code{"import_then_cache"} for
-controlling caching behavior.}
-
-\item{use_rds_cache}{Logical; if \code{TRUE}, use cached RDS versions
-of GTFs when available.}
-
-\item{fetch_sequences}{Logical; if \code{TRUE}, also load transcript
-and protein sequences via [get_sequences()].}
-
-\item{transcript_path}{Path or URL to transcript FASTA file
-(e.g. \code{gencode.v45.pc_transcripts.fa.gz}).}
-
-\item{translation_path}{Path or URL to protein FASTA file
-(e.g. \code{gencode.v45.pc_translations.fa.gz}).}
-
-\item{filter_tsl}{Character vector of transcript support levels (TSL)
-to retain; defaults to TSL 1–3.}
-
-\item{prep_assets}{Logical; if \code{TRUE}, automatically run
-[SpliceImpactR::si_prepare_assets()] before loading.}
+\item{filter_tsl}{Transcript support levels to retain (default `c("1","2","3")`).
+Transcripts outside this set are dropped unless the row is a gene record.}
 }
 \value{
-A list with components:
-  \itemize{
-    \item \code{annotations}: cleaned and annotated GTF data.table
-    \item \code{hybrids}: list of first/last exon overlaps
-    \item \code{sequences}: combined transcript/protein sequence map
-  }
+A list with:
+\describe{
+  \item{`annotations`}{Processed long-format GTF as `data.table`}
+  \item{`sequences`}{List with elements `transcripts` and `proteins` (or `NULL` if not loaded)}
+  \item{`hybrids`}{Hybrid exon annotation list}
+}
 }
 \description{
-High-level wrapper to load GENCODE or Ensembl GTF annotations together
-with corresponding transcript and protein FASTA sequences. Supports
-multiple input modes, automatic asset preparation and caching, and
-built-in filtering for high-confidence transcripts.
+This function loads GENCODE gene models (GTF), processes exon annotations,
+extracts transcript and protein sequences, identifies hybrid exons, and
+optionally caches the processed objects for future fast access.
 }
 \details{
-This function unifies annotation import, transcript filtering, and
-optional sequence retrieval in a single step. It harmonizes column
-names, adds exon-level coding and ordering information, and filters
-low-confidence transcripts (TSL > 3) by default.
+Four loading modes are supported:
+\describe{
+  \item{`test`}{Load small internal test data shipped with the package.}
+  \item{`cached`}{Load previously cached GTF, transcript sequences, protein sequences, and hybrid tables from `base_dir`.}
+  \item{`path`}{Read local GTF and FASTA files, process, then cache results in `base_dir`.}
+  \item{`link`}{Download GENCODE files from URLs, process, then cache results in `base_dir`.}
+}
 
-Remote or cached asset handling is done via [resolve_output_dir()]
-and [SpliceImpactR:::.si_prepare_assets()].
+Cached files created in `base_dir`:
+\preformatted{
+{species}_gencode_v{release}.gtf.rds
+{species}_gencode_v{release}_transcripts.rds
+{species}_gencode_v{release}_proteins.rds
+{species}_gencode_v{release}_hybrids.rds
+}
+
+
+Uses internal helpers:
+* `resolve_output_dir()` — ensure/create cache directory
+* `.si_prepare_assets()` — fetch remote GENCODE files if necessary
+* `load_gtf_long()` — parse and normalize GTF to exon-long format
+* `get_sequences()` — extract transcript and translation sequences
+* `identify_hybrid_exons_split()` — detect hybrid exons
 }
 \examples{
-annots <- get_annotation(load = 'test')
+# Load bundled test data
+ann <- get_annotation(load = "test")
+
+#
+#  # Load from local files and cache results
+#  ann <- get_annotation(
+#    load = "path",
+#    base_dir = "/project/annotation_cache/",
+#    gtf_path = "gencode.v45.annotation.gtf.gz",
+#    transcript_path = "gencode.v45.pc_transcripts.fa.gz",
+#    translation_path = "gencode.v45.pc_translations.fa.gz"
+#  )
+
+#  # Download files, process, and cache
+#  ann <- get_annotation(
+#    load = "link",
+#    base_dir = "/project/annotation_cache/"
+#  )
+
+# Load from cached RDS (fast)
+#  ann <- get_annotation(
+#    load = "cached",
+#    base_dir = "/project/annotation_cache/"
+#  )
 
 }
 \seealso{
-[load_gtf_long()], [get_sequences()],
-  [resolve_output_dir()]
+`load_gtf_long()`, `get_sequences()`, `identify_hybrid_exons_split()`
 }

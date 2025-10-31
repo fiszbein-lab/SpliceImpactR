@@ -215,6 +215,22 @@ get_hitindex <- function(paths_df, keep_annotated_first_last = FALSE) {
 }
 
 
+#' Wrapper function to get both rmats and hit index cleanly
+#' @param sample_frame Data.frame with columns: \code{path}, \code{condition}, and \code{sample_name}.
+#' @param event_types event types to load from rMATS
+#' @param use Character scalar, one of \code{"JC"} or \code{"JCEC"}.
+#' @param keep_annotated_first_last Logical; if TRUE, retain only annotated first/last exons and normalize PSI.
+#'
+#' @export
+get_rmats_hit <- function(sample_frame,
+                          event_types = c("MXE", "SE", "A3SS", "A5SS", "RI"),
+                          use = 'JCEC',
+                          keep_annotated_first_last = TRUE) {
+  hit_index <- get_hitindex(sample_frame, keep_annotated_first_last)
+  rmats <- get_rmats(load_rmats(sample_frame, use, event_types))
+  data <- rbind(rmats, hit_index[, .SD, .SDcols = seq(1, ncol(rmats))])
+
+}
 
 
 

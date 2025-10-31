@@ -235,20 +235,49 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
   tx_len_exc   <- .safe_nchar(DT$transcript_seq_exc)
   pc_class     <- mapply(.pc_class, DT$protein_seq_inc, DT$protein_seq_exc)
 
-  # dna_res <- mapply(.align_dna,
-  #                   DT$transcript_seq_inc, DT$transcript_seq_exc, NUC44,
-  #                   SIMPLIFY = FALSE)
-  # aa_res  <- mapply(.align_aa,
-  #                   DT$protein_seq_inc, DT$protein_seq_exc, BLOSUM62,
-  #                   SIMPLIFY = FALSE)
+  DT[, transcript_seq_inc := vapply(transcript_seq_inc, as.character, character(1))]
+  DT[, transcript_seq_exc := vapply(transcript_seq_exc, as.character, character(1))]
+  DT[, protein_seq_inc    := vapply(protein_seq_inc,    as.character, character(1))]
+  DT[, protein_seq_exc    := vapply(protein_seq_exc,    as.character, character(1))]
 
-  dna_res <- mapply(function(a, b) .align_dna(a, b, NUC44),
-                    DT$transcript_seq_inc, DT$transcript_seq_exc,
-                    SIMPLIFY = FALSE)
+  # handle rows with missing sequences
+  dna_res <- vector("list", nrow(DT))
+  aa_res  <- vector("list", nrow(DT))
 
-  aa_res  <- mapply(function(a, b) .align_aa(a, b, BLOSUM62),
-                    DT$protein_seq_inc, DT$protein_seq_exc,
-                    SIMPLIFY = FALSE)
+  valid_dna <- !is.na(DT$transcript_seq_inc) & !is.na(DT$transcript_seq_exc)
+  valid_aa  <- !is.na(DT$protein_seq_inc)    & !is.na(DT$protein_seq_exc)
+
+  # fill non-valid rows with default NA result list
+  for (i in which(!valid_dna)) {
+    dna_res[[i]] <- list(pid = NA_real_, score = NA_real_, width = NA_integer_)
+  }
+
+  for (i in which(!valid_aa)) {
+    aa_res[[i]] <- list(pid = NA_real_, score = NA_real_, width = NA_integer_)
+  }
+
+  # align only valid rows
+  dna_res[valid_dna] <- mapply(
+    function(a, b) .align_dna(a, b, NUC44),
+    DT$transcript_seq_inc[valid_dna],
+    DT$transcript_seq_exc[valid_dna],
+    SIMPLIFY = FALSE
+  )
+
+  aa_res[valid_aa] <- mapply(
+    function(a, b) .align_aa(a, b, BLOSUM62),
+    DT$protein_seq_inc[valid_aa],
+    DT$protein_seq_exc[valid_aa],
+    SIMPLIFY = FALSE
+  )
+
+  # dna_res <- mapply(function(a, b) .align_dna(a, b, NUC44),
+  #                   as.character(DT$transcript_seq_inc), as.character(DT$transcript_seq_exc),
+  #                   SIMPLIFY = FALSE)
+  #
+  # aa_res  <- mapply(function(a, b) .align_aa(a, b, BLOSUM62),
+  #                   as.character(DT$protein_seq_inc), as.character(DT$protein_seq_exc),
+  #                   SIMPLIFY = FALSE)
   DT[, `:=`(
     pc_class   = as.character(pc_class),
 

@@ -319,7 +319,7 @@ get_differential_inclusion <- function(
       # cross join sites x samples (within event_type)
       base_grid <- sites[smp, on="event_type", allow.cartesian=TRUE]
       keep_cols <- c("sample","condition", site_cols,
-                     "inclusion_reads","exclusion_reads","total","psi_raw","psi_adj")
+                     "inclusion_reads","exclusion_reads","total","psi_raw","psi_adj", "source_file")
       y <- base_grid[x[event_type == terminal_type, ..keep_cols], on=c("sample","condition", site_cols)]
       y <- x[event_type == terminal_type, ..keep_cols][
         base_grid,
@@ -350,6 +350,12 @@ get_differential_inclusion <- function(
     if (verbose) print(paste0("[PROCESSING/INFO] Filtering genes that have no nonzero values in a given sample, removed ",
                               length(unique(all0[all_zero == TRUE, gene_id])), " genes from specific samples, ",
                               length(unique(x$gene_id)), " genes remain in total"))
+    x <- x[, `:=` (
+      psi = psi_adj,
+      all_zero = NULL,
+      total_update = NULL
+    )]
+
     if (more_types == TRUE) {
       x <- rbind(x, non_type)
     }

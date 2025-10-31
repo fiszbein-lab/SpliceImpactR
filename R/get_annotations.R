@@ -964,162 +964,214 @@ get_sequences <- function(gtf_df, transcript_path, translation_path) {
 }
 
 
-#' Load and prepare genomic annotation and sequence data
+#' Load and cache GENCODE annotations, sequences, and hybrid exon annotations
 #'
-#' High-level wrapper to load GENCODE or Ensembl GTF annotations together
-#' with corresponding transcript and protein FASTA sequences. Supports
-#' multiple input modes, automatic asset preparation and caching, and
-#' built-in filtering for high-confidence transcripts.
+#' This function loads GENCODE gene models (GTF), processes exon annotations,
+#' extracts transcript and protein sequences, identifies hybrid exons, and
+#' optionally caches the processed objects for future fast access.
 #'
-#' @param load One of \code{test}, \code{"dataframe"}, \code{"path"}, or \code{"link"},
-#'   specifying how to obtain the annotation:
-#'   \itemize{
-#'     \item \code{"test"} — load minimal annotation for quick testing.
-#'     \item \code{"dataframe"} — use an in-memory \code{gtf_df} or
-#'       \code{assets$gtf_df}.
-#'     \item \code{"path"} — load a local file specified by \code{gtf_path}
-#'       or \code{assets$paths$gtf_gz}.
-#'     \item \code{"link"} — download directly from a remote URL or via
-#'       \code{.si_prepare_assets()}.
-#'   }
-#' @param gtf_df Optional GTF data.frame already loaded in memory.
-#' @param gtf_path Path to a GTF file (gzipped or uncompressed).
-#' @param link Remote URL pointing to a GTF resource.
-#' @param prep_assets Logical; if \code{TRUE}, automatically run
-#'   [SpliceImpactR::si_prepare_assets()] before loading.
-#' @param base_dir Directory used for downloaded or cached assets.
-#'   Defaults to [resolve_output_dir()].
-#' @param species Character scalar; one of \code{"human"} or
-#'   \code{"mouse"}.
-#' @param release Integer GENCODE release number (e.g. 45).
-#' @param mode Either \code{"download"} or \code{"import_then_cache"} for
-#'   controlling caching behavior.
-#' @param use_rds_cache Logical; if \code{TRUE}, use cached RDS versions
-#'   of GTFs when available.
-#' @param fetch_sequences Logical; if \code{TRUE}, also load transcript
-#'   and protein sequences via [get_sequences()].
-#' @param transcript_path Path or URL to transcript FASTA file
-#'   (e.g. \code{gencode.v45.pc_transcripts.fa.gz}).
-#' @param translation_path Path or URL to protein FASTA file
-#'   (e.g. \code{gencode.v45.pc_translations.fa.gz}).
-#' @param filter_tsl Character vector of transcript support levels (TSL)
-#'   to retain; defaults to TSL 1–3.
+#' Four loading modes are supported:
+#' \describe{
+#'   \item{`test`}{Load small internal test data shipped with the package.}
+#'   \item{`cached`}{Load previously cached GTF, transcript sequences, protein sequences, and hybrid tables from `base_dir`.}
+#'   \item{`path`}{Read local GTF and FASTA files, process, then cache results in `base_dir`.}
+#'   \item{`link`}{Download GENCODE files from URLs, process, then cache results in `base_dir`.}
+#' }
 #'
-#' @return A list with components:
-#'   \itemize{
-#'     \item \code{annotations}: cleaned and annotated GTF data.table
-#'     \item \code{hybrids}: list of first/last exon overlaps
-#'     \item \code{sequences}: combined transcript/protein sequence map
-#'   }
+#' Cached files created in `base_dir`:
+#' \preformatted{
+#' {species}_gencode_v{release}.gtf.rds
+#' {species}_gencode_v{release}_transcripts.rds
+#' {species}_gencode_v{release}_proteins.rds
+#' {species}_gencode_v{release}_hybrids.rds
+#' }
+#'
+#' @param load Character string specifying load mode:
+#'   one of `"link"`, `"path"`, `"cached"`, `"test"`.
+#' @param base_dir Directory to cache/load processed objects.
+#' @param species Species label used in filenames (default `"human"`).
+#' @param release GENCODE release version (default `45`).
+#' @param gtf_path Path to a GTF file when `load = "path"`.
+#' @param transcript_path Path to transcript FASTA (.fa/.fa.gz) when `load = "path"`.
+#' @param translation_path Path to protein FASTA (.fa/.fa.gz) when `load = "path"`.
+#' @param filter_tsl Transcript support levels to retain (default `c("1","2","3")`).
+#'   Transcripts outside this set are dropped unless the row is a gene record.
+#'
+#' @return A list with:
+#' \describe{
+#'   \item{`annotations`}{Processed long-format GTF as `data.table`}
+#'   \item{`sequences`}{List with elements `transcripts` and `proteins` (or `NULL` if not loaded)}
+#'   \item{`hybrids`}{Hybrid exon annotation list}
+#' }
 #'
 #' @details
-#' This function unifies annotation import, transcript filtering, and
-#' optional sequence retrieval in a single step. It harmonizes column
-#' names, adds exon-level coding and ordering information, and filters
-#' low-confidence transcripts (TSL > 3) by default.
+#' Uses internal helpers:
+#' * `resolve_output_dir()` — ensure/create cache directory
+#' * `.si_prepare_assets()` — fetch remote GENCODE files if necessary
+#' * `load_gtf_long()` — parse and normalize GTF to exon-long format
+#' * `get_sequences()` — extract transcript and translation sequences
+#' * `identify_hybrid_exons_split()` — detect hybrid exons
 #'
-#' Remote or cached asset handling is done via [resolve_output_dir()]
-#' and [SpliceImpactR:::.si_prepare_assets()].
-#'
-#' @seealso [load_gtf_long()], [get_sequences()],
-#'   [resolve_output_dir()]
+#' @seealso
+#'   `load_gtf_long()`, `get_sequences()`, `identify_hybrid_exons_split()`
 #'
 #' @examples
-#' annots <- get_annotation(load = 'test')
+#' # Load bundled test data
+#' ann <- get_annotation(load = "test")
+#'
+#' #
+#' #  # Load from local files and cache results
+#' #  ann <- get_annotation(
+#' #    load = "path",
+#' #    base_dir = "/project/annotation_cache/",
+#' #    gtf_path = "gencode.v45.annotation.gtf.gz",
+#' #    transcript_path = "gencode.v45.pc_transcripts.fa.gz",
+#' #    translation_path = "gencode.v45.pc_translations.fa.gz"
+#' #  )
+#'
+#' #  # Download files, process, and cache
+#' #  ann <- get_annotation(
+#' #    load = "link",
+#' #    base_dir = "/project/annotation_cache/"
+#' #  )
+#'
+#' # Load from cached RDS (fast)
+#' #  ann <- get_annotation(
+#' #    load = "cached",
+#' #    base_dir = "/project/annotation_cache/"
+#' #  )
 #'
 #' @export
 get_annotation <- function(
-    load = c("link", "path", "dataframe", "test"),
-    gtf_df = NULL,
-    gtf_path = NULL,   # <- renamed from `path`
-    link   = NULL,
-    base_dir      = NULL,
-    species       = "human",
-    release       = 45,
-    mode          = "download",
-    use_rds_cache = TRUE,
-    fetch_sequences = TRUE,
-    transcript_path = NULL,   # .fa / .fa.gz (transcripts, i.e., cDNA)
+    load = c("link", "path", "cached", "test"),
+    base_dir = NULL,
+    species = c("human", 'mouse')[1],
+    release = 45,
+    gtf_path = NULL,
+    transcript_path = NULL,
     translation_path = NULL,
-    filter_tsl = c('1', '2', '3', '4', '5')[1:3]
+    filter_tsl = c('1','2','3', '4', '5')[1:3]
 ) {
-  message(paste0("[PROCESSING] Loading ", species, " v", release, " annotations and sequences from ", load, ", this may take some time if not previously cached"))
   load <- match.arg(load)
-  # Resolve with best practices if null path given
   base_dir <- resolve_output_dir(base_dir)
 
-  if (load == 'test') {
-    return(list(annotations = fread(.get_example_data("human_test_gencode_v45_annotations.csv")),
-                sequences = fread(.get_example_data("human_test_gencode_v45_sequences.csv")),
-                hybrids = list(first_hybrids = fread(.get_example_data("human_test_gencode_v45_first_hybrids.csv")),
-                               last_hybrids = fread(.get_example_data("human_test_gencode_v45_last_hybrids.csv")))))
-  } else if (load == "dataframe") {
-    if (!is.null(gtf_df)) {
-      gtf_dt <- load_gtf_long(as.data.table(gtf_df))
-    } else stop("For load='dataframe', provide `gtf_df`.")
+  ### ---- Define cache files ----
+  rds_gtf  <- file.path(base_dir, sprintf("%s_gencode_v%s.gtf.rds", species, release))
+  rds_tx   <- file.path(base_dir, sprintf("%s_gencode_v%s_transcripts.rds", species, release))
+  rds_prot <- file.path(base_dir, sprintf("%s_gencode_v%s_proteins.rds", species, release))
+  rds_hyb  <- file.path(base_dir, sprintf("%s_gencode_v%s_hybrids.rds", species, release))
 
-  } else if (load == "path") {
-    p <- if (!is.null(gtf_path)) gtf_path else assets$paths$gtf_gz
-    if (!is.character(p) || length(p) != 1L) stop("`gtf_path` must be a single character path.")
-    gtf_dt <- load_gtf_long(p)
+  message("[INFO] get_annotation mode: ", load)
 
-  } else { # load == "link"
-    assets <- .si_prepare_assets(
-      base_dir = base_dir, species = species, release = release,
-      mode = mode, use_rds_cache = use_rds_cache
-    )
-
-    gtf_dt <- load_gtf_long(assets$paths$gtf_gz)
+  ### ---- TEST MODE ----
+  if (load == "test") {
+    message("[INFO] Loading bundled test annotation data")
+    return(list(
+      annotations = fread(.get_example_data("human_test_gencode_v45_annotations.csv")),
+      sequences = fread(.get_example_data("human_test_gencode_v45_sequences.csv")),
+      hybrids = list(
+        first_hybrids = fread(.get_example_data("human_test_gencode_v45_first_hybrids.csv")),
+        last_hybrids = fread(.get_example_data("human_test_gencode_v45_last_hybrids.csv"))
+      )
+    ))
   }
 
-  gtf_df <- gtf_dt %>% restrict_gtf_genetype %>%
+  ### ---- CACHED MODE ----
+  if (load == "cached") {
+    message("[FAST] Loading cached annotation objects from: ", base_dir)
+
+    req <- c(rds_gtf, rds_tx, rds_prot, rds_hyb)
+    if (!all(file.exists(req))) {
+      missing <- req[!file.exists(req)]
+      stop("[ERROR] Missing cached file(s):\n", paste(missing, collapse = "\n"),
+           "\nRun with load='path' or load='link' first to generate caches.")
+    }
+
+    return(list(
+      annotations = readRDS(rds_gtf),
+      sequences = list(
+        transcripts = readRDS(rds_tx),
+        proteins = readRDS(rds_prot)
+      ),
+      hybrids = readRDS(rds_hyb)
+    ))
+  }
+
+  ### ---- LINK / PATH: Acquire GTF/FASTA paths ----
+  if (load == "link") {
+    message("[STEP] Downloading GENCODE assets (first run only)")
+    assets <- .si_prepare_assets(base_dir, species, release, mode = "download")
+    gtf_file  <- assets$paths$gtf_gz
+    tx_fa     <- transcript_path  %||% assets$paths$txfa_gz
+    aa_fa     <- translation_path %||% assets$paths$aafa_gz
+  } else if (load == "path") {
+    if (is.null(gtf_path))
+      stop("load='path' requires gtf_path=")
+
+    gtf_file <- gtf_path
+    tx_fa <- transcript_path
+    aa_fa <- translation_path
+
+    if (fetch_sequences && (is.null(tx_fa) || is.null(aa_fa)))
+      stop("load='path' requires transcript_path= and translation_path= when fetch_sequences=TRUE")
+  }
+
+  message("[STEP] Reading GTF: ", gtf_file)
+  gtf_dt <- load_gtf_long(gtf_file)
+
+  ### ---- Annotation pipeline ----
+  message("[STEP] Annotating GTF")
+  gtf_df <- gtf_dt %>%
+    restrict_gtf_genetype %>%
     add_exon_coding_information %>%
     add_exon_order_information %>%
     restrict_gtf_rowtype %>%
     add_exon_frames %>%
     add_feature_length
 
+  gtf_df <- gtf_df[
+    transcript_support_level %in% filter_tsl | type == 'gene'
+  ][
+    !(tag %in% c("cds_start_NF", "cds_end_NF")) | type == 'gene'
+  ]
 
-  gtf_df <- gtf_df[transcript_support_level %in% filter_tsl | type == 'gene']
-  gtf_df <- gtf_df[!(tag %in% c("cds_start_NF", "cds_end_NF")) | type == 'gene']
-
+  ### ---- Hybrid exons ----
+  message("[STEP] Identifying hybrid exons")
   hybrids <- identify_hybrid_exons_split(gtf_df)
 
-  if (!isTRUE(fetch_sequences)) {
-    return(list(annotations = gtf_df, hybrids = hybrids))  # preserve original return type when not fetching sequences
+  ### ---- Sequence loading ----
+  message("[STEP] Loading transcript + protein sequences")
+  tx_local <- if (grepl("^https?://", tx_fa)) cached_resource(tx_fa) else tx_fa
+  aa_local <- if (grepl("^https?://", aa_fa)) cached_resource(aa_fa) else aa_fa
+
+  if (!file.exists(tx_local)) stop("Transcript FASTA missing: ", tx_local)
+  if (!file.exists(aa_local)) stop("Protein FASTA missing: ", aa_local)
+
+  seq_map <- get_sequences(
+    gtf_df,
+    transcript_path = tx_local,
+    translation_path = aa_local
+  )
+
+  transcripts <- seq_map[!is.na(transcript_seq), .(transcript_id, transcript_seq)]
+  proteins    <- seq_map[!is.na(protein_seq), .(transcript_id, protein_seq)]
+
+
+  ### ---- Save cache ----
+  message("[CACHE] Saving cleaned annotations and sequences → ", base_dir)
+  saveRDS(gtf_df,  rds_gtf)
+  saveRDS(hybrids, rds_hyb)
+  if (fetch_sequences) {
+    saveRDS(transcripts, rds_tx)
+    saveRDS(proteins,    rds_prot)
   }
-  message(paste0("[INFO] Loaded annotations for ",
-                 length(unique(gtf_df$gene_id)),
-                 " unique genes, ",
-                 length(unique(gtf_df$transcript_id)),
-                 " unique transcripts, and ",
-                 length(unique(gtf_df$exon_id)),
-                 " unique exons. Loading sequences..."))
-  # Resolve transcript FASTA (path or link or assets)
-  txfa <- transcript_path %||%
-    assets$paths$txfa_gz
 
-  aafa <- translation_path %||%
-    assets$paths$aafa_gz
-
-  if (is.null(txfa) || is.null(aafa))
-    stop("fetch_sequences=TRUE, but could not resolve transcript/translation FASTA paths or links.\n",
-         "Provide `transcript_path` and `translation_path`, or ensure assets$paths/$links are set.")
-
-  # If they’re http(s) links, cache to local; if file://, strip; if local path, use as-is
-  resolve_local <- function(p) {
-    if (!is.character(p) || length(p) != 1L) stop("FASTA path must be single character.")
-    p <- sub("^file://", "", p)
-    if (grepl("^https?://", p, ignore.case = TRUE)) cached_resource(p) else p
-  }
-  txfa_local <- resolve_local(txfa)
-  aafa_local <- resolve_local(aafa)
-
-  seq_map <- get_sequences(gtf_df, transcript_path = txfa_local, translation_path = aafa_local)
-  message(paste0("[INFO] Loaded sequences for ", length(unique(seq_map$transcript_id)), " transcripts and proteins"))
-
-
-  return(list(annotations = gtf_df, hybrids = hybrids, sequences = seq_map))
+  ### ---- Return ----
+  list(
+    annotations = gtf_df,
+    sequences = list(transcripts = transcripts, proteins = proteins),
+    hybrids = hybrids
+  )
 }
 
 #' Helper to fetch test files for vignettes / tests

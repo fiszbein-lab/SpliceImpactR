@@ -6,25 +6,17 @@
 \usage{
 load_rmats(
   paths,
-  use = c("JC", "JCEC"),
-  event_types = c("SE", "RI", "A5SS", "A3SS", "MXE"),
-  precomputed_significance = TRUE
+  use = c("JC", "JCEC")[2],
+  event_types = c("SE", "RI", "A5SS", "A3SS", "MXE")
 )
 }
 \arguments{
-\item{paths}{Either:
-\itemize{
-  \item A character vector of directories or individual rMATS files, OR
-  \item A data.frame with columns \code{path}, \code{sample_name}, and \code{condition}.
-}}
+\item{paths}{A data.frame with columns \code{path}, \code{sample_name}, and \code{condition}.}
 
 \item{use}{Character scalar, one of \code{"JC"} or \code{"JCEC"}.}
 
 \item{event_types}{Event types to include: one or more of
 \code{c("SE", "RI", "A5SS", "A3SS", "MXE")}.}
-
-\item{precomputed_significance}{Logical; if TRUE, extract \code{delta_psi}, \code{pvalue},
-and \code{FDR} columns from rMATS output when available.}
 }
 \value{
 A `data.table` with unified rMATS event annotations, including columns:
