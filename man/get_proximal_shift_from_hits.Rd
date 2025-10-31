@@ -4,7 +4,7 @@
 \alias{get_proximal_shift_from_hits}
 \title{Classify splicing events as proximal or distal}
 \usage{
-get_proximal_shift_from_hits(hits, plot = TRUE)
+get_proximal_shift_from_hits(hits)
 }
 \arguments{
 \item{hits}{`data.frame` or `data.table` containing at least:

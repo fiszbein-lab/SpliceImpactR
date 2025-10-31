@@ -29,17 +29,38 @@
 #' @noRd
 #' @keywords internal
 .align_dna <- function(a, b, alignmentMat) {
-  if (is.na(a) || is.na(b) || !nzchar(a) || !nzchar(b))
+  # Coerce to character safely
+  a <- if (is(a, "DNAString")) as.character(a) else as.character(a)
+  b <- if (is(b, "DNAString")) as.character(b) else as.character(b)
+
+  # Guard against NA / empty
+  if (is.null(a) || is.null(b) ||
+      anyNA(c(a, b)) ||
+      !nzchar(a) || !nzchar(b)) {
     return(list(pid = NA_real_, score = NA_real_, width = NA_integer_))
-  a <- DNAString(toupper(a)); b <- DNAString(toupper(b))
-  if (as.character(a) == as.character(b))
-    return(list(pid = 100, score = nchar(a), width = nchar(a)))
-  aln <- pwalign::pairwiseAlignment(a, b, type = "global",
-                                    substitutionMatrix = alignmentMat,
-                                    gapOpening = 10, gapExtension = 0.5)
-  list(pid   = .aln_pid(aln),
-       score = pwalign::score(aln),
-       width = as.integer(width(pwalign::aligned(aln))[1]))
+  }
+
+  # Now rebuild DNAString objects after cleaning
+  a <- DNAString(toupper(a))
+  b <- DNAString(toupper(b))
+
+  # Fast path: identical
+  if (identical(a, b)) {
+    n <- length(a)  # works on DNAString
+    return(list(pid = 100, score = n, width = n))
+  }
+
+  aln <- pwalign::pairwiseAlignment(
+    a, b, type = "global",
+    substitutionMatrix = alignmentMat,
+    gapOpening = 10, gapExtension = 0.5
+  )
+
+  list(
+    pid   = .aln_pid(aln),
+    score = pwalign::score(aln),
+    width = as.integer(width(pwalign::aligned(aln))[1])
+  )
 }
 
 #' Align two protein sequences and compute identity, score, and width.
@@ -48,19 +69,36 @@
 #' @noRd
 #' @keywords internal
 .align_aa <- function(a, b, alignmentMat) {
-  if (is.na(a) || is.na(b) || !nzchar(a) || !nzchar(b))
-    return(list(pid = NA_real_, score = NA_real_, width = NA_integer_))
-  a <- AAString(toupper(a)); b <- AAString(toupper(b))
-  if (as.character(a) == as.character(b))
-    return(list(pid = 100, score = nchar(a), width = nchar(a)))
-  aln <- pwalign::pairwiseAlignment(a, b, type = "global",
-                                    substitutionMatrix = alignmentMat,
-                                    gapOpening = 10, gapExtension = 0.5)
-  list(pid   = .aln_pid(aln),
-       score = pwalign::score(aln),
-       width = as.integer(width(pwalign::aligned(aln))[1]))
-}
+  # Coerce to character safely
+  a <- if (is(a, "AAString")) as.character(a) else as.character(a)
+  b <- if (is(b, "AAString")) as.character(b) else as.character(b)
 
+  if (is.null(a) || is.null(b) ||
+      anyNA(c(a, b)) ||
+      !nzchar(a) || !nzchar(b)) {
+    return(list(pid = NA_real_, score = NA_real_, width = NA_integer_))
+  }
+
+  a <- AAString(toupper(a))
+  b <- AAString(toupper(b))
+
+  if (identical(a, b)) {
+    n <- length(a)
+    return(list(pid = 100, score = n, width = n))
+  }
+
+  aln <- pwalign::pairwiseAlignment(
+    a, b, type = "global",
+    substitutionMatrix = alignmentMat,
+    gapOpening = 10, gapExtension = 0.5
+  )
+
+  list(
+    pid   = .aln_pid(aln),
+    score = pwalign::score(aln),
+    width = as.integer(width(pwalign::aligned(aln))[1])
+  )
+}
 
 #' Sum exon CDS and feature lengths for each event row
 #' @param H Event table containing exon IDs.
@@ -271,13 +309,6 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
     SIMPLIFY = FALSE
   )
 
-  # dna_res <- mapply(function(a, b) .align_dna(a, b, NUC44),
-  #                   as.character(DT$transcript_seq_inc), as.character(DT$transcript_seq_exc),
-  #                   SIMPLIFY = FALSE)
-  #
-  # aa_res  <- mapply(function(a, b) .align_aa(a, b, BLOSUM62),
-  #                   as.character(DT$protein_seq_inc), as.character(DT$protein_seq_exc),
-  #                   SIMPLIFY = FALSE)
   DT[, `:=`(
     pc_class   = as.character(pc_class),
 

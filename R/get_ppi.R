@@ -347,7 +347,7 @@ summarize_partners <- function(ppi_map_tx_gene) {
 #' hits_final <- get_ppi_switches(hits_domain, ppi)
 #' @export
 get_ppi_switches <- function(hits_all, ppi) {
-  H <- as.data.table(hits_all)
+  H <- as.data.table(hits_all)[, I := NULL]
   res <- H[, {
 
     if (pc_class == 'protein_coding') {

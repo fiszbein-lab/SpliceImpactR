@@ -71,8 +71,8 @@
 #' proximal_output <- get_proximal_shift_from_hits(pairs)
 #' @import data.table
 #' @export
-get_proximal_shift_from_hits <- function(hits, plot = TRUE) {
-  H <- data.table::as.data.table(hits)[, .(event_id, event_type = event_type_inc, strand = strand_inc, pos = inc_inc, delta_psi_inc, neg = inc_exc, delta_psi_exc)]
+get_proximal_shift_from_hits <- function(hits) {
+  H <- data.table::as.data.table(hits)[event_type_inc %in% c('AFE', 'ALE'), .(event_id, event_type = event_type_inc, strand = strand_inc, pos = inc_inc, delta_psi_inc, neg = inc_exc, delta_psi_exc)]
   res <- H[, {
     pos <- .split_coord(pos)
     neg <- .split_coord(neg)
@@ -118,10 +118,9 @@ get_proximal_shift_from_hits <- function(hits, plot = TRUE) {
   }, by = .I
   ]
   H_prox <- cbind(H, res)
-  if (plot == TRUE) {
-    print(plot_prox_dist(H_prox))
-  }
-  return(H_prox)
+  plot <- plot_prox_dist(H_prox)
+  return(list(data = H_prox,
+              plot = plot))
 }
 
 #' @title Plot proximal vs distal exon usage
@@ -316,7 +315,9 @@ plot_length_comparison <- function(
     }
     if (nrow(Dpair_use)) {
       w_p <- tryCatch(
-        wilcox.test(Dpair_use$value_inc, Dpair_use$value_exc, paired = TRUE)$p.value,
+        suppressWarnings(
+          wilcox.test(Dpair_use$value_inc, Dpair_use$value_exc, paired = TRUE)$p.value,
+        ),
         error = function(e) NA_real_
       )
     }
@@ -1087,7 +1088,6 @@ integrated_event_summary <- function(
     hits,
     pre_filter_hits
 ) {
-
   DT <- as.data.table(hits)
 
   DT[, event_type := event_type_inc]
@@ -1191,6 +1191,58 @@ integrated_event_summary <- function(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
   have_upset <- requireNamespace("ComplexUpset", quietly = TRUE)
+
+  p3 <- ggplot(dom_long, aes(event_type, prop, fill = kind)) +
+    geom_col(position = "dodge") +
+    scale_y_continuous(labels = percent_format(accuracy = 1)) +
+    scale_fill_manual(values = c(
+      prop_any  = "cadetblue4",
+      prop_inc  = "deeppink4",
+      prop_exc  = "#56B4E9",
+      prop_both = "#E69F00"
+    ), labels = c("Any","INC-only","EXC-only","Both")) +
+    labs(x = NULL, y = "Proportion", fill = NULL,
+         title = "Domain-change prevalence") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  have_upset <- requireNamespace("ComplexUpset", quietly = TRUE)
+
+  DT2 <- as.data.table(DT)[pc_class == "protein_coding"]
+
+  DT2[, any_ppi := as.integer(n_ppi > 0)]
+  DT2[, event_type := factor(event_type,
+                             levels = c("AFE","ALE","A3SS","A5SS","SE","RI","MXE"))]
+
+
+  ppi1 <- DT2[, .(prop_any_ppi = mean(any_ppi)), by = event_type] |>
+    ggplot(aes(x = event_type, y = prop_any_ppi)) +
+    geom_col(alpha = 0.8) +
+    geom_text(aes(label = scales::percent(prop_any_ppi, .1)),
+              vjust = -0.3) +
+    labs(y = "Proportion with PPI change", x = "",
+         title = "Fraction of events with altered PPIs") +
+    theme_bw(base_size = 12) +
+    ylim(0, 1)
+
+  T_long <- melt(
+    DT2,
+    id.vars = "event_type",
+    measure.vars = c("n_inc_ppi", "n_exc_ppi"),
+    variable.name = "ppi_direction",
+    value.name  = "ppi_count"
+  )
+
+  DT_long[, ppi_direction := factor(ppi_direction,
+                                    labels = c("INC gained","EXC gained"))]
+
+  ppi2 <- ggplot(DT_long[ppi_count > 0],
+               aes(x = event_type, y = ppi_count, color = ppi_direction)) +
+    geom_jitter(alpha = 0.4, width = 0.2) +
+    geom_boxplot(alpha = 0.5, outlier.shape = NA) +
+    labs(x = "Event type", y = "# PPI gained",
+         title = "PPI gain distributions by event type",
+         color = "") +
+    theme_bw(base_size = 12)
 
   ## ---------- 1) Gene × Event-Type UpSet ----------
   # Coalesce gene id (prefers *_inc, falls back to *_exc, then NA removed)
@@ -1307,10 +1359,11 @@ integrated_event_summary <- function(
 
   ru <- relative_use_pre_post(pre_filter_hits, hits)
 
-  top_row    <- wrap_plots(list(p1, p2, p3), ncol = 3)
+  top_row    <- wrap_plots(list(p1, p2), ncol = 2)
+  top2_row <- wrap_plots(list(p3, ppi1, ppi2), ncol = 3)
   middle_row <- wrap_plots(list(gene_upset, ru$plot), ncol = 2, widths = c(2.5, .5))#, relative_use), ncol = 2)
   bottom_row <- wrap_plots(list(domain_upset, coord_heatmap), ncol = 2, widths = c(2.5, .5))
-  combined   <- top_row / middle_row / bottom_row + plot_layout(heights = c(1, 1, 1))
+  combined   <- top_row / top2_row / middle_row / bottom_row + plot_layout(heights = c(1, 1, 1, 1))
 
   return(list(
     summaries = list(

@@ -221,15 +221,37 @@ get_hitindex <- function(paths_df, keep_annotated_first_last = FALSE) {
 #' @param use Character scalar, one of \code{"JC"} or \code{"JCEC"}.
 #' @param keep_annotated_first_last Logical; if TRUE, retain only annotated first/last exons and normalize PSI.
 #'
+#' @examples
+#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
+#'                                     check_extdata_dir('rawData/control_S6/'),
+#'                                     check_extdata_dir('rawData/control_S7/'),
+#'                                     check_extdata_dir('rawData/control_S8/'),
+#'                                     check_extdata_dir('rawData/case_S1/'),
+#'                                     check_extdata_dir('rawData/case_S2/'),
+#'                                     check_extdata_dir('rawData/case_S3/'),
+#'                                     check_extdata_dir('rawData/case_S4/')),
+#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
+#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
+#'                            stringsAsFactors = FALSE)
+#' data <- get_rmats_hit(sample_frame, event_types = c("ALE", "AFE", "MXE", "SE", "A3SS", "A5SS", "RI"))
 #' @export
 get_rmats_hit <- function(sample_frame,
-                          event_types = c("MXE", "SE", "A3SS", "A5SS", "RI"),
+                          event_types = c("ALE", "AFE", "MXE", "SE", "A3SS", "A5SS", "RI"),
                           use = 'JCEC',
                           keep_annotated_first_last = TRUE) {
-  hit_index <- get_hitindex(sample_frame, keep_annotated_first_last)
-  rmats <- get_rmats(load_rmats(sample_frame, use, event_types))
-  data <- rbind(rmats, hit_index[, .SD, .SDcols = seq(1, ncol(rmats))])
+  if ("ALE" %in% event_types | "AFE" %in% event_types) {
+    hit_index <- get_hitindex(sample_frame, keep_annotated_first_last)
+    if (sum(c("MXE", "SE", "A3SS", "A5SS", "RI") %in% event_types) > 0) {
+      rmats <- get_rmats(load_rmats(sample_frame, use, event_types))
+      data <- rbind(rmats, hit_index[, .SD, .SDcols = seq(1, ncol(rmats))])
+    } else {
+      data <- hit_index
+    }
 
+  } else if (sum(c("MXE", "SE", "A3SS", "A5SS", "RI") %in% event_types) > 0) {
+    data <- get_rmats(load_rmats(sample_frame, use, event_types))
+  }
+  return(data)
 }
 
 
