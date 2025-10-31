@@ -21,7 +21,7 @@ install.packages("devtools")
 ```
 Then, to install the package:
 ```r
-devtools::install("fiszbein-lab/SpliceImpactR")
+devtools::install_github("fiszbein-lab/SpliceImpactR")
 ```
 Or 
 ``` r

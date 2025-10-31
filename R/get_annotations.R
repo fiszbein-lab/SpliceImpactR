@@ -963,6 +963,33 @@ get_sequences <- function(gtf_df, transcript_path, translation_path) {
   return(seq_map_df)
 }
 
+#' Add frames to exons dependent on cds location
+#'
+#' Internal helper
+#'
+#' @param gtf_df A \code{data.frame} or \code{data.table} containing
+#'   GTF annotation data, typically from [load_gtf_long()].
+#'
+#' @return A \code{data.table} with added start_frame and stop_frame
+#'
+#' @keywords internal
+add_exon_frames <- function(gtf_df) {
+  data.table::setDT(gtf_df)
+
+  # compute frames only for exon rows that have CDS
+  idx <- (gtf_df$type == "exon") & gtf_df$cds_has
+  # guard NAs as well
+  idx <- idx & !is.na(gtf_df$cds_rel_start) & !is.na(gtf_df$cds_rel_stop)
+
+  # frame is (position - 1) %% 3, with the first coding nt of a transcript = frame 0
+  gtf_df[idx, `:=`(
+    start_frame = as.integer((cds_rel_start - 1L) %% 3L),
+    stop_frame  = as.integer((cds_rel_stop  - 1L) %% 3L)
+  )]
+
+  return(gtf_df[])
+}
+
 
 #' Load and cache GENCODE annotations, sequences, and hybrid exon annotations
 #'
@@ -1067,11 +1094,11 @@ get_annotation <- function(
   if (load == "test") {
     message("[INFO] Loading bundled test annotation data")
     return(list(
-      annotations = fread(.get_example_data("human_test_gencode_v45_annotations.csv")),
-      sequences = fread(.get_example_data("human_test_gencode_v45_sequences.csv")),
+      annotations = fread(get_example_data("human_test_gencode_v45_annotations.csv")),
+      sequences = fread(get_example_data("human_test_gencode_v45_sequences.csv")),
       hybrids = list(
-        first_hybrids = fread(.get_example_data("human_test_gencode_v45_first_hybrids.csv")),
-        last_hybrids = fread(.get_example_data("human_test_gencode_v45_last_hybrids.csv"))
+        first_hybrids = fread(get_example_data("human_test_gencode_v45_first_hybrids.csv")),
+        last_hybrids = fread(get_example_data("human_test_gencode_v45_last_hybrids.csv"))
       )
     ))
   }
@@ -1180,7 +1207,7 @@ get_annotation <- function(
 #' get_example_data("test_signalp.csv")
 #'
 #' @export
- get_example_data <- function(filename) {
+get_example_data <- function(filename) {
   # Locate extdata folder inside the installed package
   data_dir <- system.file("extdata", package = "SpliceImpactR")
   if (data_dir == "") stop("extdata directory not found in SpliceImpactR")
@@ -1213,7 +1240,7 @@ get_annotation <- function(
 #' check_extdata_dir("rawData")
 #'
 #'
- check_extdata_dir <- function(dir_name,
+check_extdata_dir <- function(dir_name,
                                package = "SpliceImpactR",
                                error = TRUE) {
   base_dir <- system.file("extdata", package = package)
