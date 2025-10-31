@@ -1189,10 +1189,8 @@ get_annotation <- function(
   message("[CACHE] Saving cleaned annotations and sequences → ", base_dir)
   saveRDS(gtf_df,  rds_gtf)
   saveRDS(hybrids, rds_hyb)
-  if (fetch_sequences) {
-    saveRDS(transcripts, rds_tx)
-    saveRDS(proteins,    rds_prot)
-  }
+  saveRDS(transcripts, rds_tx)
+  saveRDS(proteins,    rds_prot)
 
   ### ---- Return ----
   list(
