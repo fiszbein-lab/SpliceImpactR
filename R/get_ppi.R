@@ -48,7 +48,7 @@ get_ppidm <- function(
     test = FALSE
 ) {
   if (test == TRUE) {
-    return(fread(.get_example_data("test_ppidm.csv")))
+    return(fread(get_example_data("test_ppidm.csv")))
   }
   if (download == TRUE) {
     if (is.null(load_dir)) {

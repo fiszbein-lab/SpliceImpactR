@@ -391,7 +391,7 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
                                  load_path = NULL, save_path = NULL, timeout = 600, test = FALSE) {
   if (test == TRUE) {
     return(data.table::rbindlist(lapply(biomaRt_databases[biomaRt_databases %in% c("interpro", "signalp")], function(x) {
-      fread(.get_example_data(paste0("test_", x, ".csv")))
+      fread(get_example_data(paste0("test_", x, ".csv")))
     })))
   }
   options(timeout = timeout)
