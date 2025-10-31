@@ -145,7 +145,7 @@ data <- get_rmats_hit(sample_frame, event_types = c("ALE", "AFE", "MXE", "SE", "
 hit_compare <- compare_hit_index(sample_frame, condition_map = c(control = "control", test = "case"))
 
 ## We can plot an overview of how the conditions compare as well. Here, we probe whether there are changes in depth-normalized counts of AFE or the distribution of PSI across condition
-ov <- overview_splicing_comparison_fixed(hit_index, 
+ov <- overview_splicing_comparison_fixed(data, 
                                          sample_frame, 
                                          depth_norm = 'exon_files', 
                                          event_type = "AFE")
@@ -171,10 +171,9 @@ matched <- get_matched_events_chunked(res_di, annotation_df$annotations, chunk_s
 hits_sequences <- attach_sequences(matched, annotation_df$sequences)
 pairs <- get_pairs(hits_sequences, source="multi")
 
-## We can also perform analysis looking at how events impact protein length and 
-## proximal/distal use of terminal exons
+## We can also perform analysis looking at how events impact proximal/distal use of terminal exons
 proximal_output <- get_proximal_shift_from_hits(pairs)
-length_output <- plot_length_comparison(seq_compare)
+
 ```
 
 ## Primary sequence comparisons
@@ -184,6 +183,8 @@ And make a summary plot
 seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 alignment_summary <- plot_alignment_summary(seq_compare)
 
+## We can also perform analysis looking at how events impact protein length
+length_output <- plot_length_comparison(seq_compare)
 ```
 
 ## Get background

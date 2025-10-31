@@ -163,6 +163,7 @@ explode_coords <- function(ev, which = c("inc","exc")) {
 #' @importFrom data.table setnames %chin%
 #' @importFrom GenomicRanges GRanges findOverlaps pintersect
 #' @importFrom IRanges IRanges width
+#' @importFrom S4Vectors queryHits subjectHits
 #' @keywords internal
 match_events_to_annotations_vec <- function(events,
                                             annotations,

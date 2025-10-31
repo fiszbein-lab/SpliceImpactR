@@ -123,6 +123,7 @@ get_ppidm <- function(
 #'
 #'
 #' @importFrom data.table as.data.table fwrite fread setDT
+#' @importFrom dplyr distinct
 #' @export
 get_isoform_interactions <- function(protein_features, interpro_pairs, init = TRUE, load_dir = NULL, save = FALSE) {
 
@@ -446,6 +447,7 @@ get_ppi_switches <- function(hits_all, ppi) {
 #'   element_text expand_limits
 #' @importFrom patchwork plot_layout
 #' @importFrom scales percent
+#' @importFrom ggplot2 margin
 #' @export
 plot_ppi_summary <- function(df,
                              bins = 30,

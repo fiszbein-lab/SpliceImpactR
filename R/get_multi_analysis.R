@@ -146,6 +146,7 @@ get_proximal_shift_from_hits <- function(hits) {
 #' @import data.table
 #' @importFrom ggplot2 ggplot aes geom_col coord_polar xlim geom_text
 #'   scale_fill_manual facet_wrap theme_void labs theme element_text
+#'   position_stack
 #' @keywords internal
 plot_prox_dist <- function(res) {
 
@@ -242,7 +243,7 @@ plot_prox_dist <- function(res) {
 #' @import data.table
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_boxplot geom_density
 #'   geom_col geom_text geom_vline scale_fill_manual scale_x_discrete labs theme_bw
-#'   theme annotate element_blank element_text
+#'   theme annotate element_blank element_text position_dodge
 #' @importFrom patchwork plot_layout plot_annotation
 #' @importFrom tools toTitleCase
 #' @importFrom stats wilcox.test
@@ -1083,6 +1084,7 @@ compare_hit_index <- function(
 #' @importFrom patchwork wrap_plots plot_layout
 #' @importFrom scales percent percent_format rescale
 #' @importFrom stats median quantile
+#' @importFrom ggplot2 stat_summary ylim xlim
 #' @export
 integrated_event_summary <- function(
     hits,
@@ -1224,7 +1226,7 @@ integrated_event_summary <- function(
     theme_bw(base_size = 12) +
     ylim(0, 1)
 
-  T_long <- melt(
+  DT_long <- melt(
     DT2,
     id.vars = "event_type",
     measure.vars = c("n_inc_ppi", "n_exc_ppi"),

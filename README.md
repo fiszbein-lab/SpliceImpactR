@@ -111,7 +111,7 @@ sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
 data <- get_rmats_hit(sample_frame)
 
 ## We can plot an overview of how the conditions compare as well
-ov <- overview_splicing_comparison_fixed(hit_index, sample_frame, 'exon_files')
+ov <- overview_splicing_comparison_fixed(data, sample_frame, 'exon_files')
 
 ```
 

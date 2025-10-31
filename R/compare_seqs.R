@@ -26,6 +26,7 @@
 #' @param a,b Character strings of DNA sequences.
 #' @return List with fields \code{pid}, \code{score}, \code{width}.
 #' @importFrom pwalign pairwiseAlignment
+#' @importFrom Biostrings DNAString
 #' @noRd
 #' @keywords internal
 .align_dna <- function(a, b, alignmentMat) {
@@ -66,6 +67,8 @@
 #' Align two protein sequences and compute identity, score, and width.
 #' @param a,b Character strings of amino acid sequences.
 #' @return List with fields \code{pid}, \code{score}, \code{width}.
+#'
+#' @importFrom Biostrings AAString
 #' @noRd
 #' @keywords internal
 .align_aa <- function(a, b, alignmentMat) {

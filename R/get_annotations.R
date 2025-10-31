@@ -1236,7 +1236,7 @@ get_example_data <- function(filename) {
 #' @examples
 #' check_extdata_dir("rawData")
 #'
-#'
+#' @export
 check_extdata_dir <- function(dir_name,
                                package = "SpliceImpactR",
                                error = TRUE) {

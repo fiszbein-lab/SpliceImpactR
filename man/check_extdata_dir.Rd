@@ -19,6 +19,5 @@ Helper to fetch test dirs for vignettes / tests
 \examples{
 check_extdata_dir("rawData")
 
-
 }
 \keyword{internal}

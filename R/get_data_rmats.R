@@ -229,16 +229,16 @@ get_rmats <- function(DT) {
     p2 <- .clean_pair(seS[idx],  seE[idx])
     p3 <- .clean_pair(dnES[idx], dnEE[idx])
     INC[idx, `:=`(
-      inc = .collapse3(fmt_pair(upES[idx],upEE[idx]),
-                      fmt_pair(seS[idx], seE[idx]),
-                      fmt_pair(dnES[idx],dnEE[idx])),
+      inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
+                       .fmt_pair(seS[idx], seE[idx]),
+                       .fmt_pair(dnES[idx],dnEE[idx])),
       exc = ""
     )]
 
     # EXC: inc = [upES,upEE); [dnES,dnEE] ; exc = [seS,seE]
     EXC[idx, `:=`(
-      inc = .collapse3(fmt_pair(upES[idx],upEE[idx]),
-                      fmt_pair(dnES[idx],dnEE[idx]),
+      inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
+                       .fmt_pair(dnES[idx],dnEE[idx]),
                       rep("", sum(idx))),
       exc = .fmt_pair(seS[idx], seE[idx])
     )]
@@ -253,15 +253,15 @@ get_rmats <- function(DT) {
     # + strand: INC includes exon1; EXC includes exon2; EXC.exc = exon1
     if (any(plus)) {
       INC[plus, `:=`(
-        inc = .collapse3(fmt_pair(upES[plus],upEE[plus]),
-                        fmt_pair(m1S[plus],m1E[plus]),
-                        fmt_pair(dnES[plus],dnEE[plus])),
+        inc = .collapse3(.fmt_pair(upES[plus],upEE[plus]),
+                         .fmt_pair(m1S[plus],m1E[plus]),
+                         .fmt_pair(dnES[plus],dnEE[plus])),
         exc = .fmt_pair(m2S[plus], m2E[plus])
       )]
       EXC[plus, `:=`(
-        inc = .collapse3(fmt_pair(upES[plus],upEE[plus]),
-                        fmt_pair(m2S[plus],m2E[plus]),
-                        fmt_pair(dnES[plus],dnEE[plus])),
+        inc = .collapse3(.fmt_pair(upES[plus],upEE[plus]),
+                         .fmt_pair(m2S[plus],m2E[plus]),
+                         .fmt_pair(dnES[plus],dnEE[plus])),
         exc = .fmt_pair(m1S[plus], m1E[plus])
       )]
     }
@@ -269,15 +269,15 @@ get_rmats <- function(DT) {
     # − strand: swap 1st/2nd
     if (any(minus)) {
       INC[minus, `:=`(
-        inc = .collapse3(fmt_pair(upES[minus],upEE[minus]),
-                        fmt_pair(m2S[minus],m2E[minus]),
-                        fmt_pair(dnES[minus],dnEE[minus])),
+        inc = .collapse3(.fmt_pair(upES[minus],upEE[minus]),
+                         .fmt_pair(m2S[minus],m2E[minus]),
+                         .fmt_pair(dnES[minus],dnEE[minus])),
         exc = .fmt_pair(m1S[minus],m1E[minus])
       )]
       EXC[minus, `:=`(
-        inc = .collapse3(fmt_pair(upES[minus],upEE[minus]),
-                        fmt_pair(m1S[minus],m1E[minus]),
-                        fmt_pair(dnES[minus],dnEE[minus])),
+        inc = .collapse3(.fmt_pair(upES[minus],upEE[minus]),
+                         .fmt_pair(m1S[minus],m1E[minus]),
+                         .fmt_pair(dnES[minus],dnEE[minus])),
         exc = .fmt_pair(m2S[minus], m2E[minus])
       )]
     }
@@ -287,11 +287,11 @@ get_rmats <- function(DT) {
   # A3SS rows
   idx_A3 <- x$event_type %chin% "A3SS"
   if (any(idx_A3)) {
-    INC[idx_A3, inc := .collapse3(fmt_pair(longS[idx_A3],longE[idx_A3]),
+    INC[idx_A3, inc := .collapse3(.fmt_pair(longS[idx_A3],longE[idx_A3]),
                                  rep("", sum(idx_A3)),
                                  rep("", sum(idx_A3)))]
     INC[idx_A3, exc := ""]
-    EXC[idx_A3, inc := .collapse3(fmt_pair(shS[idx_A3],shE[idx_A3]),
+    EXC[idx_A3, inc := .collapse3(.fmt_pair(shS[idx_A3],shE[idx_A3]),
                                  rep("", sum(idx_A3)),
                                  rep("", sum(idx_A3)))]
     EXC[idx_A3, exc := .fmt_pair(t$start[idx_A3], t$end[idx_A3])]
@@ -300,11 +300,11 @@ get_rmats <- function(DT) {
   # A5SS rows
   idx_A5 <- x$event_type %chin% "A5SS"
   if (any(idx_A5)) {
-    INC[idx_A5, inc := .collapse3(fmt_pair(longS[idx_A5],longE[idx_A5]),
+    INC[idx_A5, inc := .collapse3(.fmt_pair(longS[idx_A5],longE[idx_A5]),
                                  rep("", sum(idx_A5)),
                                  rep("", sum(idx_A5)))]
     INC[idx_A5, exc := ""]
-    EXC[idx_A5, inc := .collapse3(fmt_pair(shS[idx_A5],shE[idx_A5]),
+    EXC[idx_A5, inc := .collapse3(.fmt_pair(shS[idx_A5],shE[idx_A5]),
                                  rep("", sum(idx_A5)),
                                  rep("", sum(idx_A5)))]
     EXC[idx_A5, exc := .fmt_pair(t$start[idx_A5], t$end[idx_A5])]
@@ -318,7 +318,7 @@ get_rmats <- function(DT) {
     pI <- .clean_pair(upEE[idx], dnES[idx])  # intron
     pD <- .clean_pair(dnES[idx], dnEE[idx])
     INC[idx, `:=`(
-      inc = collapse3(.fmt_pair(upES[idx],upEE[idx]),
+      inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                       .fmt_pair(upEE[idx],dnES[idx]),
                       .fmt_pair(dnES[idx],dnEE[idx])),
       exc = ""
@@ -326,7 +326,7 @@ get_rmats <- function(DT) {
 
     # EXC: inc = flanks ; exc = intron
     EXC[idx, `:=`(
-      inc = collapse3(.fmt_pair(upES[idx],upEE[idx]),
+      inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                       .fmt_pair(dnES[idx],dnEE[idx]),
                       rep("", sum(idx))),
       exc = .fmt_pair(upEE[idx], dnES[idx])
