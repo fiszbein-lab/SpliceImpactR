@@ -37,7 +37,7 @@ __SpliceImpactR__ requires the acceession of various genome annotations, accesse
 ```r
 ## Loading annotations (if they aren't previously cached takes a bit of time)
 ## We will initally load a test set
-annotation_df <- get_annotation(load = "link")
+annotation_df <- get_annotation(load = "test")
 
 ## If we were looking to load the full annotations, we'd run the following (or load from paths of already downloaded gtf/fa files)
 # annotation_df <- get_annotation(load = "link", species = 'human', version = 45, base_dir = "/.")
