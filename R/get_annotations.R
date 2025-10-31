@@ -395,7 +395,7 @@ load_seq_map <- function(gtf_df, txfa_path, aafa_path,
             start <- as.integer(match[2])
             end   <- as.integer(match[3])
             if (!is.na(start) && !is.na(end) &&
-                start >= 1L && end <= nchar(seq) && end >= start) {
+                start >= 1L && end <= nchar(as.character(seq)) && end >= start) {
               return(Biostrings::subseq(seq, start = start, end = end))
             }
           }
