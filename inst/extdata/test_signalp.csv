@@ -1,0 +1,14 @@
+ensembl_transcript_id,start,stop,chr,strand,feature_id,clean_name,alt_name,database,ensembl_peptide_id,method,name
+ENST00000244519,1,29,chr6,+,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000244519,biomaRt,SignalP-noTM;chr6:26443575-26443958
+ENST00000289361,1,29,chr6,+,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000289361,biomaRt,SignalP-noTM;chr6:26405564-26405910
+ENST00000297268,1,20,chr7,+,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000297268,biomaRt,SignalP-noTM;chr7:94395032-94395091
+ENST00000398006,1,18,chr11,-,SignalP-TM,SignalP-TM,SignalP-TM,signalp,ENSP00000381090,biomaRt,SignalP-TM;chr11:111860547-111857603
+ENST00000414912,1,29,chr6,+,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000406667,biomaRt,SignalP-noTM;chr6:26405564-26405910
+ENST00000425234,1,29,chr6,+,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000396684,biomaRt,SignalP-noTM;chr6:26405564-26405910
+ENST00000476549,1,29,chr6,+,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000420010,biomaRt,SignalP-noTM;chr6:26405564-26405910
+ENST00000531154,1,18,chr11,-,SignalP-TM,SignalP-TM,SignalP-TM,signalp,ENSP00000435517,biomaRt,SignalP-TM;chr11:111860547-111857603
+ENST00000532425,1,17,chr11,-,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000432442,biomaRt,SignalP-noTM;chr11:111838249-111838299
+ENST00000587303,1,29,chr19,-,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000467537,biomaRt,SignalP-noTM;chr19:5286050-5286136
+ENST00000588012,1,29,chr19,-,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000465443,biomaRt,SignalP-noTM;chr19:5286050-5286136
+ENST00000590509,1,29,chr19,-,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000465185,biomaRt,SignalP-noTM;chr19:5286050-5286136
+ENST00000592099,1,29,chr19,-,SignalP-noTM,SignalP-noTM,SignalP-noTM,signalp,ENSP00000467398,biomaRt,SignalP-noTM;chr19:5286050-5286136

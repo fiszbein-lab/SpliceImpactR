@@ -1,0 +1,65 @@
+Package: SpliceImpactR
+Type: Package
+Title: An R package to identify functional impacts due to alternative RNA 
+    processing events 
+Version: 0.99.0
+Authors@R: c(person(given="Zachary", family="Wakefield",
+    email = "zachpw@bu.edu",
+    role = c("cre", "aut"),
+    comment = c(ORCID = "0000-0002-9104-0934")),
+    person(given="Ana", family="Fiszbein",
+    email = "anafisz@bu.edu",
+    role = c("aut")))
+Description: Works by taking in processed data from the HIT Index and/or rMATS
+    and identifying how differentially used alternative RNA processing events 
+    lead to changes in protein function through various means. Primarily this 
+    is done through protein similarity, functional protein domain analysis, and 
+    domain-domain interaction changes. Notably, we both identify alterantive 
+    RNA processing event 'swaps' across condition and are able to perform 
+    holistic analyses regarding the impact of different RNA processing events. 
+License: GPL-3
+Encoding: UTF-8
+Imports:
+    data.table,
+    BiocFileCache,
+    BiocParallel,
+    Biostrings,
+    GenomicRanges,
+    biomaRt,
+    IRanges,
+    PFAM.db,
+    dplyr,
+    ggplot2,
+    ggpubr,
+    patchwork,
+    pwalign,
+    rtracklayer,
+    scales,
+    stats,
+    tidyr,
+    tools,
+    utils,
+    magrittr,
+    methods,
+    ComplexUpset,
+    S4Vectors,
+    methods
+RoxygenNote: 7.3.2
+biocViews: AlternativeSplicing, DifferentialSplicing, StatisticalMethod, 
+    Alignment
+Suggests: 
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    cowplot,
+    stringr,
+    readr,
+    tibble,
+    BiocStyle,
+    clusterProfiler,
+    AnnotationDbi,
+    msigdbr,
+    org.Hs.eg.db,
+    org.Mm.eg.db
+VignetteBuilder: knitr
+Config/testthat/edition: 3

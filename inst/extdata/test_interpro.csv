@@ -1,0 +1,936 @@
+ensembl_transcript_id,start,stop,chr,strand,feature_id,clean_name,alt_name,database,ensembl_peptide_id,method,name
+ENST00000163416,1,724,chr14,+,IPR019177,Golgin subfamily A member 5,Golgin_subfamily_A_member_5,interpro,ENSP00000163416,biomaRt,Golgin subfamily A member 5;chr14:92797438-92839422
+ENST00000221283,1,591,chr19,+,IPR001619,Sec1-like protein,Sec1-like,interpro,ENSP00000221283,biomaRt,Sec1-like protein;chr19:7637150-7647801
+ENST00000221283,138,578,chr19,+,IPR027482,"Sec1-like, domain 2",Sec1-like_dom2,interpro,ENSP00000221283,biomaRt,"Sec1-like, domain 2;chr19:7640986-7647762"
+ENST00000221283,6,585,chr19,+,IPR036045,Sec1-like superfamily,Sec1-like_sf,interpro,ENSP00000221283,biomaRt,Sec1-like superfamily;chr19:7637165-7647783
+ENST00000221283,246,358,chr19,+,IPR043127,"Sec1-like, domain 3a",Sec-1-like_dom3a,interpro,ENSP00000221283,biomaRt,"Sec1-like, domain 3a;chr19:7642275-7643212"
+ENST00000221283,1,132,chr19,+,IPR043154,"Sec1-like, domain 1",Sec-1-like_dom1,interpro,ENSP00000221283,biomaRt,"Sec1-like, domain 1;chr19:7637150-7640970"
+ENST00000226328,95,227,chr4,+,IPR004012,RUN domain,Run_dom,interpro,ENSP00000226328,biomaRt,RUN domain;chr4:70762623-70768646
+ENST00000226328,62,237,chr4,+,IPR037213,RUN domain superfamily,Run_dom_sf,interpro,ENSP00000226328,biomaRt,RUN domain superfamily;chr4:70762524-70773525
+ENST00000226328,68,223,chr4,+,IPR047334,"RUN and FYVE domain-containing protein 3, RUN domain",RUN_RUFY3,interpro,ENSP00000226328,biomaRt,"RUN and FYVE domain-containing protein 3, RUN domain;chr4:70762542-70768634"
+ENST00000226328,15,462,chr4,+,IPR047335,RUN and FYVE domain-containing protein 1-3,RUFY1-3,interpro,ENSP00000226328,biomaRt,RUN and FYVE domain-containing protein 1-3;chr4:70722616-70791273
+ENST00000244519,322,518,chr6,+,IPR001870,B30.2/SPRY domain,B30.2/SPRY,interpro,ENSP00000244519,biomaRt,B30.2/SPRY domain;chr6:26448754-26452210
+ENST00000244519,37,144,chr6,+,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000244519,biomaRt,Immunoglobulin domain subtype;chr6:26443980-26444303
+ENST00000244519,392,515,chr6,+,IPR003877,SPRY domain,SPRY_dom,interpro,ENSP00000244519,biomaRt,SPRY domain;chr6:26451830-26452201
+ENST00000244519,338,372,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000244519,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26450127-26451772"
+ENST00000244519,377,401,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000244519,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26451785-26451859"
+ENST00000244519,407,420,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000244519,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26451875-26451916"
+ENST00000244519,452,476,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000244519,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26452010-26452084"
+ENST00000244519,483,501,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000244519,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26452103-26452159"
+ENST00000244519,339,391,chr6,+,IPR006574,SPRY-associated,PRY,interpro,ENSP00000244519,biomaRt,SPRY-associated;chr6:26450130-26451829
+ENST00000244519,26,139,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000244519,biomaRt,Immunoglobulin-like domain;chr6:26443650-26444288
+ENST00000244519,164,236,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000244519,biomaRt,Immunoglobulin-like domain;chr6:26445760-26445978
+ENST00000244519,38,143,chr6,+,IPR013106,Immunoglobulin V-set domain,Ig_V-set,interpro,ENSP00000244519,biomaRt,Immunoglobulin V-set domain;chr6:26443983-26444300
+ENST00000244519,332,513,chr6,+,IPR013320,Concanavalin A-like lectin/glucanase domain superfamily,ConA-like_dom_sf,interpro,ENSP00000244519,biomaRt,Concanavalin A-like lectin/glucanase domain superfamily;chr6:26450109-26452195
+ENST00000244519,28,145,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000244519,biomaRt,Immunoglobulin-like fold;chr6:26443656-26445705
+ENST00000244519,146,248,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000244519,biomaRt,Immunoglobulin-like fold;chr6:26445706-26448276
+ENST00000244519,31,143,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000244519,biomaRt,Immunoglobulin-like domain superfamily;chr6:26443962-26444300
+ENST00000244519,156,236,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000244519,biomaRt,Immunoglobulin-like domain superfamily;chr6:26445736-26445978
+ENST00000244519,337,513,chr6,+,IPR037954,"Butyrophilin subfamily 3, PRY/SPRY domain",SPRY_PRY_BTN3,interpro,ENSP00000244519,biomaRt,"Butyrophilin subfamily 3, PRY/SPRY domain;chr6:26450124-26452195"
+ENST00000244519,326,515,chr6,+,IPR043136,B30.2/SPRY domain superfamily,B30.2/SPRY_sf,interpro,ENSP00000244519,biomaRt,B30.2/SPRY domain superfamily;chr6:26449673-26452201
+ENST00000244519,15,358,chr6,+,IPR050504,Immunoglobulin superfamily BTN/MOG domain-containing protein,IgSF_BTN/MOG,interpro,ENSP00000244519,biomaRt,Immunoglobulin superfamily BTN/MOG domain-containing protein;chr6:26443617-26451730
+ENST00000244519,146,232,chr6,+,IPR053896,"Butyrophilin subfamily 3 member A2-like, Ig-C domain",BTN3A2-like_Ig-C,interpro,ENSP00000244519,biomaRt,"Butyrophilin subfamily 3 member A2-like, Ig-C domain;chr6:26445706-26445966"
+ENST00000253925,875,944,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000253925,biomaRt,Sterile alpha motif domain;chr11:70362135-70362455
+ENST00000253925,960,1027,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000253925,biomaRt,Sterile alpha motif domain;chr11:70372227-70372516
+ENST00000253925,1048,1120,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000253925,biomaRt,Sterile alpha motif domain;chr11:70374920-70376576
+ENST00000253925,842,1040,chr11,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000253925,biomaRt,Sterile alpha motif/pointed domain superfamily;chr11:70356196-70372555
+ENST00000253925,1041,1136,chr11,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000253925,biomaRt,Sterile alpha motif/pointed domain superfamily;chr11:70372556-70378053
+ENST00000253925,40,1149,chr11,+,IPR029515,"LAR-interacting protein, Liprin",Liprin,interpro,ENSP00000253925,biomaRt,"LAR-interacting protein, Liprin;chr11:70272290-70378092"
+ENST00000253925,875,945,chr11,+,IPR037620,"Liprin-alpha, SAM domain repeat 1",Liprin-alpha_SAM_rpt_1,interpro,ENSP00000253925,biomaRt,"Liprin-alpha, SAM domain repeat 1;chr11:70362135-70362458"
+ENST00000253925,962,1027,chr11,+,IPR037621,"Liprin-alpha, SAM domain repeat 2",Liprin-alpha_SAM_rpt_2,interpro,ENSP00000253925,biomaRt,"Liprin-alpha, SAM domain repeat 2;chr11:70372233-70372516"
+ENST00000253925,1047,1118,chr11,+,IPR037622,"Liprin-alpha, SAM domain repeat 3",Liprin-alpha_SAM_rpt_3,interpro,ENSP00000253925,biomaRt,"Liprin-alpha, SAM domain repeat 3;chr11:70372574-70376570"
+ENST00000256658,11,522,chr1,-,IPR002553,"Clathrin/coatomer adaptor, adaptin-like, N-terminal",Clathrin/coatomer_adapt-like_N,interpro,ENSP00000256658,biomaRt,"Clathrin/coatomer adaptor, adaptin-like, N-terminal;chr1:113904635-113895812"
+ENST00000256658,6,583,chr1,-,IPR011989,Armadillo-like helical,ARM-like,interpro,ENSP00000256658,biomaRt,Armadillo-like helical;chr1:113904620-113895995
+ENST00000256658,602,739,chr1,-,IPR012295,TBP domain superfamily,TBP_dom_sf,interpro,ENSP00000256658,biomaRt,TBP domain superfamily;chr1:113895079-113895492
+ENST00000256658,620,732,chr1,-,IPR015151,"Beta-adaptin appendage, C-terminal subdomain",B-adaptin_app_sub_C,interpro,ENSP00000256658,biomaRt,"Beta-adaptin appendage, C-terminal subdomain;chr1:113895133-113895471"
+ENST00000256658,8,572,chr1,-,IPR016024,Armadillo-type fold,ARM-type_fold,interpro,ENSP00000256658,biomaRt,Armadillo-type fold;chr1:113904626-113895962
+ENST00000256658,3,736,chr1,-,IPR016342,AP-1/2/4 complex subunit beta,AP_complex_bsu_1_2_4,interpro,ENSP00000256658,biomaRt,AP-1/2/4 complex subunit beta;chr1:113904611-113895483
+ENST00000256658,11,592,chr1,-,IPR026739,AP complex subunit beta,AP_beta,interpro,ENSP00000256658,biomaRt,AP complex subunit beta;chr1:113904635-113896022
+ENST00000262376,117,168,chr16,+,IPR014840,Hpc2-related domain,HRD,interpro,ENSP00000262376,biomaRt,Hpc2-related domain;chr16:4858580-4859096
+ENST00000262376,353,573,chr16,+,IPR026947,Ubinuclein middle domain,UBN_middle_dom,interpro,ENSP00000262376,biomaRt,Ubinuclein middle domain;chr16:4861049-4872896
+ENST00000263805,1520,1611,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000263805,biomaRt,WD40 repeat;chr15:42437258-42428038
+ENST00000263805,1644,1686,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000263805,biomaRt,WD40 repeat;chr15:42424834-42424962
+ENST00000263805,1689,1726,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000263805,biomaRt,WD40 repeat;chr15:42424969-42424054
+ENST00000263805,1729,1766,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000263805,biomaRt,WD40 repeat;chr15:42422501-42422614
+ENST00000263805,1769,1806,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000263805,biomaRt,WD40 repeat;chr15:42421917-42421102
+ENST00000263805,20,44,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000263805,biomaRt,Zinc finger C2H2-type;chr15:42457015-42457089
+ENST00000263805,1813,1838,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000263805,biomaRt,Zinc finger C2H2-type;chr15:42421121-42417870
+ENST00000263805,1846,1874,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000263805,biomaRt,Zinc finger C2H2-type;chr15:42417892-42417333
+ENST00000263805,1455,1619,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000263805,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42439701-42428062
+ENST00000263805,1620,1853,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000263805,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42428063-42417915
+ENST00000263805,1525,1814,chr15,-,IPR036322,WD40-repeat-containing domain superfamily,WD40_repeat_dom_sf,interpro,ENSP00000263805,biomaRt,WD40-repeat-containing domain superfamily;chr15:42437273-42421126
+ENST00000263805,16,1883,chr15,-,IPR042622,Zinc finger protein 106,Znf106,interpro,ENSP00000263805,biomaRt,Zinc finger protein 106;chr15:42457003-42417360
+ENST00000265100,1,144,chr5,+,IPR005756,"Large ribosomal subunit protein uL24, eukaryotic/archaeal",Ribosomal_uL24_euk/arc,interpro,ENSP00000265100,biomaRt,"Large ribosomal subunit protein uL24, eukaryotic/archaeal;chr5:172959874-172969535"
+ENST00000265100,48,83,chr5,+,IPR005824,KOW,KOW,interpro,ENSP00000265100,biomaRt,KOW;chr5:172960015-172968539
+ENST00000265100,52,70,chr5,+,IPR005825,"Large ribosomal subunit protein uL24, conserved site",Ribosomal_uL24_CS,interpro,ENSP00000265100,biomaRt,"Large ribosomal subunit protein uL24, conserved site;chr5:172960027-172968500"
+ENST00000265100,8,125,chr5,+,IPR008991,Translation protein SH3-like domain superfamily,Translation_prot_SH3-like_sf,interpro,ENSP00000265100,biomaRt,Translation protein SH3-like domain superfamily;chr5:172959895-172969478
+ENST00000265100,1,145,chr5,+,IPR014722,"Large ribosomal subunit protein uL2, domain 2",Rib_uL2_dom2,interpro,ENSP00000265100,biomaRt,"Large ribosomal subunit protein uL2, domain 2;chr5:172959874-172969538"
+ENST00000265100,52,106,chr5,+,IPR041988,"Large ribosomal subunit protein uL24, KOW domain",Ribosomal_uL24_KOW,interpro,ENSP00000265100,biomaRt,"Large ribosomal subunit protein uL24, KOW domain;chr5:172960027-172969421"
+ENST00000266077,200,230,chr20,+,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000266077,biomaRt,Zinc finger C2H2-type;chr20:63742148-63742345
+ENST00000266077,342,387,chr20,+,IPR052253,CR1/CR2 motif-containing transcription regulator,CR1/CR2-DNA-binding_regulator,interpro,ENSP00000266077,biomaRt,CR1/CR2 motif-containing transcription regulator;chr20:63742762-63742987
+ENST00000281701,297,436,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000281701,biomaRt,AAA+ ATPase domain;chr1:224303786-224294394
+ENST00000281701,614,750,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000281701,biomaRt,AAA+ ATPase domain;chr1:224286071-224250279
+ENST00000281701,301,432,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000281701,biomaRt,"ATPase, AAA-type, core;chr1:224303798-224294382"
+ENST00000281701,618,747,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000281701,biomaRt,"ATPase, AAA-type, core;chr1:224286083-224250270"
+ENST00000281701,404,422,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000281701,biomaRt,"ATPase, AAA-type, conserved site;chr1:224294296-224294352"
+ENST00000281701,718,736,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000281701,biomaRt,"ATPase, AAA-type, conserved site;chr1:224268103-224250237"
+ENST00000281701,244,488,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000281701,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224305148-224289622
+ENST00000281701,572,850,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000281701,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224287913-224227652
+ENST00000281701,2,71,chr1,-,IPR031996,"NVL2, nucleolin binding domain",NVL2_nucleolin-bd,interpro,ENSP00000281701,biomaRt,"NVL2, nucleolin binding domain;chr1:224330074-224317722"
+ENST00000281701,1,74,chr1,-,IPR038100,"NVL2, N-terminal domain superfamily",NLV2_N_sf,interpro,ENSP00000281701,biomaRt,"NVL2, N-terminal domain superfamily;chr1:224330071-224317731"
+ENST00000281701,457,495,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000281701,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224289527-224289643"
+ENST00000281701,773,811,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000281701,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224236533-224233267"
+ENST00000281701,144,854,chr1,-,IPR050168,AAA ATPase domain-containing protein,AAA_ATPase_domain,interpro,ENSP00000281701,biomaRt,AAA ATPase domain-containing protein;chr1:224308078-224227664
+ENST00000289361,322,513,chr6,+,IPR001870,B30.2/SPRY domain,B30.2/SPRY,interpro,ENSP00000289361,biomaRt,B30.2/SPRY domain;chr6:26410032-26413689
+ENST00000289361,37,144,chr6,+,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000289361,biomaRt,Immunoglobulin domain subtype;chr6:26405932-26406255
+ENST00000289361,392,513,chr6,+,IPR003877,SPRY domain,SPRY_dom,interpro,ENSP00000289361,biomaRt,SPRY domain;chr6:26413324-26413689
+ENST00000289361,338,372,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000289361,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26411575-26413266"
+ENST00000289361,377,401,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000289361,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413279-26413353"
+ENST00000289361,407,420,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000289361,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413369-26413410"
+ENST00000289361,451,475,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000289361,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413501-26413575"
+ENST00000289361,482,500,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000289361,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413594-26413650"
+ENST00000289361,339,391,chr6,+,IPR006574,SPRY-associated,PRY,interpro,ENSP00000289361,biomaRt,SPRY-associated;chr6:26411578-26413323
+ENST00000289361,26,139,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000289361,biomaRt,Immunoglobulin-like domain;chr6:26405639-26406240
+ENST00000289361,164,236,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000289361,biomaRt,Immunoglobulin-like domain;chr6:26407727-26407945
+ENST00000289361,38,143,chr6,+,IPR013106,Immunoglobulin V-set domain,Ig_V-set,interpro,ENSP00000289361,biomaRt,Immunoglobulin V-set domain;chr6:26405935-26406252
+ENST00000289361,332,512,chr6,+,IPR013320,Concanavalin A-like lectin/glucanase domain superfamily,ConA-like_dom_sf,interpro,ENSP00000289361,biomaRt,Concanavalin A-like lectin/glucanase domain superfamily;chr6:26411557-26413686
+ENST00000289361,28,145,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000289361,biomaRt,Immunoglobulin-like fold;chr6:26405645-26407672
+ENST00000289361,146,249,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000289361,biomaRt,Immunoglobulin-like fold;chr6:26407673-26409564
+ENST00000289361,31,143,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000289361,biomaRt,Immunoglobulin-like domain superfamily;chr6:26405914-26406252
+ENST00000289361,159,234,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000289361,biomaRt,Immunoglobulin-like domain superfamily;chr6:26407712-26407939
+ENST00000289361,337,512,chr6,+,IPR037954,"Butyrophilin subfamily 3, PRY/SPRY domain",SPRY_PRY_BTN3,interpro,ENSP00000289361,biomaRt,"Butyrophilin subfamily 3, PRY/SPRY domain;chr6:26411572-26413686"
+ENST00000289361,326,513,chr6,+,IPR043136,B30.2/SPRY domain superfamily,B30.2/SPRY_sf,interpro,ENSP00000289361,biomaRt,B30.2/SPRY domain superfamily;chr6:26411120-26413689
+ENST00000289361,14,358,chr6,+,IPR050504,Immunoglobulin superfamily BTN/MOG domain-containing protein,IgSF_BTN/MOG,interpro,ENSP00000289361,biomaRt,Immunoglobulin superfamily BTN/MOG domain-containing protein;chr6:26405603-26413224
+ENST00000289361,146,232,chr6,+,IPR053896,"Butyrophilin subfamily 3 member A2-like, Ig-C domain",BTN3A2-like_Ig-C,interpro,ENSP00000289361,biomaRt,"Butyrophilin subfamily 3 member A2-like, Ig-C domain;chr6:26407673-26407933"
+ENST00000297268,1132,1366,chr7,+,IPR000885,"Fibrillar collagen, C-terminal",Fib_collagen_C,interpro,ENSP00000297268,biomaRt,"Fibrillar collagen, C-terminal;chr7:94427753-94430390"
+ENST00000297268,32,75,chr7,+,IPR008160,Collagen triple helix repeat,Collagen,interpro,ENSP00000297268,biomaRt,Collagen triple helix repeat;chr7:94398394-94400288
+ENST00000297268,91,256,chr7,+,IPR008160,Collagen triple helix repeat,Collagen,interpro,ENSP00000297268,biomaRt,Collagen triple helix repeat;chr7:94401612-94408799
+ENST00000297268,469,574,chr7,+,IPR008160,Collagen triple helix repeat,Collagen,interpro,ENSP00000297268,biomaRt,Collagen triple helix repeat;chr7:94412584-94415228
+ENST00000297268,1045,1102,chr7,+,IPR008160,Collagen triple helix repeat,Collagen,interpro,ENSP00000297268,biomaRt,Collagen triple helix repeat;chr7:94427035-94427665
+ENST00000297268,454,916,chr7,+,IPR050149,Collagen superfamily,Collagen_superfamily,interpro,ENSP00000297268,biomaRt,Collagen superfamily;chr7:94412077-94425191
+ENST00000303657,199,274,chr19,-,IPR003150,DNA-binding RFX-type winged-helix domain,DNA-bd_RFX,interpro,ENSP00000306335,biomaRt,DNA-binding RFX-type winged-helix domain;chr19:6026235-6013028
+ENST00000303657,4,154,chr19,-,IPR007668,RFX1 transcription activation region,RFX1_trans_act,interpro,ENSP00000306335,biomaRt,RFX1 transcription activation region;chr19:6047416-6040181
+ENST00000303657,199,273,chr19,-,IPR036388,Winged helix-like DNA-binding domain superfamily,WH-like_DNA-bd_sf,interpro,ENSP00000306335,biomaRt,Winged helix-like DNA-binding domain superfamily;chr19:6026235-6013025
+ENST00000303657,200,273,chr19,-,IPR036390,Winged helix DNA-binding domain superfamily,WH_DNA-bd_sf,interpro,ENSP00000306335,biomaRt,Winged helix DNA-binding domain superfamily;chr19:6016090-6013025
+ENST00000303657,62,675,chr19,-,IPR039779,RFX-like DNA-binding protein,RFX-like,interpro,ENSP00000306335,biomaRt,RFX-like DNA-binding protein;chr19:6042047-5995612
+ENST00000315082,6,169,chr16,+,IPR001806,Small GTPase,Small_GTPase,interpro,ENSP00000321971,biomaRt,Small GTPase;chr16:668215-670524
+ENST00000315082,304,339,chr16,+,IPR002048,EF-hand domain,EF_hand_dom,interpro,ENSP00000321971,biomaRt,EF-hand domain;chr16:671737-671922
+ENST00000315082,168,365,chr16,+,IPR011992,EF-hand domain pair,EF-hand-dom_pair,interpro,ENSP00000321971,biomaRt,EF-hand domain pair;chr16:670519-672000
+ENST00000315082,341,411,chr16,+,IPR013566,"Mitochondrial Rho GTPase 1/3, EF hand associated, type-1",EF_hand_assoc_1,interpro,ENSP00000321971,biomaRt,"Mitochondrial Rho GTPase 1/3, EF hand associated, type-1;chr16:671926-672291"
+ENST00000315082,220,305,chr16,+,IPR013567,"EF hand associated, type-2",EF_hand_assoc_2,interpro,ENSP00000321971,biomaRt,"EF hand associated, type-2;chr16:670910-671742"
+ENST00000315082,317,329,chr16,+,IPR018247,"EF-Hand 1, calcium-binding site",EF_Hand_1_Ca_BS,interpro,ENSP00000321971,biomaRt,"EF-Hand 1, calcium-binding site;chr16:671776-671892"
+ENST00000315082,2,168,chr16,+,IPR020860,MIRO domain,MIRO_dom,interpro,ENSP00000321971,biomaRt,MIRO domain;chr16:668203-670521
+ENST00000315082,414,576,chr16,+,IPR020860,MIRO domain,MIRO_dom,interpro,ENSP00000321971,biomaRt,MIRO domain;chr16:672298-673128
+ENST00000315082,1,618,chr16,+,IPR021181,Mitochondrial Rho GTPase,Miro,interpro,ENSP00000321971,biomaRt,Mitochondrial Rho GTPase;chr16:668200-673603
+ENST00000315082,3,170,chr16,+,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000321971,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr16:668206-670527
+ENST00000315082,413,580,chr16,+,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000321971,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr16:672295-673489
+ENST00000315082,136,443,chr16,+,IPR052266,Mitochondrial Rho GTPase/EF-hand domain-containing protein,Miro-EF-hand_domain,interpro,ENSP00000321971,biomaRt,Mitochondrial Rho GTPase/EF-hand domain-containing protein;chr16:670325-672491
+ENST00000318130,59,497,chr1,-,IPR001382,Glycoside hydrolase family 47,Glyco_hydro_47,interpro,ENSP00000318147,biomaRt,Glycoside hydrolase family 47;chr1:184749563-184712553
+ENST00000318130,685,773,chr1,-,IPR003137,PA domain,PA_domain,interpro,ENSP00000318147,biomaRt,PA domain;chr1:184706658-184702926
+ENST00000318130,41,510,chr1,-,IPR012341,Six-hairpin glycosidase-like superfamily,6hp_glycosidase-like_sf,interpro,ENSP00000318147,biomaRt,Six-hairpin glycosidase-like superfamily;chr1:184754609-184712592
+ENST00000318130,49,499,chr1,-,IPR036026,Seven-hairpin glycosidases,Seven-hairpin_glycosidases,interpro,ENSP00000318147,biomaRt,Seven-hairpin glycosidases;chr1:184754633-184712559
+ENST00000318130,664,789,chr1,-,IPR037322,"EDEM3, PA domain",EDEM3_PA,interpro,ENSP00000318147,biomaRt,"EDEM3, PA domain;chr1:184708297-184702974"
+ENST00000318130,25,800,chr1,-,IPR044674,ER degradation-enhancing alpha-mannosidase-like protein 1/2/3,EDEM1/2/3,interpro,ENSP00000318147,biomaRt,ER degradation-enhancing alpha-mannosidase-like protein 1/2/3;chr1:184754561-184694076
+ENST00000318130,701,741,chr1,-,IPR046450,PA domain superfamily,PA_dom_sf,interpro,ENSP00000318147,biomaRt,PA domain superfamily;chr1:184706706-184702830
+ENST00000337907,501,560,chr1,-,IPR000679,"Zinc finger, GATA-type",Znf_GATA,interpro,ENSP00000338629,biomaRt,"Zinc finger, GATA-type;chr1:8364799-8364195"
+ENST00000337907,284,387,chr1,-,IPR000949,ELM2 domain,ELM2_dom,interpro,ENSP00000338629,biomaRt,ELM2 domain;chr1:8508646-8465981
+ENST00000337907,392,441,chr1,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000338629,biomaRt,SANT/Myb domain;chr1:8465994-8365850
+ENST00000337907,103,283,chr1,-,IPR001025,Bromo adjacent homology (BAH) domain,BAH_dom,interpro,ENSP00000338629,biomaRt,Bromo adjacent homology (BAH) domain;chr1:8656279-8508645
+ENST00000337907,568,1565,chr1,-,IPR002951,Atrophin-like,Atrophin-like,interpro,ENSP00000338629,biomaRt,Atrophin-like;chr1:8364217-8355117
+ENST00000337907,380,441,chr1,-,IPR009057,Homedomain-like superfamily,Homeodomain-like_sf,interpro,ENSP00000338629,biomaRt,Homedomain-like superfamily;chr1:8465958-8365850
+ENST00000337907,391,443,chr1,-,IPR017884,SANT domain,SANT_dom,interpro,ENSP00000338629,biomaRt,SANT domain;chr1:8465991-8365856
+ENST00000337907,65,283,chr1,-,IPR043151,Bromo adjacent homology (BAH) domain superfamily,BAH_sf,interpro,ENSP00000338629,biomaRt,Bromo adjacent homology (BAH) domain superfamily;chr1:8656165-8508645
+ENST00000338608,1,424,chr11,+,IPR031410,Stabilizer of axonemal microtubules 4,SAXO4,interpro,ENSP00000344140,biomaRt,Stabilizer of axonemal microtubules 4;chr11:61481810-61490564
+ENST00000339269,424,499,chr20,-,IPR002792,TRAM domain,TRAM_dom,interpro,ENSP00000341840,biomaRt,TRAM domain;chr20:33366967-33359090
+ENST00000339269,248,410,chr20,-,IPR006638,"Elp3/MiaA/NifB-like, radical SAM core domain",Elp3/MiaA/NifB-like_rSAM,interpro,ENSP00000341840,biomaRt,"Elp3/MiaA/NifB-like, radical SAM core domain;chr20:33387520-33366927"
+ENST00000339269,168,421,chr20,-,IPR007197,Radical SAM,rSAM,interpro,ENSP00000341840,biomaRt,Radical SAM;chr20:33392200-33366960
+ENST00000339269,100,220,chr20,-,IPR013848,"Methylthiotransferase, N-terminal",Methylthiotransferase_N,interpro,ENSP00000341840,biomaRt,"Methylthiotransferase, N-terminal;chr20:33397058-33387438"
+ENST00000339269,252,272,chr20,-,IPR020612,"Methylthiotransferase, conserved site",Methylthiotransferase_CS,interpro,ENSP00000341840,biomaRt,"Methylthiotransferase, conserved site;chr20:33387532-33385710"
+ENST00000339269,246,289,chr20,-,IPR023404,"Radical SAM, alpha/beta horseshoe",rSAM_horseshoe,interpro,ENSP00000341840,biomaRt,"Radical SAM, alpha/beta horseshoe;chr20:33387514-33385761"
+ENST00000339269,290,427,chr20,-,IPR023404,"Radical SAM, alpha/beta horseshoe",rSAM_horseshoe,interpro,ENSP00000341840,biomaRt,"Radical SAM, alpha/beta horseshoe;chr20:33385762-33366978"
+ENST00000339269,100,234,chr20,-,IPR038135,"Methylthiotransferase, N-terminal domain superfamily",Methylthiotransferase_N_sf,interpro,ENSP00000341840,biomaRt,"Methylthiotransferase, N-terminal domain superfamily;chr20:33397058-33387480"
+ENST00000340871,81,247,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000341362,biomaRt,AAA+ ATPase domain;chr1:224303786-224294394
+ENST00000340871,425,561,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000341362,biomaRt,AAA+ ATPase domain;chr1:224286071-224250279
+ENST00000340871,85,243,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000341362,biomaRt,"ATPase, AAA-type, core;chr1:224303798-224294382"
+ENST00000340871,429,558,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000341362,biomaRt,"ATPase, AAA-type, core;chr1:224286083-224250270"
+ENST00000340871,215,233,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000341362,biomaRt,"ATPase, AAA-type, conserved site;chr1:224294296-224294352"
+ENST00000340871,529,547,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000341362,biomaRt,"ATPase, AAA-type, conserved site;chr1:224268103-224250237"
+ENST00000340871,28,299,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000341362,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224305115-224289622
+ENST00000340871,383,661,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000341362,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224287913-224227652
+ENST00000340871,268,306,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000341362,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224289527-224289643"
+ENST00000340871,584,622,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000341362,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224236533-224233267"
+ENST00000340871,131,665,chr1,-,IPR050168,AAA ATPase domain-containing protein,AAA_ATPase_domain,interpro,ENSP00000341362,biomaRt,AAA ATPase domain-containing protein;chr1:224301769-224227664
+ENST00000340934,4,411,chr1,+,IPR004328,BRO1 domain,BRO1_dom,interpro,ENSP00000343742,biomaRt,BRO1 domain;chr1:222715709-222732711
+ENST00000340934,1,374,chr1,+,IPR038499,BRO1 domain superfamily,BRO1_sf,interpro,ENSP00000343742,biomaRt,BRO1 domain superfamily;chr1:222715700-222731489
+ENST00000340934,2,378,chr1,+,IPR038898,BRO1 domain-containing protein BROX,BROX,interpro,ENSP00000343742,biomaRt,BRO1 domain-containing protein BROX;chr1:222715703-222731501
+ENST00000342105,2,243,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000341875,biomaRt,cAMP response element binding (CREB) protein;chr10:35178889-35211794
+ENST00000342105,1,59,chr10,+,IPR003102,"Cyclic AMP-responsive element-binding protein 1-like, pKID",CREB1-like_pKID,interpro,ENSP00000341875,biomaRt,"Cyclic AMP-responsive element-binding protein 1-like, pKID;chr10:35175703-35179209"
+ENST00000342105,184,241,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000341875,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000342105,188,238,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000341875,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000344351,1,93,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000344365,biomaRt,cAMP response element binding (CREB) protein;chr10:35206909-35211389
+ENST00000344351,35,93,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000344365,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211389
+ENST00000344351,39,90,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000344365,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211380
+ENST00000345491,56,298,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000265372,biomaRt,cAMP response element binding (CREB) protein;chr10:35148489-35211794
+ENST00000345491,55,114,chr10,+,IPR003102,"Cyclic AMP-responsive element-binding protein 1-like, pKID",CREB1-like_pKID,interpro,ENSP00000265372,biomaRt,"Cyclic AMP-responsive element-binding protein 1-like, pKID;chr10:35148486-35179209"
+ENST00000345491,239,296,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000265372,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000345491,243,293,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000265372,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000346416,501,576,chr20,-,IPR002792,TRAM domain,TRAM_dom,interpro,ENSP00000217372,biomaRt,TRAM domain;chr20:33366967-33359090
+ENST00000346416,98,580,chr20,-,IPR005839,Methylthiotransferase,Methylthiotransferase,interpro,ENSP00000217372,biomaRt,Methylthiotransferase;chr20:33397052-33359102
+ENST00000346416,98,577,chr20,-,IPR006463,tRNA-2-methylthio-N(6)-dimethylallyladenosine synthase MiaB,MiaB_methiolase,interpro,ENSP00000217372,biomaRt,tRNA-2-methylthio-N(6)-dimethylallyladenosine synthase MiaB;chr20:33397052-33359093
+ENST00000346416,248,487,chr20,-,IPR006638,"Elp3/MiaA/NifB-like, radical SAM core domain",Elp3/MiaA/NifB-like_rSAM,interpro,ENSP00000217372,biomaRt,"Elp3/MiaA/NifB-like, radical SAM core domain;chr20:33387520-33366927"
+ENST00000346416,244,498,chr20,-,IPR007197,Radical SAM,rSAM,interpro,ENSP00000217372,biomaRt,Radical SAM;chr20:33387508-33366960
+ENST00000346416,100,220,chr20,-,IPR013848,"Methylthiotransferase, N-terminal",Methylthiotransferase_N,interpro,ENSP00000217372,biomaRt,"Methylthiotransferase, N-terminal;chr20:33397058-33387438"
+ENST00000346416,252,272,chr20,-,IPR020612,"Methylthiotransferase, conserved site",Methylthiotransferase_CS,interpro,ENSP00000217372,biomaRt,"Methylthiotransferase, conserved site;chr20:33387532-33385710"
+ENST00000346416,246,504,chr20,-,IPR023404,"Radical SAM, alpha/beta horseshoe",rSAM_horseshoe,interpro,ENSP00000217372,biomaRt,"Radical SAM, alpha/beta horseshoe;chr20:33387514-33366978"
+ENST00000346416,100,234,chr20,-,IPR038135,"Methylthiotransferase, N-terminal domain superfamily",Methylthiotransferase_N_sf,interpro,ENSP00000217372,biomaRt,"Methylthiotransferase, N-terminal domain superfamily;chr20:33397058-33387480"
+ENST00000348787,121,219,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000345384,biomaRt,cAMP response element binding (CREB) protein;chr10:35179276-35211794
+ENST00000348787,39,98,chr10,+,IPR003102,"Cyclic AMP-responsive element-binding protein 1-like, pKID",CREB1-like_pKID,interpro,ENSP00000345384,biomaRt,"Cyclic AMP-responsive element-binding protein 1-like, pKID;chr10:35148486-35179209"
+ENST00000348787,160,217,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000345384,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000348787,164,214,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000345384,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000352066,324,429,chr19,-,IPR007758,"Nucleoporin, NSP1-like, C-terminal",Nucleoporin_NSP1_C,interpro,ENSP00000305503,biomaRt,"Nucleoporin, NSP1-like, C-terminal;chr19:49909211-49909528"
+ENST00000352066,1,514,chr19,-,IPR026010,Nucleoporin NSP1/NUP62,NSP1/NUP62,interpro,ENSP00000305503,biomaRt,Nucleoporin NSP1/NUP62;chr19:49908242-49909783
+ENST00000354759,147,246,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000346804,biomaRt,cAMP response element binding (CREB) protein;chr10:35201480-35211389
+ENST00000354759,55,114,chr10,+,IPR003102,"Cyclic AMP-responsive element-binding protein 1-like, pKID",CREB1-like_pKID,interpro,ENSP00000346804,biomaRt,"Cyclic AMP-responsive element-binding protein 1-like, pKID;chr10:35148486-35179209"
+ENST00000354759,188,246,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000346804,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211389
+ENST00000354759,192,243,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000346804,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211380
+ENST00000356917,8,106,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000349387,biomaRt,cAMP response element binding (CREB) protein;chr10:35195211-35211389
+ENST00000356917,48,106,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000349387,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211389
+ENST00000356917,52,103,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000349387,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211380
+ENST00000357865,1,145,chr1,-,IPR000956,Stathmin family,Stathmin_fam,interpro,ENSP00000350531,biomaRt,Stathmin family;chr1:25904664-25901075
+ENST00000357865,40,49,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000350531,biomaRt,"Stathmin, conserved site;chr1:25903745-25903774"
+ENST00000357865,73,82,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000350531,biomaRt,"Stathmin, conserved site;chr1:25901521-25901550"
+ENST00000357865,5,140,chr1,-,IPR036002,Stathmin superfamily,Stathmin_sf,interpro,ENSP00000350531,biomaRt,Stathmin superfamily;chr1:25904676-25901060
+ENST00000359161,199,274,chr19,-,IPR003150,DNA-binding RFX-type winged-helix domain,DNA-bd_RFX,interpro,ENSP00000352076,biomaRt,DNA-binding RFX-type winged-helix domain;chr19:6026235-6013028
+ENST00000359161,4,154,chr19,-,IPR007668,RFX1 transcription activation region,RFX1_trans_act,interpro,ENSP00000352076,biomaRt,RFX1 transcription activation region;chr19:6047416-6040181
+ENST00000359161,199,273,chr19,-,IPR036388,Winged helix-like DNA-binding domain superfamily,WH-like_DNA-bd_sf,interpro,ENSP00000352076,biomaRt,Winged helix-like DNA-binding domain superfamily;chr19:6026235-6013025
+ENST00000359161,200,273,chr19,-,IPR036390,Winged helix DNA-binding domain superfamily,WH_DNA-bd_sf,interpro,ENSP00000352076,biomaRt,Winged helix DNA-binding domain superfamily;chr19:6016090-6013025
+ENST00000359161,62,675,chr19,-,IPR039779,RFX-like DNA-binding protein,RFX-like,interpro,ENSP00000352076,biomaRt,RFX-like DNA-binding protein;chr19:6042047-5995612
+ENST00000361232,273,469,chr6,+,IPR001870,B30.2/SPRY domain,B30.2/SPRY,interpro,ENSP00000355238,biomaRt,B30.2/SPRY domain;chr6:26448754-26452210
+ENST00000361232,343,466,chr6,+,IPR003877,SPRY domain,SPRY_dom,interpro,ENSP00000355238,biomaRt,SPRY domain;chr6:26451830-26452201
+ENST00000361232,289,323,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000355238,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26450127-26451772"
+ENST00000361232,328,352,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000355238,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26451785-26451859"
+ENST00000361232,358,371,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000355238,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26451875-26451916"
+ENST00000361232,403,427,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000355238,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26452010-26452084"
+ENST00000361232,434,452,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000355238,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26452103-26452159"
+ENST00000361232,290,342,chr6,+,IPR006574,SPRY-associated,PRY,interpro,ENSP00000355238,biomaRt,SPRY-associated;chr6:26450130-26451829
+ENST00000361232,1,97,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000355238,biomaRt,Immunoglobulin-like domain;chr6:26443998-26444288
+ENST00000361232,122,194,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000355238,biomaRt,Immunoglobulin-like domain;chr6:26445760-26445978
+ENST00000361232,2,101,chr6,+,IPR013106,Immunoglobulin V-set domain,Ig_V-set,interpro,ENSP00000355238,biomaRt,Immunoglobulin V-set domain;chr6:26444001-26444300
+ENST00000361232,283,464,chr6,+,IPR013320,Concanavalin A-like lectin/glucanase domain superfamily,ConA-like_dom_sf,interpro,ENSP00000355238,biomaRt,Concanavalin A-like lectin/glucanase domain superfamily;chr6:26450109-26452195
+ENST00000361232,1,103,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000355238,biomaRt,Immunoglobulin-like fold;chr6:26443998-26445705
+ENST00000361232,104,206,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000355238,biomaRt,Immunoglobulin-like fold;chr6:26445706-26448276
+ENST00000361232,114,194,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000355238,biomaRt,Immunoglobulin-like domain superfamily;chr6:26445736-26445978
+ENST00000361232,288,464,chr6,+,IPR037954,"Butyrophilin subfamily 3, PRY/SPRY domain",SPRY_PRY_BTN3,interpro,ENSP00000355238,biomaRt,"Butyrophilin subfamily 3, PRY/SPRY domain;chr6:26450124-26452195"
+ENST00000361232,277,466,chr6,+,IPR043136,B30.2/SPRY domain superfamily,B30.2/SPRY_sf,interpro,ENSP00000355238,biomaRt,B30.2/SPRY domain superfamily;chr6:26449673-26452201
+ENST00000361232,1,309,chr6,+,IPR050504,Immunoglobulin superfamily BTN/MOG domain-containing protein,IgSF_BTN/MOG,interpro,ENSP00000355238,biomaRt,Immunoglobulin superfamily BTN/MOG domain-containing protein;chr6:26443998-26451730
+ENST00000361232,104,190,chr6,+,IPR053896,"Butyrophilin subfamily 3 member A2-like, Ig-C domain",BTN3A2-like_Ig-C,interpro,ENSP00000355238,biomaRt,"Butyrophilin subfamily 3 member A2-like, Ig-C domain;chr6:26445706-26445966"
+ENST00000366212,2,54,chr11,+,IPR031410,Stabilizer of axonemal microtubules 4,SAXO4,interpro,ENSP00000439468,biomaRt,Stabilizer of axonemal microtubules 4;chr11:61489852-61490564
+ENST00000367512,59,497,chr1,-,IPR001382,Glycoside hydrolase family 47,Glyco_hydro_47,interpro,ENSP00000356482,biomaRt,Glycoside hydrolase family 47;chr1:184749563-184712553
+ENST00000367512,685,773,chr1,-,IPR003137,PA domain,PA_domain,interpro,ENSP00000356482,biomaRt,PA domain;chr1:184706658-184702926
+ENST00000367512,41,510,chr1,-,IPR012341,Six-hairpin glycosidase-like superfamily,6hp_glycosidase-like_sf,interpro,ENSP00000356482,biomaRt,Six-hairpin glycosidase-like superfamily;chr1:184754609-184712592
+ENST00000367512,49,499,chr1,-,IPR036026,Seven-hairpin glycosidases,Seven-hairpin_glycosidases,interpro,ENSP00000356482,biomaRt,Seven-hairpin glycosidases;chr1:184754633-184712559
+ENST00000367512,664,789,chr1,-,IPR037322,"EDEM3, PA domain",EDEM3_PA,interpro,ENSP00000356482,biomaRt,"EDEM3, PA domain;chr1:184708297-184702974"
+ENST00000367512,25,797,chr1,-,IPR044674,ER degradation-enhancing alpha-mannosidase-like protein 1/2/3,EDEM1/2/3,interpro,ENSP00000356482,biomaRt,ER degradation-enhancing alpha-mannosidase-like protein 1/2/3;chr1:184754561-184701498
+ENST00000367512,701,741,chr1,-,IPR046450,PA domain superfamily,PA_dom_sf,interpro,ENSP00000356482,biomaRt,PA domain superfamily;chr1:184706706-184702830
+ENST00000367549,636,809,chr1,+,IPR001650,"Helicase, C-terminal domain-like",Helicase_C-like,interpro,ENSP00000356520,biomaRt,"Helicase, C-terminal domain-like;chr1:182876140-182879325"
+ENST00000367549,506,515,chr1,+,IPR002464,"DNA/RNA helicase, ATP-dependent, DEAH-box type, conserved site",DNA/RNA_helicase_DEAH_CS,interpro,ENSP00000356520,biomaRt,"DNA/RNA helicase, ATP-dependent, DEAH-box type, conserved site;chr1:182867002-182867031"
+ENST00000367549,831,919,chr1,+,IPR007502,Helicase-associated domain,Helicase-assoc_dom,interpro,ENSP00000356520,biomaRt,Helicase-associated domain;chr1:182879389-182881396
+ENST00000367549,395,547,chr1,+,IPR011545,DEAD/DEAH box helicase domain,DEAD/DEAH_box_helicase_dom,interpro,ENSP00000356520,biomaRt,DEAD/DEAH box helicase domain;chr1:182860035-182872420
+ENST00000367549,993,1073,chr1,+,IPR011709,"DEAD-box helicase, OB fold",DEAD-box_helicase_OB_fold,interpro,ENSP00000356520,biomaRt,"DEAD-box helicase, OB fold;chr1:182883201-182883594"
+ENST00000367549,383,573,chr1,+,IPR014001,"Helicase superfamily 1/2, ATP-binding domain",Helicase_ATP-bd,interpro,ENSP00000356520,biomaRt,"Helicase superfamily 1/2, ATP-binding domain;chr1:182859999-182874858"
+ENST00000367549,3,71,chr1,+,IPR014720,Double-stranded RNA-binding domain,dsRBD_dom,interpro,ENSP00000356520,biomaRt,Double-stranded RNA-binding domain;chr1:182842573-182843395
+ENST00000367549,180,252,chr1,+,IPR014720,Double-stranded RNA-binding domain,dsRBD_dom,interpro,ENSP00000356520,biomaRt,Double-stranded RNA-binding domain;chr1:182854090-182858186
+ENST00000367549,339,933,chr1,+,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000356520,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:182858847-182881532
+ENST00000367549,178,252,chr1,+,IPR044446,"DHX9, second double-stranded RNA binding domain",DHX9_DSRM_2,interpro,ENSP00000356520,biomaRt,"DHX9, second double-stranded RNA binding domain;chr1:182854084-182858186"
+ENST00000367549,330,563,chr1,+,IPR044447,"DHX9, DEXH-box helicase domain",DHX9_DEXHc,interpro,ENSP00000356520,biomaRt,"DHX9, DEXH-box helicase domain;chr1:182858820-182872468"
+ENST00000367549,832,860,chr1,+,IPR048333,"Helicase associated domain (HA2), winged-helix domain",HA2_WH,interpro,ENSP00000356520,biomaRt,"Helicase associated domain (HA2), winged-helix domain;chr1:182879392-182880564"
+ENST00000369567,34,354,chr1,-,IPR002553,"Clathrin/coatomer adaptor, adaptin-like, N-terminal",Clathrin/coatomer_adapt-like_N,interpro,ENSP00000358580,biomaRt,"Clathrin/coatomer adaptor, adaptin-like, N-terminal;chr1:113904704-113895812"
+ENST00000369567,7,415,chr1,-,IPR011989,Armadillo-like helical,ARM-like,interpro,ENSP00000358580,biomaRt,Armadillo-like helical;chr1:113904623-113895995
+ENST00000369567,434,571,chr1,-,IPR012295,TBP domain superfamily,TBP_dom_sf,interpro,ENSP00000358580,biomaRt,TBP domain superfamily;chr1:113895079-113895492
+ENST00000369567,452,564,chr1,-,IPR015151,"Beta-adaptin appendage, C-terminal subdomain",B-adaptin_app_sub_C,interpro,ENSP00000358580,biomaRt,"Beta-adaptin appendage, C-terminal subdomain;chr1:113895133-113895471"
+ENST00000369567,37,404,chr1,-,IPR016024,Armadillo-type fold,ARM-type_fold,interpro,ENSP00000358580,biomaRt,Armadillo-type fold;chr1:113904713-113895962
+ENST00000369567,5,568,chr1,-,IPR016342,AP-1/2/4 complex subunit beta,AP_complex_bsu_1_2_4,interpro,ENSP00000358580,biomaRt,AP-1/2/4 complex subunit beta;chr1:113904617-113895483
+ENST00000369567,38,424,chr1,-,IPR026739,AP complex subunit beta,AP_beta,interpro,ENSP00000358580,biomaRt,AP complex subunit beta;chr1:113904716-113896022
+ENST00000369569,11,522,chr1,-,IPR002553,"Clathrin/coatomer adaptor, adaptin-like, N-terminal",Clathrin/coatomer_adapt-like_N,interpro,ENSP00000358582,biomaRt,"Clathrin/coatomer adaptor, adaptin-like, N-terminal;chr1:113904635-113895812"
+ENST00000369569,6,583,chr1,-,IPR011989,Armadillo-like helical,ARM-like,interpro,ENSP00000358582,biomaRt,Armadillo-like helical;chr1:113904620-113895995
+ENST00000369569,602,739,chr1,-,IPR012295,TBP domain superfamily,TBP_dom_sf,interpro,ENSP00000358582,biomaRt,TBP domain superfamily;chr1:113895079-113895492
+ENST00000369569,620,732,chr1,-,IPR015151,"Beta-adaptin appendage, C-terminal subdomain",B-adaptin_app_sub_C,interpro,ENSP00000358582,biomaRt,"Beta-adaptin appendage, C-terminal subdomain;chr1:113895133-113895471"
+ENST00000369569,8,572,chr1,-,IPR016024,Armadillo-type fold,ARM-type_fold,interpro,ENSP00000358582,biomaRt,Armadillo-type fold;chr1:113904626-113895962
+ENST00000369569,3,736,chr1,-,IPR016342,AP-1/2/4 complex subunit beta,AP_complex_bsu_1_2_4,interpro,ENSP00000358582,biomaRt,AP-1/2/4 complex subunit beta;chr1:113904611-113895483
+ENST00000369569,11,592,chr1,-,IPR026739,AP complex subunit beta,AP_beta,interpro,ENSP00000358582,biomaRt,AP complex subunit beta;chr1:113904635-113896022
+ENST00000369571,11,522,chr1,-,IPR002553,"Clathrin/coatomer adaptor, adaptin-like, N-terminal",Clathrin/coatomer_adapt-like_N,interpro,ENSP00000358584,biomaRt,"Clathrin/coatomer adaptor, adaptin-like, N-terminal;chr1:113904635-113895812"
+ENST00000369571,6,583,chr1,-,IPR011989,Armadillo-like helical,ARM-like,interpro,ENSP00000358584,biomaRt,Armadillo-like helical;chr1:113904620-113895995
+ENST00000369571,602,739,chr1,-,IPR012295,TBP domain superfamily,TBP_dom_sf,interpro,ENSP00000358584,biomaRt,TBP domain superfamily;chr1:113895079-113895492
+ENST00000369571,620,732,chr1,-,IPR015151,"Beta-adaptin appendage, C-terminal subdomain",B-adaptin_app_sub_C,interpro,ENSP00000358584,biomaRt,"Beta-adaptin appendage, C-terminal subdomain;chr1:113895133-113895471"
+ENST00000369571,8,572,chr1,-,IPR016024,Armadillo-type fold,ARM-type_fold,interpro,ENSP00000358584,biomaRt,Armadillo-type fold;chr1:113904626-113895962
+ENST00000369571,3,736,chr1,-,IPR016342,AP-1/2/4 complex subunit beta,AP_complex_bsu_1_2_4,interpro,ENSP00000358584,biomaRt,AP-1/2/4 complex subunit beta;chr1:113904611-113895483
+ENST00000369571,11,592,chr1,-,IPR026739,AP complex subunit beta,AP_beta,interpro,ENSP00000358584,biomaRt,AP complex subunit beta;chr1:113904635-113896022
+ENST00000371509,393,494,chr1,+,IPR003033,SCP2 sterol-binding domain,SCP2_sterol-bd_dom,interpro,ENSP00000360564,biomaRt,SCP2 sterol-binding domain;chr1:53028042-53050674
+ENST00000371509,12,361,chr1,+,IPR016039,Thiolase-like,Thiolase-like,interpro,ENSP00000360564,biomaRt,Thiolase-like;chr1:52927430-53015023
+ENST00000371509,301,317,chr1,+,IPR020613,"Thiolase, conserved site",Thiolase_CS,interpro,ENSP00000360564,biomaRt,"Thiolase, conserved site;chr1:52988088-53014891"
+ENST00000371509,67,195,chr1,+,IPR020616,"Thiolase, N-terminal",Thiolase_N,interpro,ENSP00000360564,biomaRt,"Thiolase, N-terminal;chr1:52948080-52978259"
+ENST00000371509,380,498,chr1,+,IPR036527,SCP2 sterol-binding domain superfamily,SCP2_sterol-bd_dom_sf,interpro,ENSP00000360564,biomaRt,SCP2 sterol-binding domain superfamily;chr1:53028003-53050686
+ENST00000371509,234,350,chr1,+,IPR055140,"Thiolase, C-terminal domain 2",Thiolase_C_2,interpro,ENSP00000360564,biomaRt,"Thiolase, C-terminal domain 2;chr1:52980402-53014990"
+ENST00000371513,12,322,chr1,+,IPR016039,Thiolase-like,Thiolase-like,interpro,ENSP00000360568,biomaRt,Thiolase-like;chr1:52927430-52993274
+ENST00000371513,301,317,chr1,+,IPR020613,"Thiolase, conserved site",Thiolase_CS,interpro,ENSP00000360568,biomaRt,"Thiolase, conserved site;chr1:52988088-52993259"
+ENST00000371513,67,195,chr1,+,IPR020616,"Thiolase, N-terminal",Thiolase_N,interpro,ENSP00000360568,biomaRt,"Thiolase, N-terminal;chr1:52948080-52978259"
+ENST00000371513,234,315,chr1,+,IPR055140,"Thiolase, C-terminal domain 2",Thiolase_C_2,interpro,ENSP00000360568,biomaRt,"Thiolase, C-terminal domain 2;chr1:52980402-52988132"
+ENST00000371514,437,538,chr1,+,IPR003033,SCP2 sterol-binding domain,SCP2_sterol-bd_dom,interpro,ENSP00000360569,biomaRt,SCP2 sterol-binding domain;chr1:53028042-53050674
+ENST00000371514,13,405,chr1,+,IPR016039,Thiolase-like,Thiolase-like,interpro,ENSP00000360569,biomaRt,Thiolase-like;chr1:52927433-53015023
+ENST00000371514,345,361,chr1,+,IPR020613,"Thiolase, conserved site",Thiolase_CS,interpro,ENSP00000360569,biomaRt,"Thiolase, conserved site;chr1:52988088-53014891"
+ENST00000371514,90,108,chr1,+,IPR020615,"Thiolase, acyl-enzyme intermediate active site",Thiolase_acyl_enz_int_AS,interpro,ENSP00000360569,biomaRt,"Thiolase, acyl-enzyme intermediate active site;chr1:52950823-52950879"
+ENST00000371514,14,239,chr1,+,IPR020616,"Thiolase, N-terminal",Thiolase_N,interpro,ENSP00000360569,biomaRt,"Thiolase, N-terminal;chr1:52927436-52978259"
+ENST00000371514,424,542,chr1,+,IPR036527,SCP2 sterol-binding domain superfamily,SCP2_sterol-bd_dom_sf,interpro,ENSP00000360569,biomaRt,SCP2 sterol-binding domain superfamily;chr1:53028003-53050686
+ENST00000371514,278,394,chr1,+,IPR055140,"Thiolase, C-terminal domain 2",Thiolase_C_2,interpro,ENSP00000360569,biomaRt,"Thiolase, C-terminal domain 2;chr1:52980402-53014990"
+ENST00000371730,8,104,chr1,-,IPR000261,EH domain,EH_dom,interpro,ENSP00000360795,biomaRt,EH domain;chr1:51519220-51465263
+ENST00000371730,121,314,chr1,-,IPR000261,EH domain,EH_dom,interpro,ENSP00000360795,biomaRt,EH domain;chr1:51465312-51445033
+ENST00000371730,48,83,chr1,-,IPR002048,EF-hand domain,EF_hand_dom,interpro,ENSP00000360795,biomaRt,EF-hand domain;chr1:51472925-51468508
+ENST00000371730,160,195,chr1,-,IPR002048,EF-hand domain,EF_hand_dom,interpro,ENSP00000360795,biomaRt,EF-hand domain;chr1:51463775-51448069
+ENST00000371730,223,258,chr1,-,IPR002048,EF-hand domain,EF_hand_dom,interpro,ENSP00000360795,biomaRt,EF-hand domain;chr1:51446975-51447082
+ENST00000371730,717,736,chr1,-,IPR003903,Ubiquitin interacting motif,UIM_dom,interpro,ENSP00000360795,biomaRt,Ubiquitin interacting motif;chr1:51356709-51356768
+ENST00000371730,743,762,chr1,-,IPR003903,Ubiquitin interacting motif,UIM_dom,interpro,ENSP00000360795,biomaRt,Ubiquitin interacting motif;chr1:51356787-51356846
+ENST00000371730,16,105,chr1,-,IPR011992,EF-hand domain pair,EF-hand-dom_pair,interpro,ENSP00000360795,biomaRt,EF-hand domain pair;chr1:51481285-51465266
+ENST00000371730,112,215,chr1,-,IPR011992,EF-hand domain pair,EF-hand-dom_pair,interpro,ENSP00000360795,biomaRt,EF-hand domain pair;chr1:51465285-51448129
+ENST00000371730,218,310,chr1,-,IPR011992,EF-hand domain pair,EF-hand-dom_pair,interpro,ENSP00000360795,biomaRt,EF-hand domain pair;chr1:51446960-51445021
+ENST00000371730,173,185,chr1,-,IPR018247,"EF-Hand 1, calcium-binding site",EF_Hand_1_Ca_BS,interpro,ENSP00000360795,biomaRt,"EF-Hand 1, calcium-binding site;chr1:51461106-51461144"
+ENST00000371730,236,248,chr1,-,IPR018247,"EF-Hand 1, calcium-binding site",EF_Hand_1_Ca_BS,interpro,ENSP00000360795,biomaRt,"EF-Hand 1, calcium-binding site;chr1:51447014-51447052"
+ENST00000371733,8,104,chr1,-,IPR000261,EH domain,EH_dom,interpro,ENSP00000360798,biomaRt,EH domain;chr1:51519220-51465263
+ENST00000371733,121,314,chr1,-,IPR000261,EH domain,EH_dom,interpro,ENSP00000360798,biomaRt,EH domain;chr1:51465312-51445033
+ENST00000371733,48,83,chr1,-,IPR002048,EF-hand domain,EF_hand_dom,interpro,ENSP00000360798,biomaRt,EF-hand domain;chr1:51472925-51468508
+ENST00000371733,160,195,chr1,-,IPR002048,EF-hand domain,EF_hand_dom,interpro,ENSP00000360798,biomaRt,EF-hand domain;chr1:51463775-51448069
+ENST00000371733,223,258,chr1,-,IPR002048,EF-hand domain,EF_hand_dom,interpro,ENSP00000360798,biomaRt,EF-hand domain;chr1:51446975-51447082
+ENST00000371733,442,462,chr1,-,IPR003903,Ubiquitin interacting motif,UIM_dom,interpro,ENSP00000360798,biomaRt,Ubiquitin interacting motif;chr1:51408183-51408245
+ENST00000371733,851,870,chr1,-,IPR003903,Ubiquitin interacting motif,UIM_dom,interpro,ENSP00000360798,biomaRt,Ubiquitin interacting motif;chr1:51356709-51356768
+ENST00000371733,877,896,chr1,-,IPR003903,Ubiquitin interacting motif,UIM_dom,interpro,ENSP00000360798,biomaRt,Ubiquitin interacting motif;chr1:51356787-51356846
+ENST00000371733,16,105,chr1,-,IPR011992,EF-hand domain pair,EF-hand-dom_pair,interpro,ENSP00000360798,biomaRt,EF-hand domain pair;chr1:51481285-51465266
+ENST00000371733,112,215,chr1,-,IPR011992,EF-hand domain pair,EF-hand-dom_pair,interpro,ENSP00000360798,biomaRt,EF-hand domain pair;chr1:51465285-51448129
+ENST00000371733,218,310,chr1,-,IPR011992,EF-hand domain pair,EF-hand-dom_pair,interpro,ENSP00000360798,biomaRt,EF-hand domain pair;chr1:51446960-51445021
+ENST00000371733,173,185,chr1,-,IPR018247,"EF-Hand 1, calcium-binding site",EF_Hand_1_Ca_BS,interpro,ENSP00000360798,biomaRt,"EF-Hand 1, calcium-binding site;chr1:51461106-51461144"
+ENST00000371733,236,248,chr1,-,IPR018247,"EF-Hand 1, calcium-binding site",EF_Hand_1_Ca_BS,interpro,ENSP00000360798,biomaRt,"EF-Hand 1, calcium-binding site;chr1:51447014-51447052"
+ENST00000373030,2,436,chr20,+,IPR039975,Intraflagellar transport protein 52 homolog,IFT52,interpro,ENSP00000362121,biomaRt,Intraflagellar transport protein 52 homolog;chr20:43594702-43646977
+ENST00000373030,360,411,chr20,+,IPR048643,"Intraflagellar transport protein 52, C-terminal domain",Itf52_C,interpro,ENSP00000362121,biomaRt,"Intraflagellar transport protein 52, C-terminal domain;chr20:43637211-43642591"
+ENST00000373030,8,253,chr20,+,IPR055458,"IFT52, GIFT domain",IFT52_GIFT,interpro,ENSP00000362121,biomaRt,"IFT52, GIFT domain;chr20:43594720-43620916"
+ENST00000373030,269,349,chr20,+,IPR055460,"IFT52, central domain",IFT52_central,interpro,ENSP00000362121,biomaRt,"IFT52, central domain;chr20:43623927-43637180"
+ENST00000374291,1,145,chr1,-,IPR000956,Stathmin family,Stathmin_fam,interpro,ENSP00000363409,biomaRt,Stathmin family;chr1:25904664-25901075
+ENST00000374291,40,49,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000363409,biomaRt,"Stathmin, conserved site;chr1:25903745-25903774"
+ENST00000374291,73,82,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000363409,biomaRt,"Stathmin, conserved site;chr1:25901521-25901550"
+ENST00000374291,5,140,chr1,-,IPR036002,Stathmin superfamily,Stathmin_sf,interpro,ENSP00000363409,biomaRt,Stathmin superfamily;chr1:25904676-25901060
+ENST00000374726,40,122,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000363858,biomaRt,cAMP response element binding (CREB) protein;chr10:35148489-35179281
+ENST00000374726,39,98,chr10,+,IPR003102,"Cyclic AMP-responsive element-binding protein 1-like, pKID",CREB1-like_pKID,interpro,ENSP00000363858,biomaRt,"Cyclic AMP-responsive element-binding protein 1-like, pKID;chr10:35148486-35179209"
+ENST00000379441,1761,1869,chr12,-,IPR001487,Bromodomain,Bromodomain,interpro,ENSP00000368754,biomaRt,Bromodomain;chr12:56599321-56598765
+ENST00000379441,516,594,chr12,-,IPR001739,Methyl-CpG DNA binding,Methyl_CpG_DNA-bd,interpro,ENSP00000368754,biomaRt,Methyl-CpG DNA binding;chr12:56611593-56610200
+ENST00000379441,1648,1694,chr12,-,IPR001965,"Zinc finger, PHD-type",Znf_PHD,interpro,ENSP00000368754,biomaRt,"Zinc finger, PHD-type;chr12:56599702-56599842"
+ENST00000379441,1634,1698,chr12,-,IPR011011,"Zinc finger, FYVE/PHD-type",Znf_FYVE_PHD,interpro,ENSP00000368754,biomaRt,"Zinc finger, FYVE/PHD-type;chr12:56600055-56599134"
+ENST00000379441,1635,1716,chr12,-,IPR013083,"Zinc finger, RING/FYVE/PHD-type",Znf_RING/FYVE/PHD,interpro,ENSP00000368754,biomaRt,"Zinc finger, RING/FYVE/PHD-type;chr12:56600058-56599188"
+ENST00000379441,499,628,chr12,-,IPR016177,DNA-binding domain superfamily,DNA-bd_dom_sf,interpro,ENSP00000368754,biomaRt,DNA-binding domain superfamily;chr12:56612216-56609822
+ENST00000379441,619,631,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000368754,biomaRt,"AT hook, DNA-binding motif;chr12:56609793-56609831"
+ENST00000379441,640,652,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000368754,biomaRt,"AT hook, DNA-binding motif;chr12:56609856-56609894"
+ENST00000379441,1156,1168,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000368754,biomaRt,"AT hook, DNA-binding motif;chr12:56601671-56601709"
+ENST00000379441,1374,1386,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000368754,biomaRt,"AT hook, DNA-binding motif;chr12:56601312-56601350"
+ENST00000379441,1785,1842,chr12,-,IPR018359,"Bromodomain, conserved site",Bromodomain_CS,interpro,ENSP00000368754,biomaRt,"Bromodomain, conserved site;chr12:56598902-56598684"
+ENST00000379441,818,883,chr12,-,IPR018501,DDT domain,DDT_dom,interpro,ENSP00000368754,biomaRt,DDT domain;chr12:56605115-56605312
+ENST00000379441,1646,1696,chr12,-,IPR019787,"Zinc finger, PHD-finger",Znf_PHD-finger,interpro,ENSP00000368754,biomaRt,"Zinc finger, PHD-finger;chr12:56600091-56599848"
+ENST00000379441,1082,1442,chr12,-,IPR028941,WHIM2 domain,WHIM2_dom,interpro,ENSP00000368754,biomaRt,WHIM2 domain;chr12:56602761-56601058
+ENST00000379441,922,963,chr12,-,IPR028942,WHIM1 domain,WHIM1_dom,interpro,ENSP00000368754,biomaRt,WHIM1 domain;chr12:56604684-56604226
+ENST00000379441,1746,1874,chr12,-,IPR036427,Bromodomain-like superfamily,Bromodomain-like_sf,interpro,ENSP00000368754,biomaRt,Bromodomain-like superfamily;chr12:56599276-56598780
+ENST00000379441,1768,1864,chr12,-,IPR037374,"BAZ2A/BAZ2B, bromodomain",BAZ2A/B_Bromo,interpro,ENSP00000368754,biomaRt,"BAZ2A/BAZ2B, bromodomain;chr12:56599342-56598750"
+ENST00000380034,90,132,chr11,-,IPR000315,B-box-type zinc finger,Znf_B-box,interpro,ENSP00000369373,biomaRt,B-box-type zinc finger;chr11:5680028-5680156
+ENST00000380034,15,59,chr11,-,IPR001841,"Zinc finger, RING-type",Znf_RING,interpro,ENSP00000369373,biomaRt,"Zinc finger, RING-type;chr11:5679803-5679937"
+ENST00000380034,281,493,chr11,-,IPR001870,B30.2/SPRY domain,B30.2/SPRY,interpro,ENSP00000369373,biomaRt,B30.2/SPRY domain;chr11:5666054-5665395
+ENST00000380034,356,492,chr11,-,IPR003877,SPRY domain,SPRY_dom,interpro,ENSP00000369373,biomaRt,SPRY domain;chr11:5664982-5665392
+ENST00000380034,313,330,chr11,-,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000369373,biomaRt,"Butyrophylin-like, SPRY domain;chr11:5664853-5664906"
+ENST00000380034,429,453,chr11,-,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000369373,biomaRt,"Butyrophylin-like, SPRY domain;chr11:5665201-5665275"
+ENST00000380034,461,479,chr11,-,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000369373,biomaRt,"Butyrophylin-like, SPRY domain;chr11:5665297-5665353"
+ENST00000380034,2,90,chr11,-,IPR013083,"Zinc finger, RING/FYVE/PHD-type",Znf_RING/FYVE/PHD,interpro,ENSP00000369373,biomaRt,"Zinc finger, RING/FYVE/PHD-type;chr11:5679764-5680030"
+ENST00000380034,292,491,chr11,-,IPR013320,Concanavalin A-like lectin/glucanase domain superfamily,ConA-like_dom_sf,interpro,ENSP00000369373,biomaRt,Concanavalin A-like lectin/glucanase domain superfamily;chr11:5665661-5665389
+ENST00000380034,30,39,chr11,-,IPR017907,"Zinc finger, RING-type, conserved site",Znf_RING_CS,interpro,ENSP00000369373,biomaRt,"Zinc finger, RING-type, conserved site;chr11:5679848-5679877"
+ENST00000380034,15,56,chr11,-,IPR027370,"Zinc finger, RING-type, eukaryotic",Znf-RING_euk,interpro,ENSP00000369373,biomaRt,"Zinc finger, RING-type, eukaryotic;chr11:5679803-5679928"
+ENST00000380034,288,493,chr11,-,IPR043136,B30.2/SPRY domain superfamily,B30.2/SPRY_sf,interpro,ENSP00000369373,biomaRt,B30.2/SPRY domain superfamily;chr11:5666075-5665395
+ENST00000380034,10,487,chr11,-,IPR050143,Tripartite motif-containing,TRIM/RBCC,interpro,ENSP00000369373,biomaRt,Tripartite motif-containing;chr11:5679788-5665377
+ENST00000389547,875,944,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000374198,biomaRt,Sterile alpha motif domain;chr11:70362135-70362455
+ENST00000389547,960,1027,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000374198,biomaRt,Sterile alpha motif domain;chr11:70372227-70372516
+ENST00000389547,1048,1120,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000374198,biomaRt,Sterile alpha motif domain;chr11:70374920-70376576
+ENST00000389547,842,1040,chr11,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000374198,biomaRt,Sterile alpha motif/pointed domain superfamily;chr11:70356196-70372555
+ENST00000389547,1041,1136,chr11,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000374198,biomaRt,Sterile alpha motif/pointed domain superfamily;chr11:70372556-70378053
+ENST00000389547,40,1149,chr11,+,IPR029515,"LAR-interacting protein, Liprin",Liprin,interpro,ENSP00000374198,biomaRt,"LAR-interacting protein, Liprin;chr11:70272290-70378092"
+ENST00000389547,875,945,chr11,+,IPR037620,"Liprin-alpha, SAM domain repeat 1",Liprin-alpha_SAM_rpt_1,interpro,ENSP00000374198,biomaRt,"Liprin-alpha, SAM domain repeat 1;chr11:70362135-70362458"
+ENST00000389547,962,1027,chr11,+,IPR037621,"Liprin-alpha, SAM domain repeat 2",Liprin-alpha_SAM_rpt_2,interpro,ENSP00000374198,biomaRt,"Liprin-alpha, SAM domain repeat 2;chr11:70372233-70372516"
+ENST00000389547,1047,1118,chr11,+,IPR037622,"Liprin-alpha, SAM domain repeat 3",Liprin-alpha_SAM_rpt_3,interpro,ENSP00000374198,biomaRt,"Liprin-alpha, SAM domain repeat 3;chr11:70372574-70376570"
+ENST00000391875,191,330,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000375747,biomaRt,AAA+ ATPase domain;chr1:224303786-224294394
+ENST00000391875,508,644,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000375747,biomaRt,AAA+ ATPase domain;chr1:224286071-224250279
+ENST00000391875,195,326,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000375747,biomaRt,"ATPase, AAA-type, core;chr1:224303798-224294382"
+ENST00000391875,512,641,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000375747,biomaRt,"ATPase, AAA-type, core;chr1:224286083-224250270"
+ENST00000391875,298,316,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000375747,biomaRt,"ATPase, AAA-type, conserved site;chr1:224294296-224294352"
+ENST00000391875,612,630,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000375747,biomaRt,"ATPase, AAA-type, conserved site;chr1:224268103-224250237"
+ENST00000391875,138,382,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000375747,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224305148-224289622
+ENST00000391875,466,744,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000375747,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224287913-224227652
+ENST00000391875,351,389,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000375747,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224289527-224289643"
+ENST00000391875,667,705,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000375747,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224236533-224233267"
+ENST00000391875,58,748,chr1,-,IPR050168,AAA ATPase domain-containing protein,AAA_ATPase_domain,interpro,ENSP00000375747,biomaRt,AAA ATPase domain-containing protein;chr1:224308138-224227664
+ENST00000396658,117,168,chr16,+,IPR014840,Hpc2-related domain,HRD,interpro,ENSP00000379894,biomaRt,Hpc2-related domain;chr16:4858580-4859096
+ENST00000396658,353,573,chr16,+,IPR026947,Ubinuclein middle domain,UBN_middle_dom,interpro,ENSP00000379894,biomaRt,Ubinuclein middle domain;chr16:4861049-4872896
+ENST00000396847,90,132,chr11,-,IPR000315,B-box-type zinc finger,Znf_B-box,interpro,ENSP00000380058,biomaRt,B-box-type zinc finger;chr11:5680028-5680156
+ENST00000396847,15,59,chr11,-,IPR001841,"Zinc finger, RING-type",Znf_RING,interpro,ENSP00000380058,biomaRt,"Zinc finger, RING-type;chr11:5679803-5679937"
+ENST00000396847,2,90,chr11,-,IPR013083,"Zinc finger, RING/FYVE/PHD-type",Znf_RING/FYVE/PHD,interpro,ENSP00000380058,biomaRt,"Zinc finger, RING/FYVE/PHD-type;chr11:5679764-5680030"
+ENST00000396847,30,39,chr11,-,IPR017907,"Zinc finger, RING-type, conserved site",Znf_RING_CS,interpro,ENSP00000380058,biomaRt,"Zinc finger, RING-type, conserved site;chr11:5679848-5679877"
+ENST00000396847,15,56,chr11,-,IPR027370,"Zinc finger, RING-type, eukaryotic",Znf-RING_euk,interpro,ENSP00000380058,biomaRt,"Zinc finger, RING-type, eukaryotic;chr11:5679803-5679928"
+ENST00000396847,10,275,chr11,-,IPR050143,Tripartite motif-containing,TRIM/RBCC,interpro,ENSP00000380058,biomaRt,Tripartite motif-containing;chr11:5679788-5666038
+ENST00000397166,382,447,chr8,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000380352,biomaRt,Sterile alpha motif domain;chr8:38247731-38249800
+ENST00000397166,30,112,chr8,+,IPR004170,WWE domain,WWE_dom,interpro,ENSP00000380352,biomaRt,WWE domain;chr8:38233082-38234509
+ENST00000397166,495,700,chr8,+,IPR004177,DDHD domain,DDHD_dom,interpro,ENSP00000380352,biomaRt,DDHD domain;chr8:38252153-38260085
+ENST00000397166,387,453,chr8,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000380352,biomaRt,Sterile alpha motif/pointed domain superfamily;chr8:38247746-38251926
+ENST00000397762,1,216,chr14,-,IPR001806,Small GTPase,Small_GTPase,interpro,ENSP00000380869,biomaRt,Small GTPase;chr14:21476827-21461303
+ENST00000397762,7,160,chr14,-,IPR005225,Small GTP-binding domain,Small_GTP-bd,interpro,ENSP00000380869,biomaRt,Small GTP-binding domain;chr14:21476845-21462355
+ENST00000397762,1,191,chr14,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000380869,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr14:21476827-21461228
+ENST00000397762,1,190,chr14,-,IPR050209,Rab GTPases family involved in membrane trafficking,Rab_GTPases_membrane_traffic,interpro,ENSP00000380869,biomaRt,Rab GTPases family involved in membrane trafficking;chr14:21476827-21461225
+ENST00000398006,1,413,chr11,-,IPR005599,GPI mannosyltransferase,GPI_mannosylTrfase,interpro,ENSP00000381090,biomaRt,GPI mannosyltransferase;chr11:111860547-111786439
+ENST00000399728,1,145,chr1,-,IPR000956,Stathmin family,Stathmin_fam,interpro,ENSP00000382633,biomaRt,Stathmin family;chr1:25904664-25901075
+ENST00000399728,40,49,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000382633,biomaRt,"Stathmin, conserved site;chr1:25903745-25903774"
+ENST00000399728,73,82,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000382633,biomaRt,"Stathmin, conserved site;chr1:25901521-25901550"
+ENST00000399728,5,140,chr1,-,IPR036002,Stathmin superfamily,Stathmin_sf,interpro,ENSP00000382633,biomaRt,Stathmin superfamily;chr1:25904676-25901060
+ENST00000400908,501,560,chr1,-,IPR000679,"Zinc finger, GATA-type",Znf_GATA,interpro,ENSP00000383700,biomaRt,"Zinc finger, GATA-type;chr1:8364799-8364195"
+ENST00000400908,284,387,chr1,-,IPR000949,ELM2 domain,ELM2_dom,interpro,ENSP00000383700,biomaRt,ELM2 domain;chr1:8508646-8465981
+ENST00000400908,392,441,chr1,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000383700,biomaRt,SANT/Myb domain;chr1:8465994-8365850
+ENST00000400908,103,283,chr1,-,IPR001025,Bromo adjacent homology (BAH) domain,BAH_dom,interpro,ENSP00000383700,biomaRt,Bromo adjacent homology (BAH) domain;chr1:8656279-8508645
+ENST00000400908,568,1565,chr1,-,IPR002951,Atrophin-like,Atrophin-like,interpro,ENSP00000383700,biomaRt,Atrophin-like;chr1:8364217-8355117
+ENST00000400908,380,441,chr1,-,IPR009057,Homedomain-like superfamily,Homeodomain-like_sf,interpro,ENSP00000383700,biomaRt,Homedomain-like superfamily;chr1:8465958-8365850
+ENST00000400908,391,443,chr1,-,IPR017884,SANT domain,SANT_dom,interpro,ENSP00000383700,biomaRt,SANT domain;chr1:8465991-8365856
+ENST00000400908,65,283,chr1,-,IPR043151,Bromo adjacent homology (BAH) domain superfamily,BAH_sf,interpro,ENSP00000383700,biomaRt,Bromo adjacent homology (BAH) domain superfamily;chr1:8656165-8508645
+ENST00000407246,413,514,chr1,+,IPR003033,SCP2 sterol-binding domain,SCP2_sterol-bd_dom,interpro,ENSP00000384569,biomaRt,SCP2 sterol-binding domain;chr1:53028042-53050674
+ENST00000407246,13,381,chr1,+,IPR016039,Thiolase-like,Thiolase-like,interpro,ENSP00000384569,biomaRt,Thiolase-like;chr1:52927433-53015023
+ENST00000407246,321,337,chr1,+,IPR020613,"Thiolase, conserved site",Thiolase_CS,interpro,ENSP00000384569,biomaRt,"Thiolase, conserved site;chr1:52988088-53014891"
+ENST00000407246,66,84,chr1,+,IPR020615,"Thiolase, acyl-enzyme intermediate active site",Thiolase_acyl_enz_int_AS,interpro,ENSP00000384569,biomaRt,"Thiolase, acyl-enzyme intermediate active site;chr1:52950823-52950879"
+ENST00000407246,46,215,chr1,+,IPR020616,"Thiolase, N-terminal",Thiolase_N,interpro,ENSP00000384569,biomaRt,"Thiolase, N-terminal;chr1:52950763-52978259"
+ENST00000407246,400,518,chr1,+,IPR036527,SCP2 sterol-binding domain superfamily,SCP2_sterol-bd_dom_sf,interpro,ENSP00000384569,biomaRt,SCP2 sterol-binding domain superfamily;chr1:53028003-53050686
+ENST00000407246,254,370,chr1,+,IPR055140,"Thiolase, C-terminal domain 2",Thiolase_C_2,interpro,ENSP00000384569,biomaRt,"Thiolase, C-terminal domain 2;chr1:52980402-53014990"
+ENST00000407431,147,195,chr22,-,IPR000467,G-patch domain,G_patch_dom,interpro,ENSP00000383892,biomaRt,G-patch domain;chr22:26506378-26503730
+ENST00000407431,18,107,chr22,-,IPR022159,"Tuftelin interacting protein, N-terminal domain",STIP/TFIP11_N,interpro,ENSP00000383892,biomaRt,"Tuftelin interacting protein, N-terminal domain;chr22:26510115-26506886"
+ENST00000407431,397,666,chr22,-,IPR022783,"GCF, C-terminal",GCFC_dom,interpro,ENSP00000383892,biomaRt,"GCF, C-terminal;chr22:26499491-26494144"
+ENST00000407431,15,837,chr22,-,IPR024933,Septin and tuftelin interacting protein,TFP11,interpro,ENSP00000383892,biomaRt,Septin and tuftelin interacting protein;chr22:26510106-26492368
+ENST00000407431,15,832,chr22,-,IPR045211,TFP11/STIP/Ntr1,TFP11/STIP/Ntr1,interpro,ENSP00000383892,biomaRt,TFP11/STIP/Ntr1;chr22:26510106-26492353
+ENST00000407690,147,195,chr22,-,IPR000467,G-patch domain,G_patch_dom,interpro,ENSP00000384421,biomaRt,G-patch domain;chr22:26506378-26503730
+ENST00000407690,18,107,chr22,-,IPR022159,"Tuftelin interacting protein, N-terminal domain",STIP/TFIP11_N,interpro,ENSP00000384421,biomaRt,"Tuftelin interacting protein, N-terminal domain;chr22:26510115-26506886"
+ENST00000407690,397,666,chr22,-,IPR022783,"GCF, C-terminal",GCFC_dom,interpro,ENSP00000384421,biomaRt,"GCF, C-terminal;chr22:26499491-26494144"
+ENST00000407690,15,837,chr22,-,IPR024933,Septin and tuftelin interacting protein,TFP11,interpro,ENSP00000384421,biomaRt,Septin and tuftelin interacting protein;chr22:26510106-26492368
+ENST00000407690,15,832,chr22,-,IPR045211,TFP11/STIP/Ntr1,TFP11/STIP/Ntr1,interpro,ENSP00000384421,biomaRt,TFP11/STIP/Ntr1;chr22:26510106-26492353
+ENST00000414284,1,588,chr19,+,IPR001619,Sec1-like protein,Sec1-like,interpro,ENSP00000409471,biomaRt,Sec1-like protein;chr19:7637150-7647801
+ENST00000414284,135,575,chr19,+,IPR027482,"Sec1-like, domain 2",Sec1-like_dom2,interpro,ENSP00000409471,biomaRt,"Sec1-like, domain 2;chr19:7640986-7647762"
+ENST00000414284,6,582,chr19,+,IPR036045,Sec1-like superfamily,Sec1-like_sf,interpro,ENSP00000409471,biomaRt,Sec1-like superfamily;chr19:7637165-7647783
+ENST00000414284,243,355,chr19,+,IPR043127,"Sec1-like, domain 3a",Sec-1-like_dom3a,interpro,ENSP00000409471,biomaRt,"Sec1-like, domain 3a;chr19:7642275-7643212"
+ENST00000414284,1,129,chr19,+,IPR043154,"Sec1-like, domain 1",Sec-1-like_dom1,interpro,ENSP00000409471,biomaRt,"Sec1-like, domain 1;chr19:7637150-7640970"
+ENST00000414912,270,461,chr6,+,IPR001870,B30.2/SPRY domain,B30.2/SPRY,interpro,ENSP00000406667,biomaRt,B30.2/SPRY domain;chr6:26410032-26413689
+ENST00000414912,37,144,chr6,+,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000406667,biomaRt,Immunoglobulin domain subtype;chr6:26405932-26406255
+ENST00000414912,340,461,chr6,+,IPR003877,SPRY domain,SPRY_dom,interpro,ENSP00000406667,biomaRt,SPRY domain;chr6:26413324-26413689
+ENST00000414912,286,320,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000406667,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26411575-26413266"
+ENST00000414912,325,349,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000406667,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413279-26413353"
+ENST00000414912,355,368,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000406667,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413369-26413410"
+ENST00000414912,399,423,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000406667,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413501-26413575"
+ENST00000414912,430,448,chr6,+,IPR003879,"Butyrophylin-like, SPRY domain",Butyrophylin_SPRY,interpro,ENSP00000406667,biomaRt,"Butyrophylin-like, SPRY domain;chr6:26413594-26413650"
+ENST00000414912,287,339,chr6,+,IPR006574,SPRY-associated,PRY,interpro,ENSP00000406667,biomaRt,SPRY-associated;chr6:26411578-26413323
+ENST00000414912,26,139,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000406667,biomaRt,Immunoglobulin-like domain;chr6:26405639-26406240
+ENST00000414912,38,143,chr6,+,IPR013106,Immunoglobulin V-set domain,Ig_V-set,interpro,ENSP00000406667,biomaRt,Immunoglobulin V-set domain;chr6:26405935-26406252
+ENST00000414912,280,460,chr6,+,IPR013320,Concanavalin A-like lectin/glucanase domain superfamily,ConA-like_dom_sf,interpro,ENSP00000406667,biomaRt,Concanavalin A-like lectin/glucanase domain superfamily;chr6:26411557-26413686
+ENST00000414912,28,140,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000406667,biomaRt,Immunoglobulin-like fold;chr6:26405645-26406243
+ENST00000414912,141,192,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000406667,biomaRt,Immunoglobulin-like fold;chr6:26406244-26409549
+ENST00000414912,31,143,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000406667,biomaRt,Immunoglobulin-like domain superfamily;chr6:26405914-26406252
+ENST00000414912,285,460,chr6,+,IPR037954,"Butyrophilin subfamily 3, PRY/SPRY domain",SPRY_PRY_BTN3,interpro,ENSP00000406667,biomaRt,"Butyrophilin subfamily 3, PRY/SPRY domain;chr6:26411572-26413686"
+ENST00000414912,274,461,chr6,+,IPR043136,B30.2/SPRY domain superfamily,B30.2/SPRY_sf,interpro,ENSP00000406667,biomaRt,B30.2/SPRY domain superfamily;chr6:26411120-26413689
+ENST00000414912,145,306,chr6,+,IPR050504,Immunoglobulin superfamily BTN/MOG domain-containing protein,IgSF_BTN/MOG,interpro,ENSP00000406667,biomaRt,Immunoglobulin superfamily BTN/MOG domain-containing protein;chr6:26406256-26413224
+ENST00000415827,126,254,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000407869,biomaRt,SANT/Myb domain;chr17:42722831-42718475
+ENST00000415827,421,469,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000407869,biomaRt,SANT/Myb domain;chr17:42712372-42709878
+ENST00000415827,604,725,chr17,-,IPR001214,SET domain,SET_dom,interpro,ENSP00000407869,biomaRt,SET domain;chr17:42706183-42702553
+ENST00000415827,39,68,chr17,-,IPR021654,Histone-lysine N-methyltransferase EZH1/EZH2,EZH1/EZH2,interpro,ENSP00000407869,biomaRt,Histone-lysine N-methyltransferase EZH1/EZH2;chr17:42728939-42727748
+ENST00000415827,495,597,chr17,-,IPR026489,CXC domain,CXC_dom,interpro,ENSP00000407869,biomaRt,CXC domain;chr17:42708892-42706164
+ENST00000415827,547,584,chr17,-,IPR033467,Tesmin/TSO1-like CXC domain,Tesmin/TSO1-like_CXC,interpro,ENSP00000407869,biomaRt,Tesmin/TSO1-like CXC domain;chr17:42706012-42706125
+ENST00000415827,150,253,chr17,-,IPR041343,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain",PRC2_HTH_1,interpro,ENSP00000407869,biomaRt,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain;chr17:42722903-42718472"
+ENST00000415827,551,582,chr17,-,IPR041355,Pre-SET CXC domain,Pre-SET_CXC,interpro,ENSP00000407869,biomaRt,Pre-SET CXC domain;chr17:42706024-42706119
+ENST00000415827,599,734,chr17,-,IPR044438,"EZH1, SET domain",EZH1_SET,interpro,ENSP00000407869,biomaRt,"EZH1, SET domain;chr17:42706168-42702580"
+ENST00000415827,12,733,chr17,-,IPR045318,Histone-lysine N-methyltransferase EZH1/2-like,EZH1/2-like,interpro,ENSP00000407869,biomaRt,Histone-lysine N-methyltransferase EZH1/2-like;chr17:42728858-42702577
+ENST00000415827,502,728,chr17,-,IPR046341,SET domain superfamily,SET_dom_sf,interpro,ENSP00000407869,biomaRt,SET domain superfamily;chr17:42708913-42702562
+ENST00000415827,261,313,chr17,-,IPR048358,"EZH1/2, MCSS domain",EZH1/2_MCSS,interpro,ENSP00000407869,biomaRt,"EZH1/2, MCSS domain;chr17:42718494-42718010"
+ENST00000417478,155,287,chr4,+,IPR004012,RUN domain,Run_dom,interpro,ENSP00000399771,biomaRt,RUN domain;chr4:70762623-70768646
+ENST00000417478,122,297,chr4,+,IPR037213,RUN domain superfamily,Run_dom_sf,interpro,ENSP00000399771,biomaRt,RUN domain superfamily;chr4:70762524-70773525
+ENST00000417478,128,283,chr4,+,IPR047334,"RUN and FYVE domain-containing protein 3, RUN domain",RUN_RUFY3,interpro,ENSP00000399771,biomaRt,"RUN and FYVE domain-containing protein 3, RUN domain;chr4:70762542-70768634"
+ENST00000417478,40,506,chr4,+,IPR047335,RUN and FYVE domain-containing protein 1-3,RUFY1-3,interpro,ENSP00000399771,biomaRt,RUN and FYVE domain-containing protein 1-3;chr4:70705054-70789593
+ENST00000418476,146,499,chr15,+,IPR011989,Armadillo-like helical,ARM-like,interpro,ENSP00000407487,biomaRt,Armadillo-like helical;chr15:90939740-90946911
+ENST00000418476,500,928,chr15,+,IPR011989,Armadillo-like helical,ARM-like,interpro,ENSP00000407487,biomaRt,Armadillo-like helical;chr15:90946912-90953665
+ENST00000418476,20,137,chr15,+,IPR011990,Tetratricopeptide-like helical domain superfamily,TPR-like_helical_dom_sf,interpro,ENSP00000407487,biomaRt,Tetratricopeptide-like helical domain superfamily;chr15:90935550-90936445
+ENST00000418476,153,267,chr15,+,IPR016024,Armadillo-type fold,ARM-type_fold,interpro,ENSP00000407487,biomaRt,Armadillo-type fold;chr15:90939761-90942550
+ENST00000418476,412,892,chr15,+,IPR016024,Armadillo-type fold,ARM-type_fold,interpro,ENSP00000407487,biomaRt,Armadillo-type fold;chr15:90946648-90953557
+ENST00000418476,21,54,chr15,+,IPR019734,Tetratricopeptide repeat,TPR_rpt,interpro,ENSP00000407487,biomaRt,Tetratricopeptide repeat;chr15:90935553-90935654
+ENST00000418476,58,91,chr15,+,IPR019734,Tetratricopeptide repeat,TPR_rpt,interpro,ENSP00000407487,biomaRt,Tetratricopeptide repeat;chr15:90935664-90936307
+ENST00000418476,92,125,chr15,+,IPR019734,Tetratricopeptide repeat,TPR_rpt,interpro,ENSP00000407487,biomaRt,Tetratricopeptide repeat;chr15:90936308-90936409
+ENST00000418476,362,505,chr15,+,IPR024660,"UNC-45/Cro1/She4, central domain",UCS_central_dom,interpro,ENSP00000407487,biomaRt,"UNC-45/Cro1/She4, central domain;chr15:90944948-90947810"
+ENST00000422090,324,429,chr19,-,IPR007758,"Nucleoporin, NSP1-like, C-terminal",Nucleoporin_NSP1_C,interpro,ENSP00000407331,biomaRt,"Nucleoporin, NSP1-like, C-terminal;chr19:49909211-49909528"
+ENST00000422090,1,514,chr19,-,IPR026010,Nucleoporin NSP1/NUP62,NSP1/NUP62,interpro,ENSP00000407331,biomaRt,Nucleoporin NSP1/NUP62;chr19:49908242-49909783
+ENST00000425234,37,144,chr6,+,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000396684,biomaRt,Immunoglobulin domain subtype;chr6:26405932-26406255
+ENST00000425234,26,139,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000396684,biomaRt,Immunoglobulin-like domain;chr6:26405639-26406240
+ENST00000425234,164,236,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000396684,biomaRt,Immunoglobulin-like domain;chr6:26407727-26407945
+ENST00000425234,38,143,chr6,+,IPR013106,Immunoglobulin V-set domain,Ig_V-set,interpro,ENSP00000396684,biomaRt,Immunoglobulin V-set domain;chr6:26405935-26406252
+ENST00000425234,28,145,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000396684,biomaRt,Immunoglobulin-like fold;chr6:26405645-26407672
+ENST00000425234,146,249,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000396684,biomaRt,Immunoglobulin-like fold;chr6:26407673-26409564
+ENST00000425234,31,143,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000396684,biomaRt,Immunoglobulin-like domain superfamily;chr6:26405914-26406252
+ENST00000425234,157,234,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000396684,biomaRt,Immunoglobulin-like domain superfamily;chr6:26407706-26407939
+ENST00000425234,14,285,chr6,+,IPR050504,Immunoglobulin superfamily BTN/MOG domain-containing protein,IgSF_BTN/MOG,interpro,ENSP00000396684,biomaRt,Immunoglobulin superfamily BTN/MOG domain-containing protein;chr6:26405603-26409672
+ENST00000425234,146,232,chr6,+,IPR053896,"Butyrophilin subfamily 3 member A2-like, Ig-C domain",BTN3A2-like_Ig-C,interpro,ENSP00000396684,biomaRt,"Butyrophilin subfamily 3 member A2-like, Ig-C domain;chr6:26407673-26407933"
+ENST00000426559,3,174,chr1,-,IPR000956,Stathmin family,Stathmin_fam,interpro,ENSP00000410452,biomaRt,Stathmin family;chr1:25904670-25885869
+ENST00000426559,40,49,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000410452,biomaRt,"Stathmin, conserved site;chr1:25903745-25903774"
+ENST00000426559,73,82,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000410452,biomaRt,"Stathmin, conserved site;chr1:25901521-25901550"
+ENST00000426559,5,127,chr1,-,IPR036002,Stathmin superfamily,Stathmin_sf,interpro,ENSP00000410452,biomaRt,Stathmin superfamily;chr1:25904676-25885728
+ENST00000428826,135,263,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000404658,biomaRt,SANT/Myb domain;chr17:42722831-42718475
+ENST00000428826,430,478,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000404658,biomaRt,SANT/Myb domain;chr17:42712372-42709878
+ENST00000428826,613,734,chr17,-,IPR001214,SET domain,SET_dom,interpro,ENSP00000404658,biomaRt,SET domain;chr17:42706183-42702553
+ENST00000428826,39,68,chr17,-,IPR021654,Histone-lysine N-methyltransferase EZH1/EZH2,EZH1/EZH2,interpro,ENSP00000404658,biomaRt,Histone-lysine N-methyltransferase EZH1/EZH2;chr17:42728939-42727721
+ENST00000428826,504,606,chr17,-,IPR026489,CXC domain,CXC_dom,interpro,ENSP00000404658,biomaRt,CXC domain;chr17:42708892-42706164
+ENST00000428826,556,593,chr17,-,IPR033467,Tesmin/TSO1-like CXC domain,Tesmin/TSO1-like_CXC,interpro,ENSP00000404658,biomaRt,Tesmin/TSO1-like CXC domain;chr17:42706012-42706125
+ENST00000428826,159,262,chr17,-,IPR041343,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain",PRC2_HTH_1,interpro,ENSP00000404658,biomaRt,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain;chr17:42722903-42718472"
+ENST00000428826,560,591,chr17,-,IPR041355,Pre-SET CXC domain,Pre-SET_CXC,interpro,ENSP00000404658,biomaRt,Pre-SET CXC domain;chr17:42706024-42706119
+ENST00000428826,608,743,chr17,-,IPR044438,"EZH1, SET domain",EZH1_SET,interpro,ENSP00000404658,biomaRt,"EZH1, SET domain;chr17:42706168-42702580"
+ENST00000428826,12,742,chr17,-,IPR045318,Histone-lysine N-methyltransferase EZH1/2-like,EZH1/2-like,interpro,ENSP00000404658,biomaRt,Histone-lysine N-methyltransferase EZH1/2-like;chr17:42728858-42702577
+ENST00000428826,511,737,chr17,-,IPR046341,SET domain superfamily,SET_dom_sf,interpro,ENSP00000404658,biomaRt,SET domain superfamily;chr17:42708913-42702562
+ENST00000428826,270,322,chr17,-,IPR048358,"EZH1/2, MCSS domain",EZH1/2_MCSS,interpro,ENSP00000404658,biomaRt,"EZH1/2, MCSS domain;chr17:42718494-42718010"
+ENST00000430330,30,131,chr1,+,IPR003033,SCP2 sterol-binding domain,SCP2_sterol-bd_dom,interpro,ENSP00000406636,biomaRt,SCP2 sterol-binding domain;chr1:53028042-53050674
+ENST00000430330,17,135,chr1,+,IPR036527,SCP2 sterol-binding domain superfamily,SCP2_sterol-bd_dom_sf,interpro,ENSP00000406636,biomaRt,SCP2 sterol-binding domain superfamily;chr1:53028003-53050686
+ENST00000432063,1,404,chr11,+,IPR031410,Stabilizer of axonemal microtubules 4,SAXO4,interpro,ENSP00000391560,biomaRt,Stabilizer of axonemal microtubules 4;chr11:61481810-61490564
+ENST00000432415,34,354,chr1,-,IPR002553,"Clathrin/coatomer adaptor, adaptin-like, N-terminal",Clathrin/coatomer_adapt-like_N,interpro,ENSP00000393622,biomaRt,"Clathrin/coatomer adaptor, adaptin-like, N-terminal;chr1:113904704-113895812"
+ENST00000432415,7,415,chr1,-,IPR011989,Armadillo-like helical,ARM-like,interpro,ENSP00000393622,biomaRt,Armadillo-like helical;chr1:113904623-113895995
+ENST00000432415,434,571,chr1,-,IPR012295,TBP domain superfamily,TBP_dom_sf,interpro,ENSP00000393622,biomaRt,TBP domain superfamily;chr1:113895079-113895492
+ENST00000432415,452,564,chr1,-,IPR015151,"Beta-adaptin appendage, C-terminal subdomain",B-adaptin_app_sub_C,interpro,ENSP00000393622,biomaRt,"Beta-adaptin appendage, C-terminal subdomain;chr1:113895133-113895471"
+ENST00000432415,37,404,chr1,-,IPR016024,Armadillo-type fold,ARM-type_fold,interpro,ENSP00000393622,biomaRt,Armadillo-type fold;chr1:113904713-113895962
+ENST00000432415,5,568,chr1,-,IPR016342,AP-1/2/4 complex subunit beta,AP_complex_bsu_1_2_4,interpro,ENSP00000393622,biomaRt,AP-1/2/4 complex subunit beta;chr1:113904617-113895483
+ENST00000432415,38,424,chr1,-,IPR026739,AP complex subunit beta,AP_beta,interpro,ENSP00000393622,biomaRt,AP complex subunit beta;chr1:113904716-113896022
+ENST00000435345,33,134,chr1,+,IPR003033,SCP2 sterol-binding domain,SCP2_sterol-bd_dom,interpro,ENSP00000396413,biomaRt,SCP2 sterol-binding domain;chr1:53028042-53050674
+ENST00000435345,20,138,chr1,+,IPR036527,SCP2 sterol-binding domain superfamily,SCP2_sterol-bd_dom_sf,interpro,ENSP00000396413,biomaRt,SCP2 sterol-binding domain superfamily;chr1:53028003-53050686
+ENST00000441779,1,602,chr19,+,IPR001619,Sec1-like protein,Sec1-like,interpro,ENSP00000413606,biomaRt,Sec1-like protein;chr19:7637150-7647801
+ENST00000441779,149,589,chr19,+,IPR027482,"Sec1-like, domain 2",Sec1-like_dom2,interpro,ENSP00000413606,biomaRt,"Sec1-like, domain 2;chr19:7640986-7647762"
+ENST00000441779,6,596,chr19,+,IPR036045,Sec1-like superfamily,Sec1-like_sf,interpro,ENSP00000413606,biomaRt,Sec1-like superfamily;chr19:7637165-7647783
+ENST00000441779,257,369,chr19,+,IPR043127,"Sec1-like, domain 3a",Sec-1-like_dom3a,interpro,ENSP00000413606,biomaRt,"Sec1-like, domain 3a;chr19:7642275-7643212"
+ENST00000441779,4,143,chr19,+,IPR043154,"Sec1-like, domain 1",Sec-1-like_dom1,interpro,ENSP00000413606,biomaRt,"Sec1-like, domain 1;chr19:7637159-7640970"
+ENST00000450465,719,806,chr16,+,IPR012677,Nucleotide-binding alpha-beta plait domain superfamily,Nucleotide-bd_a/b_plait_sf,interpro,ENSP00000404278,biomaRt,Nucleotide-binding alpha-beta plait domain superfamily;chr16:24822097-24823504
+ENST00000450465,449,722,chr16,+,IPR032226,"TNRC6, PABC binding domain",TNRC6_PABC-bd,interpro,ENSP00000404278,biomaRt,"TNRC6, PABC binding domain;chr16:24806757-24822108"
+ENST00000450465,719,810,chr16,+,IPR034924,"TNRC6A, RNA recognition motif",TNRC6A_RRM,interpro,ENSP00000404278,biomaRt,"TNRC6A, RNA recognition motif;chr16:24822097-24823516"
+ENST00000450465,697,795,chr16,+,IPR035979,RNA-binding domain superfamily,RBD_domain_sf,interpro,ENSP00000404278,biomaRt,RNA-binding domain superfamily;chr16:24820315-24823471
+ENST00000450465,102,273,chr16,+,IPR052068,GW182 domain-containing protein,GW182_domain,interpro,ENSP00000404278,biomaRt,GW182 domain-containing protein;chr16:24791790-24805016
+ENST00000455785,1,145,chr1,-,IPR000956,Stathmin family,Stathmin_fam,interpro,ENSP00000387858,biomaRt,Stathmin family;chr1:25904664-25901075
+ENST00000455785,40,49,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000387858,biomaRt,"Stathmin, conserved site;chr1:25903745-25903774"
+ENST00000455785,73,82,chr1,-,IPR030514,"Stathmin, conserved site",Stathmin_CS,interpro,ENSP00000387858,biomaRt,"Stathmin, conserved site;chr1:25901521-25901550"
+ENST00000455785,5,140,chr1,-,IPR036002,Stathmin superfamily,Stathmin_sf,interpro,ENSP00000387858,biomaRt,Stathmin superfamily;chr1:25904676-25901060
+ENST00000460270,1,93,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000420437,biomaRt,cAMP response element binding (CREB) protein;chr10:35206909-35211389
+ENST00000460270,35,93,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000420437,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211389
+ENST00000460270,39,90,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000420437,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211380
+ENST00000463314,1,136,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000418336,biomaRt,cAMP response element binding (CREB) protein;chr10:35188277-35211794
+ENST00000463314,77,134,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000418336,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000463314,81,131,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000418336,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000468236,11,123,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000419810,biomaRt,cAMP response element binding (CREB) protein;chr10:35196093-35211794
+ENST00000468236,64,121,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000419810,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000468236,68,118,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000419810,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000469075,206,345,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000417826,biomaRt,AAA+ ATPase domain;chr1:224303786-224294394
+ENST00000469075,523,659,chr1,-,IPR003593,AAA+ ATPase domain,AAA+_ATPase,interpro,ENSP00000417826,biomaRt,AAA+ ATPase domain;chr1:224286071-224250279
+ENST00000469075,210,341,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000417826,biomaRt,"ATPase, AAA-type, core;chr1:224303798-224294382"
+ENST00000469075,527,656,chr1,-,IPR003959,"ATPase, AAA-type, core",ATPase_AAA_core,interpro,ENSP00000417826,biomaRt,"ATPase, AAA-type, core;chr1:224286083-224250270"
+ENST00000469075,313,331,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000417826,biomaRt,"ATPase, AAA-type, conserved site;chr1:224294296-224294352"
+ENST00000469075,627,645,chr1,-,IPR003960,"ATPase, AAA-type, conserved site",ATPase_AAA_CS,interpro,ENSP00000417826,biomaRt,"ATPase, AAA-type, conserved site;chr1:224268103-224250237"
+ENST00000469075,153,397,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000417826,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224305148-224289622
+ENST00000469075,481,759,chr1,-,IPR027417,P-loop containing nucleoside triphosphate hydrolase,P-loop_NTPase,interpro,ENSP00000417826,biomaRt,P-loop containing nucleoside triphosphate hydrolase;chr1:224287913-224227652
+ENST00000469075,2,71,chr1,-,IPR031996,"NVL2, nucleolin binding domain",NVL2_nucleolin-bd,interpro,ENSP00000417826,biomaRt,"NVL2, nucleolin binding domain;chr1:224330074-224317722"
+ENST00000469075,1,74,chr1,-,IPR038100,"NVL2, N-terminal domain superfamily",NLV2_N_sf,interpro,ENSP00000417826,biomaRt,"NVL2, N-terminal domain superfamily;chr1:224330071-224317731"
+ENST00000469075,366,404,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000417826,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224289527-224289643"
+ENST00000469075,682,720,chr1,-,IPR041569,"AAA ATPase, AAA+ lid domain",AAA_lid_3,interpro,ENSP00000417826,biomaRt,"AAA ATPase, AAA+ lid domain;chr1:224236533-224233267"
+ENST00000469075,82,763,chr1,-,IPR050168,AAA ATPase domain-containing protein,AAA_ATPase_domain,interpro,ENSP00000417826,biomaRt,AAA ATPase domain-containing protein;chr1:224317753-224227664
+ENST00000473940,9,118,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000420681,biomaRt,cAMP response element binding (CREB) protein;chr10:35195214-35211389
+ENST00000473940,60,118,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000420681,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211389
+ENST00000473940,64,115,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000420681,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211380
+ENST00000473997,411,486,chr20,-,IPR002792,TRAM domain,TRAM_dom,interpro,ENSP00000476857,biomaRt,TRAM domain;chr20:33366967-33359090
+ENST00000473997,8,490,chr20,-,IPR005839,Methylthiotransferase,Methylthiotransferase,interpro,ENSP00000476857,biomaRt,Methylthiotransferase;chr20:33396782-33359102
+ENST00000473997,8,487,chr20,-,IPR006463,tRNA-2-methylthio-N(6)-dimethylallyladenosine synthase MiaB,MiaB_methiolase,interpro,ENSP00000476857,biomaRt,tRNA-2-methylthio-N(6)-dimethylallyladenosine synthase MiaB;chr20:33396782-33359093
+ENST00000473997,158,397,chr20,-,IPR006638,"Elp3/MiaA/NifB-like, radical SAM core domain",Elp3/MiaA/NifB-like_rSAM,interpro,ENSP00000476857,biomaRt,"Elp3/MiaA/NifB-like, radical SAM core domain;chr20:33387520-33366927"
+ENST00000473997,154,408,chr20,-,IPR007197,Radical SAM,rSAM,interpro,ENSP00000476857,biomaRt,Radical SAM;chr20:33387508-33366960
+ENST00000473997,10,130,chr20,-,IPR013848,"Methylthiotransferase, N-terminal",Methylthiotransferase_N,interpro,ENSP00000476857,biomaRt,"Methylthiotransferase, N-terminal;chr20:33396788-33387438"
+ENST00000473997,162,182,chr20,-,IPR020612,"Methylthiotransferase, conserved site",Methylthiotransferase_CS,interpro,ENSP00000476857,biomaRt,"Methylthiotransferase, conserved site;chr20:33387532-33385710"
+ENST00000473997,156,414,chr20,-,IPR023404,"Radical SAM, alpha/beta horseshoe",rSAM_horseshoe,interpro,ENSP00000476857,biomaRt,"Radical SAM, alpha/beta horseshoe;chr20:33387514-33366978"
+ENST00000473997,10,144,chr20,-,IPR038135,"Methylthiotransferase, N-terminal domain superfamily",Methylthiotransferase_N_sf,interpro,ENSP00000476857,biomaRt,"Methylthiotransferase, N-terminal domain superfamily;chr20:33396788-33387480"
+ENST00000474362,1,94,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000419018,biomaRt,cAMP response element binding (CREB) protein;chr10:35206909-35211794
+ENST00000474362,35,92,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000419018,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000474362,39,89,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000419018,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000474931,12,110,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000417562,biomaRt,cAMP response element binding (CREB) protein;chr10:35196096-35211389
+ENST00000474931,52,110,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000417562,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211389
+ENST00000474931,56,107,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000417562,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211380
+ENST00000476549,37,144,chr6,+,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000420010,biomaRt,Immunoglobulin domain subtype;chr6:26405932-26406255
+ENST00000476549,26,139,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000420010,biomaRt,Immunoglobulin-like domain;chr6:26405639-26406240
+ENST00000476549,164,236,chr6,+,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000420010,biomaRt,Immunoglobulin-like domain;chr6:26407727-26407945
+ENST00000476549,38,143,chr6,+,IPR013106,Immunoglobulin V-set domain,Ig_V-set,interpro,ENSP00000420010,biomaRt,Immunoglobulin V-set domain;chr6:26405935-26406252
+ENST00000476549,28,145,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000420010,biomaRt,Immunoglobulin-like fold;chr6:26405645-26407672
+ENST00000476549,146,249,chr6,+,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000420010,biomaRt,Immunoglobulin-like fold;chr6:26407673-26409564
+ENST00000476549,31,143,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000420010,biomaRt,Immunoglobulin-like domain superfamily;chr6:26405914-26406252
+ENST00000476549,157,234,chr6,+,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000420010,biomaRt,Immunoglobulin-like domain superfamily;chr6:26407706-26407939
+ENST00000476549,14,284,chr6,+,IPR050504,Immunoglobulin superfamily BTN/MOG domain-containing protein,IgSF_BTN/MOG,interpro,ENSP00000420010,biomaRt,Immunoglobulin superfamily BTN/MOG domain-containing protein;chr6:26405603-26409669
+ENST00000476549,146,232,chr6,+,IPR053896,"Butyrophilin subfamily 3 member A2-like, Ig-C domain",BTN3A2-like_Ig-C,interpro,ENSP00000420010,biomaRt,"Butyrophilin subfamily 3 member A2-like, Ig-C domain;chr6:26407673-26407933"
+ENST00000476556,14,1011,chr1,-,IPR002951,Atrophin-like,Atrophin-like,interpro,ENSP00000422246,biomaRt,Atrophin-like;chr1:8364095-8355117
+ENST00000487763,9,119,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000417807,biomaRt,cAMP response element binding (CREB) protein;chr10:35195214-35211794
+ENST00000487763,60,117,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000417807,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000487763,64,114,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000417807,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000488328,8,107,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000417460,biomaRt,cAMP response element binding (CREB) protein;chr10:35195211-35211794
+ENST00000488328,48,105,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000417460,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000488328,52,102,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000417460,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000488741,3,100,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000419075,biomaRt,cAMP response element binding (CREB) protein;chr10:35201486-35211389
+ENST00000488741,42,100,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000419075,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211389
+ENST00000488741,46,97,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000419075,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211380
+ENST00000489321,40,122,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000419924,biomaRt,cAMP response element binding (CREB) protein;chr10:35148489-35179281
+ENST00000489321,39,98,chr10,+,IPR003102,"Cyclic AMP-responsive element-binding protein 1-like, pKID",CREB1-like_pKID,interpro,ENSP00000419924,biomaRt,"Cyclic AMP-responsive element-binding protein 1-like, pKID;chr10:35148486-35179209"
+ENST00000490511,12,111,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000417327,biomaRt,cAMP response element binding (CREB) protein;chr10:35196096-35211794
+ENST00000490511,52,109,chr10,+,IPR004827,Basic-leucine zipper domain,bZIP,interpro,ENSP00000417327,biomaRt,Basic-leucine zipper domain;chr10:35207011-35211788
+ENST00000490511,56,106,chr10,+,IPR046347,Basic-leucine zipper domain superfamily,bZIP_sf,interpro,ENSP00000417327,biomaRt,Basic-leucine zipper domain superfamily;chr10:35207023-35211779
+ENST00000494479,1,115,chr10,+,IPR001630,cAMP response element binding (CREB) protein,Leuzip_CREB,interpro,ENSP00000417399,biomaRt,cAMP response element binding (CREB) protein;chr10:35179231-35207004
+ENST00000502613,51,317,chr4,+,IPR000719,Protein kinase domain,Prot_kinase_dom,interpro,ENSP00000424668,biomaRt,Protein kinase domain;chr4:78776694-78859651
+ENST00000502613,176,188,chr4,+,IPR008271,"Serine/threonine-protein kinase, active site",Ser/Thr_kinase_AS,interpro,ENSP00000424668,biomaRt,"Serine/threonine-protein kinase, active site;chr4:78842507-78844945"
+ENST00000502613,52,313,chr4,+,IPR011009,Protein kinase-like domain superfamily,Kinase-like_dom_sf,interpro,ENSP00000424668,biomaRt,Protein kinase-like domain superfamily;chr4:78776697-78859639
+ENST00000502613,893,1161,chr4,+,IPR028182,"BMP-2-inducible protein kinase, C-terminal",BMP2K_C,interpro,ENSP00000424668,biomaRt,"BMP-2-inducible protein kinase, C-terminal;chr4:78911224-78912030"
+ENST00000502613,733,1161,chr4,+,IPR051744,AP2-associated Ser/Thr protein kinase,AP2_assoc_SerThr_kinase,interpro,ENSP00000424668,biomaRt,AP2-associated Ser/Thr protein kinase;chr4:78910744-78912030
+ENST00000502653,495,560,chr4,+,IPR000306,FYVE zinc finger,Znf_FYVE,interpro,ENSP00000425400,biomaRt,FYVE zinc finger;chr4:70802975-70806635
+ENST00000502653,42,174,chr4,+,IPR004012,RUN domain,Run_dom,interpro,ENSP00000425400,biomaRt,RUN domain;chr4:70762623-70768646
+ENST00000502653,470,558,chr4,+,IPR011011,"Zinc finger, FYVE/PHD-type",Znf_FYVE_PHD,interpro,ENSP00000425400,biomaRt,"Zinc finger, FYVE/PHD-type;chr4:70800150-70806629"
+ENST00000502653,493,566,chr4,+,IPR013083,"Zinc finger, RING/FYVE/PHD-type",Znf_RING/FYVE/PHD,interpro,ENSP00000425400,biomaRt,"Zinc finger, RING/FYVE/PHD-type;chr4:70802969-70806653"
+ENST00000502653,8,184,chr4,+,IPR037213,RUN domain superfamily,Run_dom_sf,interpro,ENSP00000425400,biomaRt,RUN domain superfamily;chr4:70762521-70773525
+ENST00000502653,15,170,chr4,+,IPR047334,"RUN and FYVE domain-containing protein 3, RUN domain",RUN_RUFY3,interpro,ENSP00000425400,biomaRt,"RUN and FYVE domain-containing protein 3, RUN domain;chr4:70762542-70768634"
+ENST00000502653,6,566,chr4,+,IPR047335,RUN and FYVE domain-containing protein 1-3,RUFY1-3,interpro,ENSP00000425400,biomaRt,RUN and FYVE domain-containing protein 1-3;chr4:70741677-70806653
+ENST00000502871,51,317,chr4,+,IPR000719,Protein kinase domain,Prot_kinase_dom,interpro,ENSP00000421768,biomaRt,Protein kinase domain;chr4:78776694-78859651
+ENST00000502871,176,188,chr4,+,IPR008271,"Serine/threonine-protein kinase, active site",Ser/Thr_kinase_AS,interpro,ENSP00000421768,biomaRt,"Serine/threonine-protein kinase, active site;chr4:78842507-78844945"
+ENST00000502871,52,313,chr4,+,IPR011009,Protein kinase-like domain superfamily,Kinase-like_dom_sf,interpro,ENSP00000421768,biomaRt,Protein kinase-like domain superfamily;chr4:78776697-78859639
+ENST00000502871,1,653,chr4,+,IPR051744,AP2-associated Ser/Thr protein kinase,AP2_assoc_SerThr_kinase,interpro,ENSP00000421768,biomaRt,AP2-associated Ser/Thr protein kinase;chr4:78776544-78878899
+ENST00000507237,1,171,chrX,-,IPR019396,Transmembrane Fragile-X-F-associated protein,TM_Fragile-X-F-assoc,interpro,ENSP00000427766,biomaRt,Transmembrane Fragile-X-F-associated protein;chrX:149631543-149604064
+ENST00000513597,31,163,chr4,+,IPR004012,RUN domain,Run_dom,interpro,ENSP00000425574,biomaRt,RUN domain;chr4:70762623-70768646
+ENST00000513597,1,173,chr4,+,IPR037213,RUN domain superfamily,Run_dom_sf,interpro,ENSP00000425574,biomaRt,RUN domain superfamily;chr4:70762533-70773525
+ENST00000513597,4,159,chr4,+,IPR047334,"RUN and FYVE domain-containing protein 3, RUN domain",RUN_RUFY3,interpro,ENSP00000425574,biomaRt,"RUN and FYVE domain-containing protein 3, RUN domain;chr4:70762542-70768634"
+ENST00000513597,1,201,chr4,+,IPR047335,RUN and FYVE domain-containing protein 1-3,RUFY1-3,interpro,ENSP00000425574,biomaRt,RUN and FYVE domain-containing protein 1-3;chr4:70762533-70775204
+ENST00000519239,1,144,chr5,+,IPR005756,"Large ribosomal subunit protein uL24, eukaryotic/archaeal",Ribosomal_uL24_euk/arc,interpro,ENSP00000430147,biomaRt,"Large ribosomal subunit protein uL24, eukaryotic/archaeal;chr5:172959874-172969535"
+ENST00000519239,48,83,chr5,+,IPR005824,KOW,KOW,interpro,ENSP00000430147,biomaRt,KOW;chr5:172960015-172968539
+ENST00000519239,52,70,chr5,+,IPR005825,"Large ribosomal subunit protein uL24, conserved site",Ribosomal_uL24_CS,interpro,ENSP00000430147,biomaRt,"Large ribosomal subunit protein uL24, conserved site;chr5:172960027-172968500"
+ENST00000519239,8,125,chr5,+,IPR008991,Translation protein SH3-like domain superfamily,Translation_prot_SH3-like_sf,interpro,ENSP00000430147,biomaRt,Translation protein SH3-like domain superfamily;chr5:172959895-172969478
+ENST00000519239,1,145,chr5,+,IPR014722,"Large ribosomal subunit protein uL2, domain 2",Rib_uL2_dom2,interpro,ENSP00000430147,biomaRt,"Large ribosomal subunit protein uL2, domain 2;chr5:172959874-172969538"
+ENST00000519239,52,106,chr5,+,IPR041988,"Large ribosomal subunit protein uL24, KOW domain",Ribosomal_uL24_KOW,interpro,ENSP00000430147,biomaRt,"Large ribosomal subunit protein uL24, KOW domain;chr5:172960027-172969421"
+ENST00000519974,1,144,chr5,+,IPR005756,"Large ribosomal subunit protein uL24, eukaryotic/archaeal",Ribosomal_uL24_euk/arc,interpro,ENSP00000428177,biomaRt,"Large ribosomal subunit protein uL24, eukaryotic/archaeal;chr5:172959874-172969535"
+ENST00000519974,48,83,chr5,+,IPR005824,KOW,KOW,interpro,ENSP00000428177,biomaRt,KOW;chr5:172960015-172968539
+ENST00000519974,52,70,chr5,+,IPR005825,"Large ribosomal subunit protein uL24, conserved site",Ribosomal_uL24_CS,interpro,ENSP00000428177,biomaRt,"Large ribosomal subunit protein uL24, conserved site;chr5:172960027-172968500"
+ENST00000519974,8,125,chr5,+,IPR008991,Translation protein SH3-like domain superfamily,Translation_prot_SH3-like_sf,interpro,ENSP00000428177,biomaRt,Translation protein SH3-like domain superfamily;chr5:172959895-172969478
+ENST00000519974,1,145,chr5,+,IPR014722,"Large ribosomal subunit protein uL2, domain 2",Rib_uL2_dom2,interpro,ENSP00000428177,biomaRt,"Large ribosomal subunit protein uL2, domain 2;chr5:172959874-172969538"
+ENST00000519974,52,106,chr5,+,IPR041988,"Large ribosomal subunit protein uL24, KOW domain",Ribosomal_uL24_KOW,interpro,ENSP00000428177,biomaRt,"Large ribosomal subunit protein uL24, KOW domain;chr5:172960027-172969421"
+ENST00000520272,382,447,chr8,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000429932,biomaRt,Sterile alpha motif domain;chr8:38247731-38249800
+ENST00000520272,30,112,chr8,+,IPR004170,WWE domain,WWE_dom,interpro,ENSP00000429932,biomaRt,WWE domain;chr8:38233082-38234509
+ENST00000520272,495,700,chr8,+,IPR004177,DDHD domain,DDHD_dom,interpro,ENSP00000429932,biomaRt,DDHD domain;chr8:38252153-38260085
+ENST00000520272,387,453,chr8,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000429932,biomaRt,Sterile alpha motif/pointed domain superfamily;chr8:38247746-38251926
+ENST00000521476,1,144,chr5,+,IPR005756,"Large ribosomal subunit protein uL24, eukaryotic/archaeal",Ribosomal_uL24_euk/arc,interpro,ENSP00000428223,biomaRt,"Large ribosomal subunit protein uL24, eukaryotic/archaeal;chr5:172959874-172969535"
+ENST00000521476,48,83,chr5,+,IPR005824,KOW,KOW,interpro,ENSP00000428223,biomaRt,KOW;chr5:172960015-172968539
+ENST00000521476,52,70,chr5,+,IPR005825,"Large ribosomal subunit protein uL24, conserved site",Ribosomal_uL24_CS,interpro,ENSP00000428223,biomaRt,"Large ribosomal subunit protein uL24, conserved site;chr5:172960027-172968500"
+ENST00000521476,8,125,chr5,+,IPR008991,Translation protein SH3-like domain superfamily,Translation_prot_SH3-like_sf,interpro,ENSP00000428223,biomaRt,Translation protein SH3-like domain superfamily;chr5:172959895-172969478
+ENST00000521476,1,145,chr5,+,IPR014722,"Large ribosomal subunit protein uL2, domain 2",Rib_uL2_dom2,interpro,ENSP00000428223,biomaRt,"Large ribosomal subunit protein uL2, domain 2;chr5:172959874-172969538"
+ENST00000521476,52,106,chr5,+,IPR041988,"Large ribosomal subunit protein uL24, KOW domain",Ribosomal_uL24_KOW,interpro,ENSP00000428223,biomaRt,"Large ribosomal subunit protein uL24, KOW domain;chr5:172960027-172969421"
+ENST00000528311,356,457,chr1,+,IPR003033,SCP2 sterol-binding domain,SCP2_sterol-bd_dom,interpro,ENSP00000434132,biomaRt,SCP2 sterol-binding domain;chr1:53028042-53050674
+ENST00000528311,1,324,chr1,+,IPR016039,Thiolase-like,Thiolase-like,interpro,ENSP00000434132,biomaRt,Thiolase-like;chr1:52950799-53015023
+ENST00000528311,264,280,chr1,+,IPR020613,"Thiolase, conserved site",Thiolase_CS,interpro,ENSP00000434132,biomaRt,"Thiolase, conserved site;chr1:52988088-53014891"
+ENST00000528311,9,27,chr1,+,IPR020615,"Thiolase, acyl-enzyme intermediate active site",Thiolase_acyl_enz_int_AS,interpro,ENSP00000434132,biomaRt,"Thiolase, acyl-enzyme intermediate active site;chr1:52950823-52950879"
+ENST00000528311,4,158,chr1,+,IPR020616,"Thiolase, N-terminal",Thiolase_N,interpro,ENSP00000434132,biomaRt,"Thiolase, N-terminal;chr1:52950808-52978259"
+ENST00000528311,343,461,chr1,+,IPR036527,SCP2 sterol-binding domain superfamily,SCP2_sterol-bd_dom_sf,interpro,ENSP00000434132,biomaRt,SCP2 sterol-binding domain superfamily;chr1:53028003-53050686
+ENST00000528311,197,313,chr1,+,IPR055140,"Thiolase, C-terminal domain 2",Thiolase_C_2,interpro,ENSP00000434132,biomaRt,"Thiolase, C-terminal domain 2;chr1:52980402-53014990"
+ENST00000528613,1,68,chr8,+,IPR004177,DDHD domain,DDHD_dom,interpro,ENSP00000435040,biomaRt,DDHD domain;chr8:38253561-38260085
+ENST00000528853,22,89,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000434692,biomaRt,Sterile alpha motif domain;chr11:70372228-70372517
+ENST00000528853,110,182,chr11,+,IPR001660,Sterile alpha motif domain,SAM,interpro,ENSP00000434692,biomaRt,Sterile alpha motif domain;chr11:70374921-70376577
+ENST00000528853,3,100,chr11,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000434692,biomaRt,Sterile alpha motif/pointed domain superfamily;chr11:70362445-70372550
+ENST00000528853,103,198,chr11,+,IPR013761,Sterile alpha motif/pointed domain superfamily,SAM/pointed_sf,interpro,ENSP00000434692,biomaRt,Sterile alpha motif/pointed domain superfamily;chr11:70372557-70378054
+ENST00000528853,2,211,chr11,+,IPR029515,"LAR-interacting protein, Liprin",Liprin,interpro,ENSP00000434692,biomaRt,"LAR-interacting protein, Liprin;chr11:70362442-70378093"
+ENST00000528853,24,89,chr11,+,IPR037621,"Liprin-alpha, SAM domain repeat 2",Liprin-alpha_SAM_rpt_2,interpro,ENSP00000434692,biomaRt,"Liprin-alpha, SAM domain repeat 2;chr11:70372234-70372517"
+ENST00000528853,109,180,chr11,+,IPR037622,"Liprin-alpha, SAM domain repeat 3",Liprin-alpha_SAM_rpt_3,interpro,ENSP00000434692,biomaRt,"Liprin-alpha, SAM domain repeat 3;chr11:70374918-70376571"
+ENST00000531154,1,420,chr11,-,IPR005599,GPI mannosyltransferase,GPI_mannosylTrfase,interpro,ENSP00000435517,biomaRt,GPI mannosyltransferase;chr11:111860547-111786439
+ENST00000532425,2,170,chr11,-,IPR005599,GPI mannosyltransferase,GPI_mannosylTrfase,interpro,ENSP00000432442,biomaRt,GPI mannosyltransferase;chr11:111838252-111786445
+ENST00000537020,4,338,chr1,+,IPR004328,BRO1 domain,BRO1_dom,interpro,ENSP00000440041,biomaRt,BRO1 domain;chr1:222715709-222732652
+ENST00000537020,1,336,chr1,+,IPR038499,BRO1 domain superfamily,BRO1_sf,interpro,ENSP00000440041,biomaRt,BRO1 domain superfamily;chr1:222715700-222732646
+ENST00000537020,2,332,chr1,+,IPR038898,BRO1 domain-containing protein BROX,BROX,interpro,ENSP00000440041,biomaRt,BRO1 domain-containing protein BROX;chr1:222715703-222732634
+ENST00000538185,23,101,chr11,+,IPR031410,Stabilizer of axonemal microtubules 4,SAXO4,interpro,ENSP00000444387,biomaRt,Stabilizer of axonemal microtubules 4;chr11:61489774-61490564
+ENST00000539697,4,379,chr1,+,IPR004328,BRO1 domain,BRO1_dom,interpro,ENSP00000441080,biomaRt,BRO1 domain;chr1:222715709-222732711
+ENST00000539697,1,342,chr1,+,IPR038499,BRO1 domain superfamily,BRO1_sf,interpro,ENSP00000441080,biomaRt,BRO1 domain superfamily;chr1:222715700-222731489
+ENST00000539697,2,102,chr1,+,IPR038898,BRO1 domain-containing protein BROX,BROX,interpro,ENSP00000441080,biomaRt,BRO1 domain-containing protein BROX;chr1:222715703-222724092
+ENST00000549884,1789,1897,chr12,-,IPR001487,Bromodomain,Bromodomain,interpro,ENSP00000447941,biomaRt,Bromodomain;chr12:56599321-56598765
+ENST00000549884,544,622,chr12,-,IPR001739,Methyl-CpG DNA binding,Methyl_CpG_DNA-bd,interpro,ENSP00000447941,biomaRt,Methyl-CpG DNA binding;chr12:56611593-56610200
+ENST00000549884,1676,1722,chr12,-,IPR001965,"Zinc finger, PHD-type",Znf_PHD,interpro,ENSP00000447941,biomaRt,"Zinc finger, PHD-type;chr12:56599702-56599842"
+ENST00000549884,1662,1726,chr12,-,IPR011011,"Zinc finger, FYVE/PHD-type",Znf_FYVE_PHD,interpro,ENSP00000447941,biomaRt,"Zinc finger, FYVE/PHD-type;chr12:56600055-56599134"
+ENST00000549884,1669,1726,chr12,-,IPR013083,"Zinc finger, RING/FYVE/PHD-type",Znf_RING/FYVE/PHD,interpro,ENSP00000447941,biomaRt,"Zinc finger, RING/FYVE/PHD-type;chr12:56600076-56599134"
+ENST00000549884,527,656,chr12,-,IPR016177,DNA-binding domain superfamily,DNA-bd_dom_sf,interpro,ENSP00000447941,biomaRt,DNA-binding domain superfamily;chr12:56612216-56609822
+ENST00000549884,647,659,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000447941,biomaRt,"AT hook, DNA-binding motif;chr12:56609793-56609831"
+ENST00000549884,668,680,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000447941,biomaRt,"AT hook, DNA-binding motif;chr12:56609856-56609894"
+ENST00000549884,1184,1196,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000447941,biomaRt,"AT hook, DNA-binding motif;chr12:56601671-56601709"
+ENST00000549884,1402,1414,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000447941,biomaRt,"AT hook, DNA-binding motif;chr12:56601312-56601350"
+ENST00000549884,1813,1870,chr12,-,IPR018359,"Bromodomain, conserved site",Bromodomain_CS,interpro,ENSP00000447941,biomaRt,"Bromodomain, conserved site;chr12:56598902-56598684"
+ENST00000549884,846,911,chr12,-,IPR018501,DDT domain,DDT_dom,interpro,ENSP00000447941,biomaRt,DDT domain;chr12:56605115-56605312
+ENST00000549884,1674,1724,chr12,-,IPR019787,"Zinc finger, PHD-finger",Znf_PHD-finger,interpro,ENSP00000447941,biomaRt,"Zinc finger, PHD-finger;chr12:56600091-56599848"
+ENST00000549884,1110,1470,chr12,-,IPR028941,WHIM2 domain,WHIM2_dom,interpro,ENSP00000447941,biomaRt,WHIM2 domain;chr12:56602761-56601058
+ENST00000549884,950,991,chr12,-,IPR028942,WHIM1 domain,WHIM1_dom,interpro,ENSP00000447941,biomaRt,WHIM1 domain;chr12:56604684-56604226
+ENST00000549884,1774,1902,chr12,-,IPR036427,Bromodomain-like superfamily,Bromodomain-like_sf,interpro,ENSP00000447941,biomaRt,Bromodomain-like superfamily;chr12:56599276-56598780
+ENST00000549884,1796,1892,chr12,-,IPR037374,"BAZ2A/BAZ2B, bromodomain",BAZ2A/B_Bromo,interpro,ENSP00000447941,biomaRt,"BAZ2A/BAZ2B, bromodomain;chr12:56599342-56598750"
+ENST00000551812,1791,1899,chr12,-,IPR001487,Bromodomain,Bromodomain,interpro,ENSP00000446880,biomaRt,Bromodomain;chr12:56599321-56598765
+ENST00000551812,546,624,chr12,-,IPR001739,Methyl-CpG DNA binding,Methyl_CpG_DNA-bd,interpro,ENSP00000446880,biomaRt,Methyl-CpG DNA binding;chr12:56611593-56610200
+ENST00000551812,1678,1724,chr12,-,IPR001965,"Zinc finger, PHD-type",Znf_PHD,interpro,ENSP00000446880,biomaRt,"Zinc finger, PHD-type;chr12:56599702-56599842"
+ENST00000551812,1664,1728,chr12,-,IPR011011,"Zinc finger, FYVE/PHD-type",Znf_FYVE_PHD,interpro,ENSP00000446880,biomaRt,"Zinc finger, FYVE/PHD-type;chr12:56600055-56599134"
+ENST00000551812,1671,1728,chr12,-,IPR013083,"Zinc finger, RING/FYVE/PHD-type",Znf_RING/FYVE/PHD,interpro,ENSP00000446880,biomaRt,"Zinc finger, RING/FYVE/PHD-type;chr12:56600076-56599134"
+ENST00000551812,529,658,chr12,-,IPR016177,DNA-binding domain superfamily,DNA-bd_dom_sf,interpro,ENSP00000446880,biomaRt,DNA-binding domain superfamily;chr12:56612216-56609822
+ENST00000551812,649,661,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000446880,biomaRt,"AT hook, DNA-binding motif;chr12:56609793-56609831"
+ENST00000551812,670,682,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000446880,biomaRt,"AT hook, DNA-binding motif;chr12:56609856-56609894"
+ENST00000551812,1186,1198,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000446880,biomaRt,"AT hook, DNA-binding motif;chr12:56601671-56601709"
+ENST00000551812,1404,1416,chr12,-,IPR017956,"AT hook, DNA-binding motif",AT_hook_DNA-bd_motif,interpro,ENSP00000446880,biomaRt,"AT hook, DNA-binding motif;chr12:56601312-56601350"
+ENST00000551812,1815,1872,chr12,-,IPR018359,"Bromodomain, conserved site",Bromodomain_CS,interpro,ENSP00000446880,biomaRt,"Bromodomain, conserved site;chr12:56598902-56598684"
+ENST00000551812,848,913,chr12,-,IPR018501,DDT domain,DDT_dom,interpro,ENSP00000446880,biomaRt,DDT domain;chr12:56605115-56605312
+ENST00000551812,1676,1726,chr12,-,IPR019787,"Zinc finger, PHD-finger",Znf_PHD-finger,interpro,ENSP00000446880,biomaRt,"Zinc finger, PHD-finger;chr12:56600091-56599848"
+ENST00000551812,1112,1472,chr12,-,IPR028941,WHIM2 domain,WHIM2_dom,interpro,ENSP00000446880,biomaRt,WHIM2 domain;chr12:56602761-56601058
+ENST00000551812,952,993,chr12,-,IPR028942,WHIM1 domain,WHIM1_dom,interpro,ENSP00000446880,biomaRt,WHIM1 domain;chr12:56604684-56604226
+ENST00000551812,1776,1904,chr12,-,IPR036427,Bromodomain-like superfamily,Bromodomain-like_sf,interpro,ENSP00000446880,biomaRt,Bromodomain-like superfamily;chr12:56599276-56598780
+ENST00000551812,1798,1894,chr12,-,IPR037374,"BAZ2A/BAZ2B, bromodomain",BAZ2A/B_Bromo,interpro,ENSP00000446880,biomaRt,"BAZ2A/BAZ2B, bromodomain;chr12:56599342-56598750"
+ENST00000564754,1543,1634,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456845,biomaRt,WD40 repeat;chr15:42437258-42428038
+ENST00000564754,1667,1709,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456845,biomaRt,WD40 repeat;chr15:42424834-42424962
+ENST00000564754,1712,1749,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456845,biomaRt,WD40 repeat;chr15:42424969-42424054
+ENST00000564754,1752,1789,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456845,biomaRt,WD40 repeat;chr15:42422501-42422614
+ENST00000564754,1792,1829,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456845,biomaRt,WD40 repeat;chr15:42421917-42421102
+ENST00000564754,5,29,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000456845,biomaRt,Zinc finger C2H2-type;chr15:42472248-42466085
+ENST00000564754,43,67,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000456845,biomaRt,Zinc finger C2H2-type;chr15:42456968-42457042
+ENST00000564754,1836,1861,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000456845,biomaRt,Zinc finger C2H2-type;chr15:42421121-42417870
+ENST00000564754,1869,1897,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000456845,biomaRt,Zinc finger C2H2-type;chr15:42417892-42417333
+ENST00000564754,1478,1641,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000456845,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42439701-42428059
+ENST00000564754,1642,1876,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000456845,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42428060-42417915
+ENST00000564754,1548,1837,chr15,-,IPR036322,WD40-repeat-containing domain superfamily,WD40_repeat_dom_sf,interpro,ENSP00000456845,biomaRt,WD40-repeat-containing domain superfamily;chr15:42437273-42421126
+ENST00000564754,1,1906,chr15,-,IPR042622,Zinc finger protein 106,Znf106,interpro,ENSP00000456845,biomaRt,Zinc finger protein 106;chr15:42472236-42417360
+ENST00000565380,748,839,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000455674,biomaRt,WD40 repeat;chr15:42437258-42428038
+ENST00000565380,872,914,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000455674,biomaRt,WD40 repeat;chr15:42424834-42424962
+ENST00000565380,917,954,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000455674,biomaRt,WD40 repeat;chr15:42424969-42424054
+ENST00000565380,957,994,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000455674,biomaRt,WD40 repeat;chr15:42422501-42422614
+ENST00000565380,997,1034,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000455674,biomaRt,WD40 repeat;chr15:42421917-42421102
+ENST00000565380,5,29,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000455674,biomaRt,Zinc finger C2H2-type;chr15:42472248-42466085
+ENST00000565380,1041,1066,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000455674,biomaRt,Zinc finger C2H2-type;chr15:42421121-42417870
+ENST00000565380,1074,1102,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000455674,biomaRt,Zinc finger C2H2-type;chr15:42417892-42417333
+ENST00000565380,683,847,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000455674,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42439701-42428062
+ENST00000565380,848,1069,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000455674,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42428063-42417879
+ENST00000565380,750,1030,chr15,-,IPR036322,WD40-repeat-containing domain superfamily,WD40_repeat_dom_sf,interpro,ENSP00000455674,biomaRt,WD40-repeat-containing domain superfamily;chr15:42437264-42421090
+ENST00000565380,1,39,chr15,-,IPR042622,Zinc finger protein 106,Znf106,interpro,ENSP00000455674,biomaRt,Zinc finger protein 106;chr15:42472236-42448072
+ENST00000565500,487,578,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456604,biomaRt,WD40 repeat;chr15:42437259-42428039
+ENST00000565500,611,653,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456604,biomaRt,WD40 repeat;chr15:42424835-42424963
+ENST00000565500,656,693,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456604,biomaRt,WD40 repeat;chr15:42424970-42424055
+ENST00000565500,696,733,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456604,biomaRt,WD40 repeat;chr15:42422502-42422615
+ENST00000565500,736,773,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456604,biomaRt,WD40 repeat;chr15:42421918-42421103
+ENST00000565500,782,805,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000456604,biomaRt,Zinc finger C2H2-type;chr15:42421128-42417871
+ENST00000565500,417,578,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000456604,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42439426-42428039
+ENST00000565500,579,771,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000456604,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42428040-42421097
+ENST00000565500,492,782,chr15,-,IPR036322,WD40-repeat-containing domain superfamily,WD40_repeat_dom_sf,interpro,ENSP00000456604,biomaRt,WD40-repeat-containing domain superfamily;chr15:42437274-42421130
+ENST00000565500,2,287,chr15,-,IPR042622,Zinc finger protein 106,Znf106,interpro,ENSP00000456604,biomaRt,Zinc finger protein 106;chr15:42448075-42439038
+ENST00000565611,705,796,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000457637,biomaRt,WD40 repeat;chr15:42437258-42428038
+ENST00000565611,829,871,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000457637,biomaRt,WD40 repeat;chr15:42424834-42424962
+ENST00000565611,874,911,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000457637,biomaRt,WD40 repeat;chr15:42424969-42424054
+ENST00000565611,914,951,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000457637,biomaRt,WD40 repeat;chr15:42422501-42422614
+ENST00000565611,954,991,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000457637,biomaRt,WD40 repeat;chr15:42421917-42421102
+ENST00000565611,1000,1023,chr15,-,IPR013087,Zinc finger C2H2-type,Znf_C2H2_type,interpro,ENSP00000457637,biomaRt,Zinc finger C2H2-type;chr15:42421127-42417870
+ENST00000565611,638,805,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000457637,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42439695-42428065
+ENST00000565611,806,933,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000457637,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42428066-42422560
+ENST00000565611,934,989,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000457637,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42422561-42421096
+ENST00000565611,710,1000,chr15,-,IPR036322,WD40-repeat-containing domain superfamily,WD40_repeat_dom_sf,interpro,ENSP00000457637,biomaRt,WD40-repeat-containing domain superfamily;chr15:42437273-42421129
+ENST00000565611,1,1068,chr15,-,IPR042622,Zinc finger protein 106,Znf106,interpro,ENSP00000457637,biomaRt,Zinc finger protein 106;chr15:42448072-42417360
+ENST00000565948,1,816,chr15,-,IPR042622,Zinc finger protein 106,Znf106,interpro,ENSP00000455049,biomaRt,Zinc finger protein 106;chr15:42449771-42446658
+ENST00000569648,30,72,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456191,biomaRt,WD40 repeat;chr15:42424834-42424962
+ENST00000569648,75,112,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456191,biomaRt,WD40 repeat;chr15:42424969-42424054
+ENST00000569648,115,152,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456191,biomaRt,WD40 repeat;chr15:42422501-42422614
+ENST00000569648,155,192,chr15,-,IPR001680,WD40 repeat,WD40_rpt,interpro,ENSP00000456191,biomaRt,WD40 repeat;chr15:42421917-42421102
+ENST00000569648,1,211,chr15,-,IPR015943,WD40/YVTN repeat-like-containing domain superfamily,WD40/YVTN_repeat-like_dom_sf,interpro,ENSP00000456191,biomaRt,WD40/YVTN repeat-like-containing domain superfamily;chr15:42428018-42415458
+ENST00000569648,7,194,chr15,-,IPR036322,WD40-repeat-containing domain superfamily,WD40_repeat_dom_sf,interpro,ENSP00000456191,biomaRt,WD40-repeat-containing domain superfamily;chr15:42428036-42421108
+ENST00000569648,1,202,chr15,-,IPR042622,Zinc finger protein 106,Znf106,interpro,ENSP00000456191,biomaRt,Zinc finger protein 106;chr15:42428018-42421132
+ENST00000585893,95,223,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000467871,biomaRt,SANT/Myb domain;chr17:42722831-42718475
+ENST00000585893,390,438,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000467871,biomaRt,SANT/Myb domain;chr17:42712372-42709878
+ENST00000585893,573,694,chr17,-,IPR001214,SET domain,SET_dom,interpro,ENSP00000467871,biomaRt,SET domain;chr17:42706183-42702553
+ENST00000585893,39,68,chr17,-,IPR021654,Histone-lysine N-methyltransferase EZH1/EZH2,EZH1/EZH2,interpro,ENSP00000467871,biomaRt,Histone-lysine N-methyltransferase EZH1/EZH2;chr17:42728939-42727721
+ENST00000585893,464,566,chr17,-,IPR026489,CXC domain,CXC_dom,interpro,ENSP00000467871,biomaRt,CXC domain;chr17:42708892-42706164
+ENST00000585893,516,553,chr17,-,IPR033467,Tesmin/TSO1-like CXC domain,Tesmin/TSO1-like_CXC,interpro,ENSP00000467871,biomaRt,Tesmin/TSO1-like CXC domain;chr17:42706012-42706125
+ENST00000585893,119,222,chr17,-,IPR041343,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain",PRC2_HTH_1,interpro,ENSP00000467871,biomaRt,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain;chr17:42722903-42718472"
+ENST00000585893,520,551,chr17,-,IPR041355,Pre-SET CXC domain,Pre-SET_CXC,interpro,ENSP00000467871,biomaRt,Pre-SET CXC domain;chr17:42706024-42706119
+ENST00000585893,568,703,chr17,-,IPR044438,"EZH1, SET domain",EZH1_SET,interpro,ENSP00000467871,biomaRt,"EZH1, SET domain;chr17:42706168-42702580"
+ENST00000585893,82,702,chr17,-,IPR045318,Histone-lysine N-methyltransferase EZH1/2-like,EZH1/2-like,interpro,ENSP00000467871,biomaRt,Histone-lysine N-methyltransferase EZH1/2-like;chr17:42727761-42702577
+ENST00000585893,471,697,chr17,-,IPR046341,SET domain superfamily,SET_dom_sf,interpro,ENSP00000467871,biomaRt,SET domain superfamily;chr17:42708913-42702562
+ENST00000585893,230,282,chr17,-,IPR048358,"EZH1/2, MCSS domain",EZH1/2_MCSS,interpro,ENSP00000467871,biomaRt,"EZH1/2, MCSS domain;chr17:42718494-42718010"
+ENST00000587303,1392,1650,chr19,-,IPR000242,"Tyrosine-specific protein phosphatase, PTPase domain",PTP_cat,interpro,ENSP00000467537,biomaRt,"Tyrosine-specific protein phosphatase, PTPase domain;chr19:5215575-5212145"
+ENST00000587303,1679,1941,chr19,-,IPR000242,"Tyrosine-specific protein phosphatase, PTPase domain",PTP_cat,interpro,ENSP00000467537,biomaRt,"Tyrosine-specific protein phosphatase, PTPase domain;chr19:5212230-5206821"
+ENST00000587303,1568,1639,chr19,-,IPR000387,Tyrosine-specific protein phosphatases domain,Tyr_Pase_dom,interpro,ENSP00000467537,biomaRt,Tyrosine-specific protein phosphatases domain;chr19:5212424-5212112
+ENST00000587303,1857,1930,chr19,-,IPR000387,Tyrosine-specific protein phosphatases domain,Tyr_Pase_dom,interpro,ENSP00000467537,biomaRt,Tyrosine-specific protein phosphatases domain;chr19:5208318-5206788
+ENST00000587303,1546,1647,chr19,-,IPR003595,"Protein-tyrosine phosphatase, catalytic",Tyr_Pase_cat,interpro,ENSP00000467537,biomaRt,"Protein-tyrosine phosphatase, catalytic;chr19:5212358-5212136"
+ENST00000587303,1835,1938,chr19,-,IPR003595,"Protein-tyrosine phosphatase, catalytic",Tyr_Pase_cat,interpro,ENSP00000467537,biomaRt,"Protein-tyrosine phosphatase, catalytic;chr19:5208252-5206812"
+ENST00000587303,45,114,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000467537,biomaRt,Immunoglobulin subtype 2;chr19:5274240-5273546
+ENST00000587303,147,223,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000467537,biomaRt,Immunoglobulin subtype 2;chr19:5265067-5258090
+ENST00000587303,257,318,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000467537,biomaRt,Immunoglobulin subtype 2;chr19:5245826-5246011
+ENST00000587303,39,125,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000467537,biomaRt,Immunoglobulin domain subtype;chr19:5274222-5273579
+ENST00000587303,141,235,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000467537,biomaRt,Immunoglobulin domain subtype;chr19:5265049-5258126
+ENST00000587303,251,329,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000467537,biomaRt,Immunoglobulin domain subtype;chr19:5245808-5246044
+ENST00000587303,332,424,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467537,biomaRt,Fibronectin type III;chr19:5243906-5244184
+ENST00000587303,427,523,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467537,biomaRt,Fibronectin type III;chr19:5244191-5244481
+ENST00000587303,525,616,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467537,biomaRt,Fibronectin type III;chr19:5240201-5239062
+ENST00000587303,618,718,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467537,biomaRt,Fibronectin type III;chr19:5231312-5231614
+ENST00000587303,720,831,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467537,biomaRt,Fibronectin type III;chr19:5229493-5225843
+ENST00000587303,832,1033,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467537,biomaRt,Fibronectin type III;chr19:5225844-5223293
+ENST00000587303,1034,1120,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467537,biomaRt,Fibronectin type III;chr19:5223294-5221158
+ENST00000587303,33,123,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like domain;chr19:5274204-5273573
+ENST00000587303,135,233,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like domain;chr19:5265031-5258120
+ENST00000587303,245,327,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like domain;chr19:5245790-5246038
+ENST00000587303,33,124,chr19,-,IPR013098,Immunoglobulin I-set,Ig_I-set,interpro,ENSP00000467537,biomaRt,Immunoglobulin I-set;chr19:5274204-5273576
+ENST00000587303,28,127,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5286131-5265009
+ENST00000587303,128,238,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5265010-5256115
+ENST00000587303,239,332,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5256116-5243908
+ENST00000587303,333,418,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5243909-5244166
+ENST00000587303,419,523,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5244167-5244481
+ENST00000587303,524,614,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5244482-5239056
+ENST00000587303,615,714,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5239057-5231602
+ENST00000587303,715,831,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5231603-5225843
+ENST00000587303,832,928,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5225844-5222978
+ENST00000587303,929,1035,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5222979-5222124
+ENST00000587303,1036,1120,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like fold;chr19:5222125-5221158
+ENST00000587303,1587,1597,chr19,-,IPR016130,"Protein-tyrosine phosphatase, active site",Tyr_Pase_AS,interpro,ENSP00000467537,biomaRt,"Protein-tyrosine phosphatase, active site;chr19:5212481-5211986"
+ENST00000587303,1878,1888,chr19,-,IPR016130,"Protein-tyrosine phosphatase, active site",Tyr_Pase_AS,interpro,ENSP00000467537,biomaRt,"Protein-tyrosine phosphatase, active site;chr19:5208381-5207943"
+ENST00000587303,1366,1948,chr19,-,IPR029021,Protein-tyrosine phosphatase-like,Prot-tyrosine_phosphatase-like,interpro,ENSP00000467537,biomaRt,Protein-tyrosine phosphatase-like;chr19:5216767-5206842
+ENST00000587303,331,917,chr19,-,IPR036116,Fibronectin type III superfamily,FN3_sf,interpro,ENSP00000467537,biomaRt,Fibronectin type III superfamily;chr19:5243903-5222945
+ENST00000587303,922,1159,chr19,-,IPR036116,Fibronectin type III superfamily,FN3_sf,interpro,ENSP00000467537,biomaRt,Fibronectin type III superfamily;chr19:5222958-5220281
+ENST00000587303,31,125,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like domain superfamily;chr19:5286140-5273579
+ENST00000587303,135,227,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like domain superfamily;chr19:5265031-5258102
+ENST00000587303,243,337,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000467537,biomaRt,Immunoglobulin-like domain superfamily;chr19:5245784-5243923
+ENST00000587303,1085,1649,chr19,-,IPR050713,Receptor-type Tyrosine-protein Phosphatases/Ushers,RTP_Phos/Ushers,interpro,ENSP00000467537,biomaRt,Receptor-type Tyrosine-protein Phosphatases/Ushers;chr19:5221051-5212142
+ENST00000588012,1354,1612,chr19,-,IPR000242,"Tyrosine-specific protein phosphatase, PTPase domain",PTP_cat,interpro,ENSP00000465443,biomaRt,"Tyrosine-specific protein phosphatase, PTPase domain;chr19:5215575-5212145"
+ENST00000588012,1641,1903,chr19,-,IPR000242,"Tyrosine-specific protein phosphatase, PTPase domain",PTP_cat,interpro,ENSP00000465443,biomaRt,"Tyrosine-specific protein phosphatase, PTPase domain;chr19:5212230-5206821"
+ENST00000588012,1530,1601,chr19,-,IPR000387,Tyrosine-specific protein phosphatases domain,Tyr_Pase_dom,interpro,ENSP00000465443,biomaRt,Tyrosine-specific protein phosphatases domain;chr19:5212424-5212112
+ENST00000588012,1819,1892,chr19,-,IPR000387,Tyrosine-specific protein phosphatases domain,Tyr_Pase_dom,interpro,ENSP00000465443,biomaRt,Tyrosine-specific protein phosphatases domain;chr19:5208318-5206788
+ENST00000588012,1508,1609,chr19,-,IPR003595,"Protein-tyrosine phosphatase, catalytic",Tyr_Pase_cat,interpro,ENSP00000465443,biomaRt,"Protein-tyrosine phosphatase, catalytic;chr19:5212358-5212136"
+ENST00000588012,1797,1900,chr19,-,IPR003595,"Protein-tyrosine phosphatase, catalytic",Tyr_Pase_cat,interpro,ENSP00000465443,biomaRt,"Protein-tyrosine phosphatase, catalytic;chr19:5208252-5206812"
+ENST00000588012,45,114,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000465443,biomaRt,Immunoglobulin subtype 2;chr19:5274240-5273546
+ENST00000588012,147,214,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000465443,biomaRt,Immunoglobulin subtype 2;chr19:5265067-5258090
+ENST00000588012,244,305,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000465443,biomaRt,Immunoglobulin subtype 2;chr19:5245826-5246011
+ENST00000588012,39,125,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000465443,biomaRt,Immunoglobulin domain subtype;chr19:5274222-5273579
+ENST00000588012,141,226,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000465443,biomaRt,Immunoglobulin domain subtype;chr19:5265049-5258126
+ENST00000588012,238,316,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000465443,biomaRt,Immunoglobulin domain subtype;chr19:5245808-5246044
+ENST00000588012,319,411,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000465443,biomaRt,Fibronectin type III;chr19:5243906-5244184
+ENST00000588012,414,510,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000465443,biomaRt,Fibronectin type III;chr19:5244191-5244481
+ENST00000588012,512,603,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000465443,biomaRt,Fibronectin type III;chr19:5240201-5239062
+ENST00000588012,605,705,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000465443,biomaRt,Fibronectin type III;chr19:5231312-5231614
+ENST00000588012,707,809,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000465443,biomaRt,Fibronectin type III;chr19:5229493-5225843
+ENST00000588012,810,1011,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000465443,biomaRt,Fibronectin type III;chr19:5225844-5223293
+ENST00000588012,1012,1098,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000465443,biomaRt,Fibronectin type III;chr19:5223294-5221158
+ENST00000588012,33,123,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like domain;chr19:5274204-5273573
+ENST00000588012,135,224,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like domain;chr19:5265031-5258120
+ENST00000588012,232,314,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like domain;chr19:5245790-5246038
+ENST00000588012,33,124,chr19,-,IPR013098,Immunoglobulin I-set,Ig_I-set,interpro,ENSP00000465443,biomaRt,Immunoglobulin I-set;chr19:5274204-5273576
+ENST00000588012,136,216,chr19,-,IPR013098,Immunoglobulin I-set,Ig_I-set,interpro,ENSP00000465443,biomaRt,Immunoglobulin I-set;chr19:5265034-5258096
+ENST00000588012,28,127,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5286131-5265009
+ENST00000588012,128,228,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5265010-5245780
+ENST00000588012,229,320,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5245781-5243911
+ENST00000588012,321,405,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5243912-5244166
+ENST00000588012,406,505,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5244167-5244466
+ENST00000588012,506,599,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5244467-5239050
+ENST00000588012,600,702,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5239051-5231605
+ENST00000588012,703,809,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5231606-5225843
+ENST00000588012,810,906,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5225844-5222978
+ENST00000588012,907,1013,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5222979-5222124
+ENST00000588012,1014,1098,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like fold;chr19:5222125-5221158
+ENST00000588012,1549,1559,chr19,-,IPR016130,"Protein-tyrosine phosphatase, active site",Tyr_Pase_AS,interpro,ENSP00000465443,biomaRt,"Protein-tyrosine phosphatase, active site;chr19:5212481-5211986"
+ENST00000588012,1840,1850,chr19,-,IPR016130,"Protein-tyrosine phosphatase, active site",Tyr_Pase_AS,interpro,ENSP00000465443,biomaRt,"Protein-tyrosine phosphatase, active site;chr19:5208381-5207943"
+ENST00000588012,1328,1910,chr19,-,IPR029021,Protein-tyrosine phosphatase-like,Prot-tyrosine_phosphatase-like,interpro,ENSP00000465443,biomaRt,Protein-tyrosine phosphatase-like;chr19:5218532-5206842
+ENST00000588012,318,895,chr19,-,IPR036116,Fibronectin type III superfamily,FN3_sf,interpro,ENSP00000465443,biomaRt,Fibronectin type III superfamily;chr19:5243903-5222945
+ENST00000588012,900,1008,chr19,-,IPR036116,Fibronectin type III superfamily,FN3_sf,interpro,ENSP00000465443,biomaRt,Fibronectin type III superfamily;chr19:5222958-5223284
+ENST00000588012,1015,1137,chr19,-,IPR036116,Fibronectin type III superfamily,FN3_sf,interpro,ENSP00000465443,biomaRt,Fibronectin type III superfamily;chr19:5222128-5220281
+ENST00000588012,31,125,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like domain superfamily;chr19:5286140-5273579
+ENST00000588012,135,227,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like domain superfamily;chr19:5265031-5245777
+ENST00000588012,230,324,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000465443,biomaRt,Immunoglobulin-like domain superfamily;chr19:5245784-5243923
+ENST00000588012,1064,1611,chr19,-,IPR050713,Receptor-type Tyrosine-protein Phosphatases/Ushers,RTP_Phos/Ushers,interpro,ENSP00000465443,biomaRt,Receptor-type Tyrosine-protein Phosphatases/Ushers;chr19:5221054-5212142
+ENST00000590078,65,193,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000465220,biomaRt,SANT/Myb domain;chr17:42722831-42718475
+ENST00000590078,360,408,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000465220,biomaRt,SANT/Myb domain;chr17:42712372-42709878
+ENST00000590078,543,664,chr17,-,IPR001214,SET domain,SET_dom,interpro,ENSP00000465220,biomaRt,SET domain;chr17:42706183-42702553
+ENST00000590078,434,536,chr17,-,IPR026489,CXC domain,CXC_dom,interpro,ENSP00000465220,biomaRt,CXC domain;chr17:42708892-42706164
+ENST00000590078,486,523,chr17,-,IPR033467,Tesmin/TSO1-like CXC domain,Tesmin/TSO1-like_CXC,interpro,ENSP00000465220,biomaRt,Tesmin/TSO1-like CXC domain;chr17:42706012-42706125
+ENST00000590078,89,192,chr17,-,IPR041343,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain",PRC2_HTH_1,interpro,ENSP00000465220,biomaRt,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain;chr17:42722903-42718472"
+ENST00000590078,490,521,chr17,-,IPR041355,Pre-SET CXC domain,Pre-SET_CXC,interpro,ENSP00000465220,biomaRt,Pre-SET CXC domain;chr17:42706024-42706119
+ENST00000590078,538,673,chr17,-,IPR044438,"EZH1, SET domain",EZH1_SET,interpro,ENSP00000465220,biomaRt,"EZH1, SET domain;chr17:42706168-42702580"
+ENST00000590078,18,672,chr17,-,IPR045318,Histone-lysine N-methyltransferase EZH1/2-like,EZH1/2-like,interpro,ENSP00000465220,biomaRt,Histone-lysine N-methyltransferase EZH1/2-like;chr17:42724320-42702577
+ENST00000590078,441,667,chr17,-,IPR046341,SET domain superfamily,SET_dom_sf,interpro,ENSP00000465220,biomaRt,SET domain superfamily;chr17:42708913-42702562
+ENST00000590078,200,252,chr17,-,IPR048358,"EZH1/2, MCSS domain",EZH1/2_MCSS,interpro,ENSP00000465220,biomaRt,"EZH1/2, MCSS domain;chr17:42718494-42718010"
+ENST00000590509,45,114,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000465185,biomaRt,Immunoglobulin subtype 2;chr19:5274240-5273546
+ENST00000590509,39,125,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000465185,biomaRt,Immunoglobulin domain subtype;chr19:5274222-5273579
+ENST00000590509,33,123,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000465185,biomaRt,Immunoglobulin-like domain;chr19:5274204-5273573
+ENST00000590509,33,124,chr19,-,IPR013098,Immunoglobulin I-set,Ig_I-set,interpro,ENSP00000465185,biomaRt,Immunoglobulin I-set;chr19:5274204-5273576
+ENST00000590509,27,126,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000465185,biomaRt,Immunoglobulin-like fold;chr19:5286128-5273582
+ENST00000590509,31,125,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000465185,biomaRt,Immunoglobulin-like domain superfamily;chr19:5286140-5273579
+ENST00000590769,117,168,chr16,+,IPR014840,Hpc2-related domain,HRD,interpro,ENSP00000468740,biomaRt,Hpc2-related domain;chr16:4858580-4859096
+ENST00000590769,353,573,chr16,+,IPR026947,Ubinuclein middle domain,UBN_middle_dom,interpro,ENSP00000468740,biomaRt,Ubinuclein middle domain;chr16:4861049-4872896
+ENST00000592099,945,1203,chr19,-,IPR000242,"Tyrosine-specific protein phosphatase, PTPase domain",PTP_cat,interpro,ENSP00000467398,biomaRt,"Tyrosine-specific protein phosphatase, PTPase domain;chr19:5215575-5212145"
+ENST00000592099,1232,1494,chr19,-,IPR000242,"Tyrosine-specific protein phosphatase, PTPase domain",PTP_cat,interpro,ENSP00000467398,biomaRt,"Tyrosine-specific protein phosphatase, PTPase domain;chr19:5212230-5206821"
+ENST00000592099,1121,1192,chr19,-,IPR000387,Tyrosine-specific protein phosphatases domain,Tyr_Pase_dom,interpro,ENSP00000467398,biomaRt,Tyrosine-specific protein phosphatases domain;chr19:5212424-5212112
+ENST00000592099,1410,1483,chr19,-,IPR000387,Tyrosine-specific protein phosphatases domain,Tyr_Pase_dom,interpro,ENSP00000467398,biomaRt,Tyrosine-specific protein phosphatases domain;chr19:5208318-5206788
+ENST00000592099,1099,1200,chr19,-,IPR003595,"Protein-tyrosine phosphatase, catalytic",Tyr_Pase_cat,interpro,ENSP00000467398,biomaRt,"Protein-tyrosine phosphatase, catalytic;chr19:5212358-5212136"
+ENST00000592099,1388,1491,chr19,-,IPR003595,"Protein-tyrosine phosphatase, catalytic",Tyr_Pase_cat,interpro,ENSP00000467398,biomaRt,"Protein-tyrosine phosphatase, catalytic;chr19:5208252-5206812"
+ENST00000592099,45,114,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000467398,biomaRt,Immunoglobulin subtype 2;chr19:5274240-5273546
+ENST00000592099,147,214,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000467398,biomaRt,Immunoglobulin subtype 2;chr19:5265067-5258090
+ENST00000592099,244,305,chr19,-,IPR003598,Immunoglobulin subtype 2,Ig_sub2,interpro,ENSP00000467398,biomaRt,Immunoglobulin subtype 2;chr19:5245826-5246011
+ENST00000592099,39,125,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000467398,biomaRt,Immunoglobulin domain subtype;chr19:5274222-5273579
+ENST00000592099,141,226,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000467398,biomaRt,Immunoglobulin domain subtype;chr19:5265049-5258126
+ENST00000592099,238,316,chr19,-,IPR003599,Immunoglobulin domain subtype,Ig_sub,interpro,ENSP00000467398,biomaRt,Immunoglobulin domain subtype;chr19:5245808-5246044
+ENST00000592099,319,411,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467398,biomaRt,Fibronectin type III;chr19:5243906-5244184
+ENST00000592099,414,510,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467398,biomaRt,Fibronectin type III;chr19:5244191-5244481
+ENST00000592099,512,689,chr19,-,IPR003961,Fibronectin type III,FN3_dom,interpro,ENSP00000467398,biomaRt,Fibronectin type III;chr19:5240201-5221158
+ENST00000592099,33,123,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like domain;chr19:5274204-5273573
+ENST00000592099,135,224,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like domain;chr19:5265031-5258120
+ENST00000592099,232,314,chr19,-,IPR007110,Immunoglobulin-like domain,Ig-like_dom,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like domain;chr19:5245790-5246038
+ENST00000592099,33,124,chr19,-,IPR013098,Immunoglobulin I-set,Ig_I-set,interpro,ENSP00000467398,biomaRt,Immunoglobulin I-set;chr19:5274204-5273576
+ENST00000592099,136,216,chr19,-,IPR013098,Immunoglobulin I-set,Ig_I-set,interpro,ENSP00000467398,biomaRt,Immunoglobulin I-set;chr19:5265034-5258096
+ENST00000592099,28,127,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like fold;chr19:5286131-5265009
+ENST00000592099,128,228,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like fold;chr19:5265010-5245780
+ENST00000592099,229,319,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like fold;chr19:5245781-5243908
+ENST00000592099,320,405,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like fold;chr19:5243909-5244166
+ENST00000592099,406,510,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like fold;chr19:5244167-5244481
+ENST00000592099,511,604,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like fold;chr19:5244482-5222124
+ENST00000592099,605,689,chr19,-,IPR013783,Immunoglobulin-like fold,Ig-like_fold,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like fold;chr19:5222125-5221158
+ENST00000592099,1140,1150,chr19,-,IPR016130,"Protein-tyrosine phosphatase, active site",Tyr_Pase_AS,interpro,ENSP00000467398,biomaRt,"Protein-tyrosine phosphatase, active site;chr19:5212481-5211986"
+ENST00000592099,1431,1441,chr19,-,IPR016130,"Protein-tyrosine phosphatase, active site",Tyr_Pase_AS,interpro,ENSP00000467398,biomaRt,"Protein-tyrosine phosphatase, active site;chr19:5208381-5207943"
+ENST00000592099,919,1501,chr19,-,IPR029021,Protein-tyrosine phosphatase-like,Prot-tyrosine_phosphatase-like,interpro,ENSP00000467398,biomaRt,Protein-tyrosine phosphatase-like;chr19:5218532-5206842
+ENST00000592099,318,668,chr19,-,IPR036116,Fibronectin type III superfamily,FN3_sf,interpro,ENSP00000467398,biomaRt,Fibronectin type III superfamily;chr19:5243903-5221095
+ENST00000592099,31,125,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like domain superfamily;chr19:5286140-5273579
+ENST00000592099,135,227,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like domain superfamily;chr19:5265031-5245777
+ENST00000592099,230,324,chr19,-,IPR036179,Immunoglobulin-like domain superfamily,Ig-like_dom_sf,interpro,ENSP00000467398,biomaRt,Immunoglobulin-like domain superfamily;chr19:5245784-5243923
+ENST00000592099,500,628,chr19,-,IPR050713,Receptor-type Tyrosine-protein Phosphatases/Ushers,RTP_Phos/Ushers,interpro,ENSP00000467398,biomaRt,Receptor-type Tyrosine-protein Phosphatases/Ushers;chr19:5244449-5222196
+ENST00000592546,173,249,chr19,-,IPR003150,DNA-binding RFX-type winged-helix domain,DNA-bd_RFX,interpro,ENSP00000467166,biomaRt,DNA-binding RFX-type winged-helix domain;chr19:6040236-6013028
+ENST00000592546,4,154,chr19,-,IPR007668,RFX1 transcription activation region,RFX1_trans_act,interpro,ENSP00000467166,biomaRt,RFX1 transcription activation region;chr19:6047416-6040181
+ENST00000592546,174,248,chr19,-,IPR036388,Winged helix-like DNA-binding domain superfamily,WH-like_DNA-bd_sf,interpro,ENSP00000467166,biomaRt,Winged helix-like DNA-binding domain superfamily;chr19:6040239-6013025
+ENST00000592546,62,650,chr19,-,IPR039779,RFX-like DNA-binding protein,RFX-like,interpro,ENSP00000467166,biomaRt,RFX-like DNA-binding protein;chr19:6042047-5995612
+ENST00000592743,135,263,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000466924,biomaRt,SANT/Myb domain;chr17:42722831-42718475
+ENST00000592743,430,478,chr17,-,IPR001005,SANT/Myb domain,SANT/Myb,interpro,ENSP00000466924,biomaRt,SANT/Myb domain;chr17:42712372-42709878
+ENST00000592743,613,734,chr17,-,IPR001214,SET domain,SET_dom,interpro,ENSP00000466924,biomaRt,SET domain;chr17:42706183-42702553
+ENST00000592743,39,68,chr17,-,IPR021654,Histone-lysine N-methyltransferase EZH1/EZH2,EZH1/EZH2,interpro,ENSP00000466924,biomaRt,Histone-lysine N-methyltransferase EZH1/EZH2;chr17:42728939-42727721
+ENST00000592743,504,606,chr17,-,IPR026489,CXC domain,CXC_dom,interpro,ENSP00000466924,biomaRt,CXC domain;chr17:42708892-42706164
+ENST00000592743,556,593,chr17,-,IPR033467,Tesmin/TSO1-like CXC domain,Tesmin/TSO1-like_CXC,interpro,ENSP00000466924,biomaRt,Tesmin/TSO1-like CXC domain;chr17:42706012-42706125
+ENST00000592743,159,262,chr17,-,IPR041343,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain",PRC2_HTH_1,interpro,ENSP00000466924,biomaRt,"Polycomb repressive complex 2 subunit EZH1/EZH2, tri-helical domain;chr17:42722903-42718472"
+ENST00000592743,560,591,chr17,-,IPR041355,Pre-SET CXC domain,Pre-SET_CXC,interpro,ENSP00000466924,biomaRt,Pre-SET CXC domain;chr17:42706024-42706119
+ENST00000592743,608,743,chr17,-,IPR044438,"EZH1, SET domain",EZH1_SET,interpro,ENSP00000466924,biomaRt,"EZH1, SET domain;chr17:42706168-42702580"
+ENST00000592743,12,742,chr17,-,IPR045318,Histone-lysine N-methyltransferase EZH1/2-like,EZH1/2-like,interpro,ENSP00000466924,biomaRt,Histone-lysine N-methyltransferase EZH1/2-like;chr17:42728858-42702577
+ENST00000592743,511,737,chr17,-,IPR046341,SET domain superfamily,SET_dom_sf,interpro,ENSP00000466924,biomaRt,SET domain superfamily;chr17:42708913-42702562
+ENST00000592743,270,322,chr17,-,IPR048358,"EZH1/2, MCSS domain",EZH1/2_MCSS,interpro,ENSP00000466924,biomaRt,"EZH1/2, MCSS domain;chr17:42718494-42718010"
+ENST00000596217,324,429,chr19,-,IPR007758,"Nucleoporin, NSP1-like, C-terminal",Nucleoporin_NSP1_C,interpro,ENSP00000471191,biomaRt,"Nucleoporin, NSP1-like, C-terminal;chr19:49909211-49909528"
+ENST00000596217,1,514,chr19,-,IPR026010,Nucleoporin NSP1/NUP62,NSP1/NUP62,interpro,ENSP00000471191,biomaRt,Nucleoporin NSP1/NUP62;chr19:49908242-49909783
+ENST00000597029,324,429,chr19,-,IPR007758,"Nucleoporin, NSP1-like, C-terminal",Nucleoporin_NSP1_C,interpro,ENSP00000473192,biomaRt,"Nucleoporin, NSP1-like, C-terminal;chr19:49909211-49909528"
+ENST00000597029,1,514,chr19,-,IPR026010,Nucleoporin NSP1/NUP62,NSP1/NUP62,interpro,ENSP00000473192,biomaRt,Nucleoporin NSP1/NUP62;chr19:49908242-49909783
+ENST00000597723,276,353,chr19,-,IPR007758,"Nucleoporin, NSP1-like, C-terminal",Nucleoporin_NSP1_C,interpro,ENSP00000469283,biomaRt,"Nucleoporin, NSP1-like, C-terminal;chr19:49909799-49908466"
+ENST00000597723,277,438,chr19,-,IPR026010,Nucleoporin NSP1/NUP62,NSP1/NUP62,interpro,ENSP00000469283,biomaRt,Nucleoporin NSP1/NUP62;chr19:49909802-49908721
+ENST00000599560,324,429,chr19,-,IPR007758,"Nucleoporin, NSP1-like, C-terminal",Nucleoporin_NSP1_C,interpro,ENSP00000515013,biomaRt,"Nucleoporin, NSP1-like, C-terminal;chr19:49909211-49909528"
+ENST00000599560,1,514,chr19,-,IPR026010,Nucleoporin NSP1/NUP62,NSP1/NUP62,interpro,ENSP00000515013,biomaRt,Nucleoporin NSP1/NUP62;chr19:49908242-49909783
+ENST00000600449,1,350,chrX,-,IPR019396,Transmembrane Fragile-X-F-associated protein,TM_Fragile-X-F-assoc,interpro,ENSP00000471932,biomaRt,Transmembrane Fragile-X-F-associated protein;chrX:149631543-149598255
+ENST00000600702,1,516,chr19,+,IPR001619,Sec1-like protein,Sec1-like,interpro,ENSP00000471737,biomaRt,Sec1-like protein;chr19:7637150-7647734
+ENST00000600702,138,508,chr19,+,IPR027482,"Sec1-like, domain 2",Sec1-like_dom2,interpro,ENSP00000471737,biomaRt,"Sec1-like, domain 2;chr19:7640986-7647233"
+ENST00000600702,6,513,chr19,+,IPR036045,Sec1-like superfamily,Sec1-like_sf,interpro,ENSP00000471737,biomaRt,Sec1-like superfamily;chr19:7637165-7647725
+ENST00000600702,246,358,chr19,+,IPR043127,"Sec1-like, domain 3a",Sec-1-like_dom3a,interpro,ENSP00000471737,biomaRt,"Sec1-like, domain 3a;chr19:7642275-7643212"
+ENST00000600702,1,132,chr19,+,IPR043154,"Sec1-like, domain 1",Sec-1-like_dom1,interpro,ENSP00000471737,biomaRt,"Sec1-like, domain 1;chr19:7637150-7640970"
+ENST00000602355,3,116,chr19,+,IPR001619,Sec1-like protein,Sec1-like,interpro,ENSP00000473406,biomaRt,Sec1-like protein;chr19:7646294-7647771
+ENST00000602355,1,128,chr19,+,IPR027482,"Sec1-like, domain 2",Sec1-like_dom2,interpro,ENSP00000473406,biomaRt,"Sec1-like, domain 2;chr19:7646288-7647807"
+ENST00000602355,2,120,chr19,+,IPR036045,Sec1-like superfamily,Sec1-like_sf,interpro,ENSP00000473406,biomaRt,Sec1-like superfamily;chr19:7646291-7647783
+ENST00000611119,13,291,chrX,-,IPR019396,Transmembrane Fragile-X-F-associated protein,TM_Fragile-X-F-assoc,interpro,ENSP00000483235,biomaRt,Transmembrane Fragile-X-F-associated protein;chrX:149631579-149598255
+ENST00000612948,4,379,chr1,+,IPR004328,BRO1 domain,BRO1_dom,interpro,ENSP00000478496,biomaRt,BRO1 domain;chr1:222715709-222732711
+ENST00000612948,1,342,chr1,+,IPR038499,BRO1 domain superfamily,BRO1_sf,interpro,ENSP00000478496,biomaRt,BRO1 domain superfamily;chr1:222715700-222731489
+ENST00000612948,2,102,chr1,+,IPR038898,BRO1 domain-containing protein BROX,BROX,interpro,ENSP00000478496,biomaRt,BRO1 domain-containing protein BROX;chr1:222715703-222724092
+ENST00000614444,61,584,chr11,-,IPR005599,GPI mannosyltransferase,GPI_mannosylTrfase,interpro,ENSP00000484200,biomaRt,GPI mannosyltransferase;chr11:111870281-111786439
+ENST00000616540,61,591,chr11,-,IPR005599,GPI mannosyltransferase,GPI_mannosylTrfase,interpro,ENSP00000482437,biomaRt,GPI mannosyltransferase;chr11:111870281-111786439
+ENST00000619735,147,195,chr22,-,IPR000467,G-patch domain,G_patch_dom,interpro,ENSP00000480171,biomaRt,G-patch domain;chr22:26506378-26503730
+ENST00000619735,18,107,chr22,-,IPR022159,"Tuftelin interacting protein, N-terminal domain",STIP/TFIP11_N,interpro,ENSP00000480171,biomaRt,"Tuftelin interacting protein, N-terminal domain;chr22:26510115-26506886"
+ENST00000619735,397,666,chr22,-,IPR022783,"GCF, C-terminal",GCFC_dom,interpro,ENSP00000480171,biomaRt,"GCF, C-terminal;chr22:26499491-26494144"
+ENST00000619735,15,837,chr22,-,IPR024933,Septin and tuftelin interacting protein,TFP11,interpro,ENSP00000480171,biomaRt,Septin and tuftelin interacting protein;chr22:26510106-26492368
+ENST00000619735,15,832,chr22,-,IPR045211,TFP11/STIP/Ntr1,TFP11/STIP/Ntr1,interpro,ENSP00000480171,biomaRt,TFP11/STIP/Ntr1;chr22:26510106-26492353
