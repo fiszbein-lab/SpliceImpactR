@@ -1223,7 +1223,7 @@ integrated_event_summary <- function(
                              levels = c("AFE","ALE","A3SS","A5SS","SE","RI","MXE"))]
 
 
-  ppi1 <- DT2[, .(prop_any_ppi = mean(any_ppi)), by = event_type] |>
+  ppi1 <- DT2[, .(prop_any_ppi = mean(any_ppi)), by = event_type] %>%
     ggplot(aes(x = event_type, y = prop_any_ppi)) +
     geom_col(alpha = 0.8) +
     geom_text(aes(label = scales::percent(prop_any_ppi, .1)),
