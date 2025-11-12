@@ -2,7 +2,7 @@ Package: SpliceImpactR
 Type: Package
 Title: An R package to identify functional impacts due to alternative RNA 
     processing events 
-Version: 0.99.0
+Version: 0.99.1
 Authors@R: c(person(given="Zachary", family="Wakefield",
     email = "zachpw@bu.edu",
     role = c("cre", "aut"),
@@ -44,7 +44,7 @@ Imports:
     ComplexUpset,
     S4Vectors,
     methods
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 biocViews: AlternativeSplicing, DifferentialSplicing, StatisticalMethod, 
     Alignment
 Suggests: 
