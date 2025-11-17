@@ -577,6 +577,7 @@ getSizeFactors <- function(df) {
       )
       data.table::setDT(exon_file)
       exon_file[, reads := nUP + nDOWN]
+      exon_file <- exon_file[reads > 10]
       exon_file[, .(reads = sum(reads)), by = .(exon)][, sample_name := s]
     }), use.names = TRUE, fill = TRUE)
 
@@ -593,6 +594,7 @@ getSizeFactors <- function(df) {
       if (length(x) == 0) return(NA_real_)
       exp(mean(log(x)))
     }
+    counts_mat <- counts_mat + 1
     geoMean <- apply(counts_mat, 1, gmean)
 
     # Keep informative exons only
