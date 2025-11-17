@@ -591,9 +591,13 @@ compare_frames <- function(hits,
 
       frame_call <- "PartialMatch"
       rescue <- "noRescue"
+      
+      e1_inE <- sum(E$exon_id %in% e1 & E$transcript_id %in% tx1) > 0
+      e2_inE <- sum(E$exon_id %in% e2 & E$transcript_id %in%  tx2) > 0
+      
       if (length(e1) == 1L && length(e2) == 1L &&
           !is.na(e1) && !is.na(e2) &&
-          e1 %in% E$exon_id && e2 %in% E$exon_id) {
+          e1_inE && e2_inE) {
       # if (e1 %in% E$exon_id & e2 %in% E$exon_id) {
         cmp <- switch(et,
                       "A3SS" = .compare_at_overlap_start(E, tx1, tx2, e1, e2),          # first base of overlap
