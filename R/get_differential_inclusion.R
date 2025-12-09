@@ -201,6 +201,20 @@ cutoff_num <- function(n_rows, cooks_cutoff) {
 #' @param minimum_proportion_containing_event Numeric in `[0,1]`. Minimum
 #'   fraction of samples per condition that must contain the event
 #'   (default `0.5`).
+#' @param terminal_fill Character or numeric. Strategy for completing AFE/ALE
+#'   events that are missing in a given sample. Choose one of:
+#'   \describe{
+#'     \item{"none"}{Do not add missing terminal sites.}
+#'     \item{"gene_max"}{Fill missing sites with zero counts and set `total`
+#'       to the maximum observed within each `gene_id`/`sample`/`condition`
+#'       group.}
+#'     \item{"event_max"}{Fill missing sites with zero counts and set `total`
+#'       to the maximum observed within each `event_id`/`sample`/`condition`
+#'       group.}
+#'     \item{"zero"}{Fill missing sites with zero counts and `total = 0`.}
+#'   }
+#'   Alternatively, supply a single numeric value to use as the `total` for
+#'   all filled rows. Defaults to `"gene_max"`.
 #' @param cooks_cutoff Character or numeric. Cook's distance cutoff:
 #'   `"4/n"`, `"Inf"`, `"none"`, or a numeric value.
 #' @param adjust_method Character. Multiple-testing correction method passed
@@ -224,7 +238,7 @@ cutoff_num <- function(n_rows, cooks_cutoff) {
 #'
 #' @details
 #' The function filters out low-coverage and low-presence events,
-#' fills AFE/ALE sites with zero counts where necessary,
+#' optionally fills AFE/ALE sites with zero counts where necessary,
 #' and then applies site-level GLMs. Parallelization uses
 #' [BiocParallel] back-ends for reproducibility across platforms.
 #'
@@ -255,6 +269,7 @@ get_differential_inclusion <- function(
     DT,
     min_total_reads = 10L,
     minimum_proportion_containing_event = 0.5,
+    terminal_fill = "gene_max",
     cooks_cutoff    = "Inf",
     adjust_method   = "fdr",
     verbose         = TRUE,
@@ -301,7 +316,13 @@ get_differential_inclusion <- function(
   x[, psi_adj := psi_raw]
 
   # ---------- (AFE/ALE) complete with zeros ----------
-  if (any(x$event_type %chin% c("AFE","ALE"))) {
+  fill_strategy <- if (is.numeric(terminal_fill) && length(terminal_fill) == 1L && !is.na(terminal_fill)) {
+    "constant"
+  } else {
+    match.arg(terminal_fill, c("none", "gene_max", "event_max", "zero"))
+  }
+  
+  if (!identical(fill_strategy, "none") && any(x$event_type %chin% c("AFE","ALE"))) {
     more_types <- FALSE
     if (sum(x$event_type %in% c("AFE", "ALE")) != length(x$event_type)) {
       more_types <- TRUE
@@ -312,6 +333,16 @@ get_differential_inclusion <- function(
     preALE <- dim(x[event_type == "ALE"])[1]
     # minimal set of site columns
     site_cols <- c("gene_id","inc","exc","chr","strand","event_type", "event_id", "form")
+    fill_total_value <- function(total_vec) {
+      if (identical(fill_strategy, "constant")) {
+        return(terminal_fill)
+      }
+      if (identical(fill_strategy, "zero")) return(0)
+      if (any(!is.na(total_vec))) {
+        return(max(total_vec, na.rm = TRUE))
+      }
+      0
+    }
     x <- do.call(rbind, lapply(c("AFE", "ALE"), function(terminal_type) {
       sites <- unique(x[event_type %chin% terminal_type, ..site_cols])
       smp   <- unique(x[event_type %chin% terminal_type, .(sample, condition, event_type)])
@@ -324,8 +355,16 @@ get_differential_inclusion <- function(
         base_grid,
         on = c("sample","condition", site_cols)
       ]
-      y[, total_update := if (any(!is.na(total))) max(total, na.rm = TRUE) else 0,
-        by = .(gene_id, sample, condition)]
+      by_cols <- switch(fill_strategy,
+                        gene_max  = c("gene_id", "sample", "condition"),
+                        event_max = c("event_id", "sample", "condition"),
+                        constant  = NULL,
+                        zero      = NULL)
+      if (length(by_cols)) {
+        y[, total_update := fill_total_value(total), by = by_cols]
+      } else {
+        y[, total_update := fill_total_value(total)]
+      }
       y[is.na(total), `:=` (total = total_update,
                             exclusion_reads = total_update
       )]
@@ -337,9 +376,14 @@ get_differential_inclusion <- function(
     x[, site_id := paste(event_type, gene_id, chr, inc, exc, sep="|")]
     postAFE <- dim(x[event_type == "AFE"])[1]
     postALE <- dim(x[event_type == "ALE"])[1]
-    if (verbose) print(paste0("[PROCESSING/INFO] Completing AFE/ALE with zeros per sample, filled in ", postAFE-preAFE, " AFE instances and ",
+    strategy_label <- if (fill_strategy == "constant") {
+      paste0("constant=", terminal_fill)
+    } else {
+      fill_strategy
+    }
+    if (verbose) print(paste0("[PROCESSING/INFO] Completing AFE/ALE with zeros per sample (total strategy: ", strategy_label,
+                              "), filled in ", postAFE-preAFE, " AFE instances and ",
                               postALE-preALE, " ALE instances across samples, to a total of ", postAFE, " AFE instances and ", postALE, " ALE instances"))
-
 
     # ---------- drop genes all-zero within (sample,event_type) ----------
     all0 <- x[, .(all_zero = all((psi_adj %in% 0) | is.na(psi_adj))),

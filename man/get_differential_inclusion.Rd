@@ -8,6 +8,7 @@ get_differential_inclusion(
   DT,
   min_total_reads = 10L,
   minimum_proportion_containing_event = 0.5,
+  terminal_fill = "gene_max",
   cooks_cutoff = "Inf",
   adjust_method = "fdr",
   verbose = TRUE,
@@ -27,6 +28,21 @@ required for inclusion (default `10`).}
 \item{minimum_proportion_containing_event}{Numeric in `[0,1]`. Minimum
 fraction of samples per condition that must contain the event
 (default `0.5`).}
+
+\item{terminal_fill}{Character or numeric. Strategy for completing AFE/ALE
+events that are missing in a given sample. Choose one of:
+\describe{
+  \item{"none"}{Do not add missing terminal sites.}
+  \item{"gene_max"}{Fill missing sites with zero counts and set `total`
+    to the maximum observed within each `gene_id`/`sample`/`condition`
+    group.}
+  \item{"event_max"}{Fill missing sites with zero counts and set `total`
+    to the maximum observed within each `event_id`/`sample`/`condition`
+    group.}
+  \item{"zero"}{Fill missing sites with zero counts and `total = 0`.}
+}
+Alternatively, supply a single numeric value to use as the `total` for
+all filled rows. Defaults to `"gene_max"`.}
 
 \item{cooks_cutoff}{Character or numeric. Cook's distance cutoff:
 `"4/n"`, `"Inf"`, `"none"`, or a numeric value.}
@@ -63,7 +79,7 @@ using parallel processing.
 }
 \details{
 The function filters out low-coverage and low-presence events,
-fills AFE/ALE sites with zero counts where necessary,
+optionally fills AFE/ALE sites with zero counts where necessary,
 and then applies site-level GLMs. Parallelization uses
 [BiocParallel] back-ends for reproducibility across platforms.
 }
