@@ -470,6 +470,7 @@ get_rmats_post_di <- function(input,
     out_list <- lapply(seq_len(nrow(input)), function(i) {
       dt <- data.table::fread(input$path[i])
       dt[, event_type := input$event_type[i]]
+      dt[, GeneID := tstrsplit(GeneID, "[.]")[[1]]]
       .get_rmats_di_helper(dt)
     })
     return(unique(data.table::rbindlist(out_list, fill=TRUE)))
@@ -663,6 +664,7 @@ get_rmats_post_di <- function(input,
   PValue <- dup_remover$PValue
   FDR <- dup_remover$FDR
 
+  
   dup_remover[, event_id := sprintf("%s:%d", event_type,
                                     as.integer(factor(paste(GeneID, chr, inc, exc, EXC_inc, EXC_exc, IncLevelDifference),
                                                       levels = unique(paste(GeneID, chr, inc, exc, EXC_inc, EXC_exc, IncLevelDifference))))),

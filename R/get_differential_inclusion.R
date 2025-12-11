@@ -269,7 +269,7 @@ get_differential_inclusion <- function(
     DT,
     min_total_reads = 10L,
     minimum_proportion_containing_event = 0.5,
-    terminal_fill = "gene_max",
+    terminal_fill = "event_max",
     cooks_cutoff    = "Inf",
     adjust_method   = "fdr",
     verbose         = TRUE,
