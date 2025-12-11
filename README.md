@@ -47,7 +47,7 @@ here we access the gencode files. SpliceImpactR is built to work with either hum
 annotation_df <- get_annotation(load = "test")
 
 ## If we were looking to load the full annotations, we'd run the following (or load from paths of already downloaded gtf/fa files)
-# annotation_df <- get_annotation(load = "link", species = 'human', version = 45, base_dir = "./")
+# annotation_df <- get_annotation(load = "link", species = 'human', release = 45, base_dir = "./")
 
 ## After the initial lengthy loading of annotations, we could quickly load from cached rds files
 # annotation_df <- get_annotation(load="cached", base_dir="./path/")
