@@ -324,8 +324,19 @@ ppi_plot <- plot_ppi_summary(hits_final)
 ## Integrative Analysis
 Here we identify some holistic patterns / integrative analysis using all event types
 ```
-int_summary <- integrated_event_summary(hits_domain, res)
+int_summary <- integrated_event_summary(hits_final, res)
 ```
+
+### Understanding the `hits_final` columns
+The `hits_final` table contains the paired isoform metadata together with alignment, domain, and PPI annotations that flow through the workflow. Key columns include:
+
+* **Event metadata** – `event_id` plus the paired exon IDs (`exons_inc`, `exons_exc`) and event type labels (`event_type_inc`, `event_type_exc`) used throughout downstream comparisons.【F:R/get_domains.R†L224-L237】 Transcript identifiers for each isoform (`transcript_id_inc`, `transcript_id_exc`) anchor all subsequent annotations.【F:R/get_domains.R†L224-L234】
+* **Sequence content and alignment metrics** – nucleotide and protein sequences for inclusion and exclusion isoforms (`transcript_seq_inc/exc`, `protein_seq_inc/exc`) together with coding status (`pc_class`), protein and transcript lengths, exon/CDS length differences, and alignment statistics (`dna_pid/score/width`, `prot_pid/score/width`).【F:R/compare_seqs.R†L212-L229】【F:R/compare_seqs.R†L352-L385】
+* **Frame-shift classification** – frame comparison and rescue outcomes (`frame_call`, `rescue`) and the consolidated `summary_classification` label used in plots (e.g., `Match`, `FrameShift`, `Rescue`, or inherited protein-coding class).【F:R/get_frameshifts.R†L712-L723】
+* **Domain changes** – domains observed on the event exons for inclusion vs. exclusion isoforms (`domains_exons_inc`, `domains_exons_exc`); isoform-specific domain sets (`inc_only_domains`, `exc_only_domains`), list-columns holding the underlying identifiers, and counts of changed domains (`inc_only_n`, `exc_only_n`, `diff_n`).【F:R/get_domains.R†L180-L286】
+* **Predicted PPI switches** – partners unique to the inclusion or exclusion isoform (`inc_ppi`, `exc_ppi`) and their counts (`n_inc_ppi`, `n_exc_ppi`, with `n_ppi` as the total number of altered interactions).【F:R/get_ppi.R†L300-L369】
+
+These columns provide the necessary context to trace how an alternative splicing event alters coding potential, protein domains, and predicted interaction partners.
 
 ## Contributing
 Contributions to SpliceImpactR are welcome, including bug reports, feature requests, and pull requests. Please see CONTRIBUTING.md for guidelines on how to contribute.
