@@ -1,3 +1,111 @@
+#' Visualize PSI values for a single splicing event
+#'
+#' @description
+#' Creates a per-event PSI summary across samples. For **AFE** and **ALE**
+#' events, the plot separates PSI by `inc` entry to distinguish alternative
+#' terminal exons; other event types are summarized by `event_id`.
+#'
+#' @param data `data.frame` or `data.table` containing at least the columns
+#'   `event_id`, `event_type`, `psi`, `condition`, and `sample`. For terminal
+#'   events, an `inc` column is also required.
+#' @param event Character scalar specifying the `event_id` to visualize.
+#' @param fill_zeros Logical indicating whether to fill missing PSI values
+#'   with zeros for samples that contain any observation of the event
+#'   (default: `TRUE`).
+#'
+#' @return A list with elements:
+#' \itemize{
+#'   \item `plot`: `ggplot` box/point plot of PSI per sample group.
+#'   \item `data`: `data.table` used to build the plot.
+#' }
+#'
+#' @examples
+#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
+#'                                     check_extdata_dir('rawData/control_S6/'),
+#'                                     check_extdata_dir('rawData/control_S7/'),
+#'                                     check_extdata_dir('rawData/control_S8/'),
+#'                                     check_extdata_dir('rawData/case_S1/'),
+#'                                     check_extdata_dir('rawData/case_S2/'),
+#'                                     check_extdata_dir('rawData/case_S3/'),
+#'                                     check_extdata_dir('rawData/case_S4/')),
+#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
+#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
+#'                            stringsAsFactors = FALSE)
+#' hit_index <- get_hitindex(sample_frame)
+#' res <- get_differential_inclusion(hit_index)
+#' event_probe <- "ENSG00000117632:AFE"
+#' probe_individual_event(hit_index, event = event_probe)
+#'
+#' @importFrom data.table setnames CJ 
+#' @importFrom ggplot2 ggplot aes geom_boxplot geom_point labs theme_minimal
+#'   scale_y_continuous position_dodge position_jitterdodge
+#' @export
+probe_individual_event <- function(data, event, fill_zeros = TRUE) {
+  dt <- data.table::as.data.table(data)
+  
+  required_cols <- c("event_id", "event_type", "psi", "condition", "sample")
+  if (!all(required_cols %in% names(dt))) {
+    stop("Missing required columns: ", paste(setdiff(required_cols, names(dt)), collapse = ", "))
+  }
+  
+  df <- dt[event_id == event]
+  if (!nrow(df)) {
+    stop("No rows found for event_id = '", event, "'.")
+  }
+  
+  event_type <- unique(df$event_type)
+  if (length(event_type) > 1) {
+    warning("Multiple event_type values found; using the first: ", event_type[1])
+  }
+  
+  grouping_col <- if (event_type[1] %chin% c("AFE", "ALE")) "inc" else "event_id"
+  
+  if (grouping_col == "inc" && !"inc" %in% names(df)) {
+    stop("Column 'inc' is required to plot terminal exon events.")
+  }
+  
+  grouping_values <- if (grouping_col == "inc") unique(df[[grouping_col]]) else event
+  
+  x <- df[, .(psi = suppressWarnings(as.numeric(psi)), condition, sample, grouping = get(grouping_col))]
+  setnames(x, "grouping", grouping_col)
+  
+  if (fill_zeros) {
+    all_samples <- unique(dt[, .(sample, condition)])
+    samples_to_keep <- x[, .(has_value = any(!is.na(psi))), by = sample][has_value == TRUE, sample]
+    
+    if (length(samples_to_keep)) {
+      all_samples <- all_samples[sample %in% samples_to_keep]
+    }
+    
+    template <- CJ(temp_group = grouping_values, sample = all_samples$sample)
+    setnames(template, "temp_group", grouping_col)
+    template <- template[all_samples, on = .(sample)]
+    
+    x <- template[x, on = c("sample", grouping_col)]
+    x[!is.finite(psi), psi := 0]
+  } else {
+    x <- x[is.finite(psi)]
+  }
+  
+  plot_data <- data.table::copy(x)
+  setnames(plot_data, grouping_col, "event_group")
+  
+  p <- ggplot(plot_data, aes(x = event_group, y = psi)) +
+    geom_boxplot(aes(fill = condition), position = position_dodge(width = 0.8)) +
+    geom_point(aes(color = condition),
+               position = position_jitterdodge(dodge.width = 0.8),
+               alpha = 0.6) +
+    labs(
+      x = grouping_col,
+      y = "PSI (Percent Spliced In)",
+      title = paste("PSI Distribution for Event:", event)
+    ) +
+    theme_minimal() +
+    scale_y_continuous(limits = c(0, 1))
+  
+  return(list(plot = p, data = x))
+}
+
 #' @title Split genomic coordinate strings into integer ranges
 #' @description
 #' Internal helper that converts a string like `"12345-12456"`
@@ -67,7 +175,6 @@
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' proximal_output <- get_proximal_shift_from_hits(pairs)
-#' @import data.table
 #' @export
 get_proximal_shift_from_hits <- function(hits) {
   H <- data.table::as.data.table(hits)[event_type_inc %in% c('AFE', 'ALE'), .(event_id, event_type = event_type_inc, strand = strand_inc, pos = inc_inc, delta_psi_inc, neg = inc_exc, delta_psi_exc)]

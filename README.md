@@ -248,6 +248,18 @@ pairs <- get_pairs(hits_sequences, source="multi")
 proximal_output <- get_proximal_shift_from_hits(pairs)
 ```
 
+### Inspect PSI for a single event
+Use `probe_individual_event()` to visualize PSI distributions for a specific event across samples. For terminal exon events
+(`AFE`/`ALE`), PSI is separated by the `inc` entry to highlight proximal vs distal choices.
+
+```r
+# Identify an event of interest from the differential inclusion results
+event_to_probe <- res$event_id[1]
+
+# Plot PSI by sample/condition; missing combinations are filled with zeros by default
+probe <- probe_individual_event(res, event = event_to_probe)
+```
+
 If you already have sets of transcripts you want to compare, you can feed them into 
 compare_transcript_pairs and get output at the matched stage of the workflow. This will
 position you to compare all protein features downstream.
