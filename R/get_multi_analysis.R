@@ -43,7 +43,7 @@
 probe_individual_event <- function(data, event, fill_zeros = TRUE) {
   dt <- data.table::as.data.table(data)
   
-  required_cols <- c("event_id", "event_type", "psi", "condition", "sample")
+  required_cols <- c("event_id", "event_type", "psi", "condition", "sample", "form")
   if (!all(required_cols %in% names(dt))) {
     stop("Missing required columns: ", paste(setdiff(required_cols, names(dt)), collapse = ", "))
   }
@@ -66,7 +66,7 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
   
   grouping_values <- if (grouping_col == "inc") unique(df[[grouping_col]]) else event
   
-  x <- df[, .(psi = suppressWarnings(as.numeric(psi)), condition, sample, grouping = get(grouping_col))]
+  x <- df[, .(psi = suppressWarnings(as.numeric(psi)), condition, sample, form, grouping = get(grouping_col))]
   setnames(x, "grouping", grouping_col)
   
   if (fill_zeros) {
@@ -89,6 +89,10 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
   
   plot_data <- data.table::copy(x)
   setnames(plot_data, grouping_col, "event_group")
+  
+  if (event_type %in% c("SE", "MXE", "A5SS", "A3SS", "RI")) {
+    plot_data <- plot_data[form == "INC"]
+  }
   
   p <- ggplot(plot_data, aes(x = event_group, y = psi)) +
     geom_boxplot(aes(fill = condition), position = position_dodge(width = 0.8)) +
