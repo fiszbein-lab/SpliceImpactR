@@ -117,14 +117,11 @@ collapse_domains <- function(v) {
 #' @keywords internal
 #' @noRd
 .diff_domains <- function(a, b) {
-  # Return early if inputs are empty
-  if (nrow(a) == 0L) return(a)
-  if (nrow(b) == 0L) return(a)
+  if (nrow(a) == 0L || nrow(b) == 0L) return(a)
 
   a <- a[!is.na(start) & !is.na(end)]
   b <- b[!is.na(start) & !is.na(end)]
-  if (nrow(a) == 0L) return(a)
-  if (nrow(b) == 0L) return(a)
+  if (nrow(a) == 0L || nrow(b) == 0L) return(a)
 
   a[, c("start", "end") := .(pmin(start, end), pmax(start, end))]
   b[, c("start", "end") := .(pmin(start, end), pmax(start, end))]
@@ -248,11 +245,19 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
       exc_only <- if (nrow(exc_only_dt) == 0) character(0) else exc_only_dt$domain
 
     } else {
-      dei_dt <- .parse_domain_coords(dei)
-      dee_dt <- .parse_domain_coords(dee)
-
-      inc_only_dt <- .diff_domains(dei_dt, dee_dt)
-      exc_only_dt <- .diff_domains(dee_dt, dei_dt)
+      dei_dt <- .parse_domain_coords(dei)  # inc event exons
+      dee_dt <- .parse_domain_coords(dee)  # exc event exons
+      dpi_dt <- .parse_domain_coords(dpi)  # inc full protein
+      dpe_dt <- .parse_domain_coords(dpe)  # exc full protein
+      
+      inc_only_dt <- .diff_domains(dei_dt, dpe_dt)  # inc event vs exc protein
+      exc_only_dt <- .diff_domains(dee_dt, dpi_dt)
+      
+      # dei_dt <- .parse_domain_coords(dei)
+      # dee_dt <- .parse_domain_coords(dee)
+      # 
+      # inc_only_dt <- .diff_domains(dei_dt, dee_dt)
+      # exc_only_dt <- .diff_domains(dee_dt, dei_dt)
 
       inc_only <- if (nrow(inc_only_dt) == 0) character(0) else inc_only_dt$domain
       exc_only <- if (nrow(exc_only_dt) == 0) character(0) else exc_only_dt$domain
