@@ -474,7 +474,7 @@ get_linear_motifs <- function(gtf_df,
 #' to interpro, mobidblite, seg, ncoils, tmhmm, signalp
 #' @param gtf_df annotations from get_annotation()
 #' @param sequences only necessary if loading SLiMs from elm get_annotation() 
-#' (default \code{"sequences}) output
+#' (default \code{"sequences"}) output
 #' @param load_path path to load prior protein features from
 #' @param save_path path to save prior protein features from
 #' @param timeout ability to extend timeout if biomaRt is not cooperating
@@ -483,8 +483,8 @@ get_linear_motifs <- function(gtf_df,
 #' \code{"mouse"}.
 #' @param release release version from ensemble associated with the gencode
 #' version provided in the get_annotation (This can be found in gencode, for
-#' example in human: https://www.gencodegenes.org/human/releases.html)
-#' example in mouse: https://www.gencodegenes.org/mouse/releases.html)
+#' example in human: \url{"https://www.gencodegenes.org/human/releases.html"})
+#' example in mouse: \url{"https://www.gencodegenes.org/mouse/releases.html"})
 #'
 #' @param test Logical; bool for whether to load from reduced test set
 #'
