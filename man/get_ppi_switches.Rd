@@ -2,19 +2,21 @@
 % Please edit documentation in R/get_ppi.R
 \name{get_ppi_switches}
 \alias{get_ppi_switches}
-\title{Compute PPI gains and losses for inclusion/exclusion transcripts}
+\title{Annotate hits_domain with PPI changes for inclusion vs exclusion forms}
 \usage{
-get_ppi_switches(hits_all, ppi)
+get_ppi_switches(hits_domain, ppi, protein_feature_total)
 }
 \arguments{
-\item{hits_all}{`data.frame` or `data.table` of event-level hits,
-including `transcript_id_inc`, `transcript_id_exc`, and `pc_class`.}
+\item{hits_domain}{data.table with gene_id_inc and list-cols inc_only_domains_list / exc_only_domains_list}
 
-\item{ppi}{PPI map (e.g. IntAct or STRING) containing columns
-`ensembl_transcript_id` and `i.ensembl_transcript_id`.}
+\item{ppi}{wide interaction table from saved data (get_ppi)}
+
+\item{protein_feature_total}{table with database/clean_name/feature_id for interpro mapping}
 }
 \value{
-A `data.table` identical to `hits_all` with added columns:
+hits_domain with added columns
+
+A `data.table` identical to `hits_domain` with added columns:
 \describe{
   \item{`inc_ppi`, `exc_ppi`}{Lists of partner transcripts unique to
     inclusion or exclusion isoforms.}
@@ -23,9 +25,8 @@ A `data.table` identical to `hits_all` with added columns:
 }
 }
 \description{
-Identifies gained and lost protein protein interactions (PPIs)
-between inclusion (INC) and exclusion (EXC) isoforms for each
-splicing event.
+Adds list-cols inc_ppi/exc_ppi (partner genes) plus counts.
+Also returns (optionally useful) per-event token sets in PFAM + ELM forms.
 }
 \examples{
 sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
@@ -59,12 +60,9 @@ bg <- get_background(source = "hit_index",
                      input = sample_frame,
                      annotations = annotation_df$annotations,
                      protein_features = protein_feature_total)
-ppidm <- get_ppidm(test=TRUE)
+ppi <- get_ppi_interactions()             
+hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 
-ppi <- get_isoform_interactions(protein_feature_total[ensembl_transcript_id \%in\%
-                                                        annotation_df$annotations[, unique(transcript_id)]],
-                                ppidm, save = FALSE, load_dir = '/projectnb2/evolution/zwakefield/proteinImpacts/', init = TRUE)
+hits_domain[n_ppi > 0, .(event_id, gene_id_inc, n_inc_ppi, n_exc_ppi, n_ppi, inc_ppi, exc_ppi)]
 
-
-hits_final <- get_ppi_switches(hits_domain, ppi)
 }

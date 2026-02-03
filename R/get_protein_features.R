@@ -382,6 +382,88 @@ add_user_features <- function(x, default_database = "user") {
 }
 
 
+#' Get short linear motif validated instances from ELM and convert to pf form
+#'
+#'
+#' @param gtf_df A \code{data.frame} or \code{data.table} containing GTF
+#'   annotations; used to derive chromosome groups for batching.
+#' @param sequences only necessary if loading SLiMs from elm get_annotation() 
+#'   (default \code{"sequences}) output
+#' @param species Character string giving the Ensembl BioMart
+#'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
+#'   \code{"mmusculus_gene_ensembl"}.
+#' @param release release version from ensemble associated with the gencode
+#' version provided in the get_annotation (This can be found in gencode, for
+#' example in humans: https://www.gencodegenes.org/human/releases.html)
+#'
+#' @return A \code{data.table} containing protein feature annotations
+#'   including transcript and peptide IDs, feature start/end positions,
+#'   and database-specific identifiers (e.g., InterPro accession) for elm SLiMs
+#'
+#' @details
+#' Here we access ELM's SLiM database to pull instances and classes and use
+#' BiomaRt to match up uniprot to ensembl + confirm with regex checks
+#'
+#'
+#' @keywords internal
+get_linear_motifs <- function(gtf_df,
+                              protein_seqs,
+                              species = c('hsapiens_gene_ensembl', 'mmusculus_gene_ensembl')[1],
+                              release = c(109, 115)[1]) {
+  
+  species <- match.arg(species, c("hsapiens_gene_ensembl","mmusculus_gene_ensembl"))
+  taxon <- if (species == "hsapiens_gene_ensembl") "Homo sapiens" else "Mus musculus"
+  
+  options(biomaRt.cache = FALSE)
+  if (!(exists('mart'))) {
+    mart <- biomaRt::useEnsembl(
+      biomart = "genes",
+      dataset = species,
+      version = release
+    )
+  }
+  atts <- c("uniprotswissprot", "ensembl_transcript_id", "ensembl_peptide_id")
+  swiss_ids <- data.table(biomaRt::getBM(attributes = atts,
+                                         mart = mart,
+                                         values = list(transcript_biotype = "protein_coding"),
+                                         filters = c("transcript_biotype")))[uniprotswissprot != ""]
+  
+  url_instances <- paste0(
+    "http://elm.eu.org/instances.tsv?q=*&taxon=",
+    URLencode(taxon, reserved = TRUE),
+    "&instance_logic=true%20positive"
+  )
+  elm_instances <- fread(url_instances, showProgress = FALSE, skip = 5, nThread = 4)
+  ei <- elm_instances[, .(uniprotswissprot = Primary_Acc, ELMIdentifier, Start, End)]
+  mapped_slims <- swiss_ids[ei, on='uniprotswissprot'][!is.na(ensembl_transcript_id), .(ensembl_transcript_id,
+                                                                                        ensembl_peptide_id,
+                                                                                        database = "elm",
+                                                                                        feature_id = ELMIdentifier,
+                                                                                        name = ELMIdentifier,
+                                                                                        alt_name = ELMIdentifier,
+                                                                                        start = Start,
+                                                                                        stop = End,
+                                                                                        method = "elm",
+                                                                                        ELMIdentifier)]
+  # load classes to check in specific protein sequences for confirmation
+  url_classes <- "http://elm.eu.org/elms/elms_index.tsv"
+  elm_classes <- fread(url_classes, showProgress = FALSE, skip = 5, select = c("ELMIdentifier", "Regex"), nThread = 4)
+  
+  withRegex <- elm_classes[mapped_slims, on = 'ELMIdentifier']
+  ps <- protein_seqs[, .(ensembl_peptide_id = protein_id, protein_seq)]
+  
+  elm_full <- ps[withRegex, on = 'ensembl_peptide_id']
+  
+  elm_full[, partial_protein_seqs := substr(protein_seq, start, stop)]
+  
+  elm_full <- elm_full[, confirmed := mapply(grepl, Regex, partial_protein_seqs)]
+  
+  confirmed_elm <- elm_full[confirmed == TRUE][, `:=` (protein_seq = NULL, confirmed = NULL, ELMIdentifier = NULL, Regex = NULL, partial_protein_seqs = NULL)]
+  return(confirmed_elm)
+}
+
+
+
 #' @title External function to fetch protein features from biomaRt
 #' @description Here we also remove any duplicate and overlapping domains
 #' We also add the genomic location to the name of the protein feature for
@@ -391,6 +473,8 @@ add_user_features <- function(x, default_database = "user") {
 #' @param biomaRt_databases choose what biomaRt attribute to access, defaulting
 #' to interpro, mobidblite, seg, ncoils, tmhmm, signalp
 #' @param gtf_df annotations from get_annotation()
+#' @param sequences only necessary if loading SLiMs from elm get_annotation() 
+#' (default \code{"sequences}) output
 #' @param load_path path to load prior protein features from
 #' @param save_path path to save prior protein features from
 #' @param timeout ability to extend timeout if biomaRt is not cooperating
@@ -407,13 +491,14 @@ add_user_features <- function(x, default_database = "user") {
 #' @importFrom data.table rbindlist rleid
 #' @examples
 #' annotation_df <- get_annotation(load = "test")
-#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, annotation_df$sequences, timeout = 600, test = TRUE)
 #' @return
 #' A `data.table` with one row per protein feature and transcript coupling
 #'
 #' @export
-get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite", "seg", "ncoils", "tmhmm", "signalp"),
+get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite", "seg", "ncoils", "tmhmm", "signalp", "elm", "gene3d", "pfam"),
                                  gtf_df,
+                                 sequences = NULL,
                                  load_path = NULL,
                                  save_path = NULL,
                                  timeout = 600,
@@ -436,10 +521,28 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
     pf <- .read_any(load_path)
     return(as.data.table(pf))
   }
-  pf <- get_biomart_protein_features(protein_features = biomaRt_databases,
-                                     gtf_df = gtf_df,
-                                     species_dataset = species,
-                                     release = release) %>% to_long_features
+  if ("elm" %in% biomaRt_databases & length(biomaRt_databases) == 1) {
+    message("[PROCESSING] Loading SLiMs from Eukaryotic Linear Motif Database")
+    pf <- get_linear_motifs(gtf_df, sequences, species, release)
+  } else {
+    pf <- get_biomart_protein_features(protein_features = biomaRt_databases[biomaRt_databases != 'elm'],
+                                       gtf_df = gtf_df,
+                                       species_dataset = species,
+                                       release = release)
+
+    pf <- to_long_features(ipr = pf, 
+                           features = biomaRt_databases[biomaRt_databases != 'elm'],
+                           include_interpro = "interpro" %in% biomaRt_databases)
+    if ("elm" %in% biomaRt_databases) {
+      message("[PROCESSING] Loading SLiMs from Eukaryotic Linear Motif Database")
+      linear_motifs <- get_linear_motifs(gtf_df, sequences, species, release)
+      pf <- rbind(pf, linear_motifs)
+    }
+  }
+  
+  
+  c("ensembl_transcript_id", "ensembl_peptide_id", "database", "feature_id", "name",  "alt_name", "start", "stop", "method")
+  
   message("[PROCESSING] Deduping and locating genomic coordinates")
   ## Dedup overlapping identical domains
   pf <- pf[ensembl_transcript_id %in% gtf_df$transcript_id]
@@ -457,7 +560,7 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
   pf[, k := rleid(ensembl_transcript_id, feature_id)]
 
   pf[, rmax := cummax(stop), by = k]
-  pf[, grp  := cumsum(start > shift(rmax, fill = -1)), by = k]
+  pf[, grp  := cumsum(start > data.table::shift(rmax, fill = -1)), by = k]
 
   # aggregate per (key, grp) in one shot
   ans <- pf[, .(start = min(start), stop = max(stop)),
@@ -486,11 +589,20 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
   cds_len_nt <- cds_map[, .(cds_len_nt = max(cds_rel_stop)), by = ensembl_transcript_id]
   cds_len_aa <- cds_len_nt[, .(ensembl_transcript_id, cds_len_aa = floor(cds_len_nt / 3L))]
   pf <- merge(pf, cds_len_aa, by = "ensembl_transcript_id", all.x = TRUE)
-  pf[, stop := pmin(stop, cds_len_aa, na.rm = TRUE)]
-  pf[, start := pmin(start, stop, na.rm = TRUE)]  # just in case start > stop
-
-  # Drop any zero-length or NA domains that got truncated to nothing
-  pf <- pf[!is.na(start) & !is.na(stop)]
+  
+  # Safeguard against erroneous aa coordinates
+  pf <- pf[!(is.na(start) & is.na(stop))]
+  pf[, `:=` (t_start = start, t_stop = stop)]
+  pf[, `:=` (
+    start = pmin(t_start, t_stop, na.rm = TRUE),
+    stop = pmax(t_start, t_stop, na.rm = TRUE)
+  )]
+  
+  pf[, `:=`(
+    start = pmax(1L, pmin(start, cds_len_aa, na.rm=T), na.rm=T),
+    stop  = pmax(1L, pmin(stop,  cds_len_aa, na.rm=T), na.rm=T)
+  )]
+  pf[, c("t_start","t_stop") := NULL]
 
   out <- as.data.table(pf)
   out[, cds_nt_start := start * 3L - 2L]
@@ -505,26 +617,26 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
 
   map_to_genomic <- function(features, cds_map) {
     features[, c("genomic_start", "genomic_end") := {
-
+      
       cds_sub <- cds_map[.BY$ensembl_transcript_id]
       if (nrow(cds_sub) == 0L) {
         list(NA_integer_, NA_integer_)
       } else {
-
-      i1 <- pmin(findInterval(cds_nt_start, cds_sub$cds_rel_stop+1)+1, nrow(cds_sub))
-      i2 <- pmin(findInterval(cds_nt_end,   cds_sub$cds_rel_stop+1)+1, nrow(cds_sub))
-
-      if (.BY$strand == "+") {
-        gstart <- cds_sub$cds_gen_start[i1] + (cds_nt_start - cds_sub$cds_rel_start[i1])
-        gend   <- cds_sub$cds_gen_start[i2] + (cds_nt_end   - cds_sub$cds_rel_start[i2])
-      } else {
-        gstart <- cds_sub$cds_gen_stop[i1] - (cds_sub$cds_rel_stop[i1] - cds_nt_start)
-        gend   <- cds_sub$cds_gen_stop[i2] - (cds_sub$cds_rel_stop[i2] - cds_nt_end)
-      }
-      list(gstart, gend)
+        
+        i1 <- pmin(findInterval(cds_nt_start, cds_sub$cds_rel_stop+1)+1, nrow(cds_sub))
+        i2 <- pmin(findInterval(cds_nt_end,   cds_sub$cds_rel_stop+1)+1, nrow(cds_sub))
+        
+        if (.BY$strand == "+") {
+          gstart <- cds_sub$cds_gen_start[i1] + (cds_nt_start - cds_sub$cds_rel_start[i1])
+          gend   <- cds_sub$cds_gen_start[i2] + (cds_nt_end   - cds_sub$cds_rel_start[i2])
+        } else {
+          gstart <- cds_sub$cds_gen_stop[i1] - (cds_nt_start - cds_sub$cds_rel_start[i1])
+          gend   <- cds_sub$cds_gen_stop[i2] - (cds_nt_end - cds_sub$cds_rel_start[i2])
+        }
+        list(pmin(gstart, gend), pmax(gstart, gend))
       }
     }, by = .(ensembl_transcript_id, strand)]
-
+    
     features[]
   }
 
@@ -532,16 +644,16 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
   mapped <- mapped[!is.na(genomic_start) & !is.na(genomic_end)]
   mapped <- mapped[
     , .(
-      chr = first(chr),
-      strand = first(strand),
+      chr = data.table::first(chr),
+      strand = data.table::first(strand),
       genomic_start = if (all(is.na(genomic_start))) NA_real_ else min(genomic_start, na.rm = TRUE),
       genomic_end   = if (all(is.na(genomic_end))) NA_real_ else max(genomic_end,   na.rm = TRUE),
-      feature_id = first(feature_id),
-      clean_name = first(name),
-      alt_name = first(alt_name),
-      database = first(database),
-      ensembl_peptide_id = first(ensembl_peptide_id),
-      method = first(method)
+      feature_id = data.table::first(feature_id),
+      clean_name = data.table::first(name),
+      alt_name = data.table::first(alt_name),
+      database = data.table::first(database),
+      ensembl_peptide_id = data.table::first(ensembl_peptide_id),
+      method = data.table::first(method)
     ),
     by = .(ensembl_transcript_id, start, stop)
   ]
@@ -892,7 +1004,6 @@ get_exon_features <- function(gtf_dt, feat, inclusive = TRUE) {
     overlap_aa_len   = overlap_end - overlap_start + 1L
   )][order(ensembl_transcript_id, exon_number, database, prot_start, prot_stop)]
 }
-
 
 
 

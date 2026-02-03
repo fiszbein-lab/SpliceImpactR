@@ -5,8 +5,10 @@
 \title{External function to fetch protein features from biomaRt}
 \usage{
 get_protein_features(
-  biomaRt_databases = c("interpro", "mobidblite", "seg", "ncoils", "tmhmm", "signalp"),
+  biomaRt_databases = c("interpro", "mobidblite", "seg", "ncoils", "tmhmm", "signalp",
+    "elm", "gene3d", "pfam"),
   gtf_df,
+  sequences = NULL,
   load_path = NULL,
   save_path = NULL,
   timeout = 600,
@@ -20,6 +22,9 @@ get_protein_features(
 to interpro, mobidblite, seg, ncoils, tmhmm, signalp}
 
 \item{gtf_df}{annotations from get_annotation()}
+
+\item{sequences}{only necessary if loading SLiMs from elm get_annotation() 
+(default \code{"sequences}) output}
 
 \item{load_path}{path to load prior protein features from}
 
@@ -50,5 +55,5 @@ enrichment.
 }
 \examples{
 annotation_df <- get_annotation(load = "test")
-interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
+interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, annotation_df$sequences, timeout = 600, test = TRUE)
 }

@@ -57,7 +57,6 @@ Here we obtain further annotations through biomaRt. The typical protein features
 ## We're loading test data here, but set test = FALSE to get the full set
 interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 signalp_features <- get_protein_features(c("signalp"), annotation_df$annotations, timeout = 600, test = TRUE)
-
 ```
 
 ```{r, eval=FALSE}
@@ -294,20 +293,12 @@ enriched_domains <- enrich_by_db(hits_domain, bg, dbs = 'interpro')
 
 ```
 
-## Isoform-Isoform interaction network
-For PPI analysis, we first obtain protein-protein interaction domain miner domain-domain interactions (ppidm)
+## Isoform-Isoform interaction network (only available for human data currently)
+For PPI analysis, we first obtain protein-protein interactions from a premade set derived from BioGrid, PPIDM, and ELM  
 And use those ddis to predict ppis 
 ```{r}
-## First we load from ppidm
-ppidm <- get_ppidm(test=TRUE)
-
-## Then we identify the predicted ppi, this can take some while. We should restrict to transcripts that we've found in the samples for computational efficiency
-restrict_protein_features <- protein_feature_total[ensembl_transcript_id %in% 
-                                    c(hits_domain$transcript_id_exc, hits_domain$transcript_id_inc)]
-ppi <- get_isoform_interactions(restrict_protein_features, ppidm, save = FALSE, load_dir = NULL, init = TRUE)
-
-## Now we can identify ppi switches and plot
-hits_final <- get_ppi_switches(hits_domain, ppi)
+ppi <- get_ppi_interactions()             
+hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 ppi_plot <- plot_ppi_summary(hits_final)
 
 ## We can also probe for enrichment of relevant genes:

@@ -68,12 +68,8 @@ protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
 
 hits_domain <- get_domains(seq_compare, exon_features)
-ppidm <- get_ppidm(test=TRUE)
-
-restrict_protein_features <- protein_feature_total[ensembl_transcript_id \%in\%
-                                                     c(hits_domain$transcript_id_exc, hits_domain$transcript_id_exc)]
-ppi <- get_isoform_interactions(restrict_protein_features, ppidm, save = FALSE, load_dir = NULL, init = TRUE)
-hits_final <- get_ppi_switches(hits_domain, ppi)
+ppi <- get_ppi_interactions()             
+hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 int_summary <- integrated_event_summary(hits_final, res)
 
 }

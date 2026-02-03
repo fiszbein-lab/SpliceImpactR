@@ -1202,12 +1202,8 @@ compare_hit_index <- function(
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
 #'
 #' hits_domain <- get_domains(seq_compare, exon_features)
-#' ppidm <- get_ppidm(test=TRUE)
-#'
-#' restrict_protein_features <- protein_feature_total[ensembl_transcript_id %in%
-#'                                                      c(hits_domain$transcript_id_exc, hits_domain$transcript_id_exc)]
-#' ppi <- get_isoform_interactions(restrict_protein_features, ppidm, save = FALSE, load_dir = NULL, init = TRUE)
-#' hits_final <- get_ppi_switches(hits_domain, ppi)
+#' ppi <- get_ppi_interactions()             
+#' hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 #' int_summary <- integrated_event_summary(hits_final, res)
 #'
 #' @import data.table
@@ -1970,14 +1966,8 @@ get_domain_gene_for_enrichment <- function(hits) {
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
 #'
 #' hits_domain <- get_domains(seq_compare, exon_features)
-#' ppidm <- get_ppidm(test=TRUE)
-#'
-#' ppi <- get_isoform_interactions(protein_feature_total[ensembl_transcript_id %in%
-#'                                                         annotation_df$annotations[, unique(transcript_id)]],
-#'                                 ppidm, save = FALSE, load_dir = '/projectnb2/evolution/zwakefield/proteinImpacts/', init = TRUE)
-#'
-#'
-#' hits_final <- get_ppi_switches(hits_domain, ppi)
+#' ppi <- get_ppi_interactions()             
+#' hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 #' bg <- get_background(source = "hit_index",
 #'                      input = sample_frame,
 #'                      annotations = annotation_df$annotations,

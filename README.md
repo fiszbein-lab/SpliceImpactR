@@ -66,7 +66,7 @@ signalp_features <- get_protein_features(c("signalp"), annotation_df$annotations
 
 ## When loading multiple features from biomaRt, we suggest loading in separate get_protein_features calls for each individual feature database
 # interpro_features <- get_protein_features(c("signalp"), annotation_df$annotations, timeout = 600)
-# interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600)
+# signalp_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600)
 
 ## We can also load user-defined protein features by transcript/protein ensembl ids and the location of the protein feature within 
 # user_df <- data.frame(
@@ -310,20 +310,12 @@ enriched_domains <- enrich_by_db(hits_domain, bg, dbs = 'interpro')
 
 ```
 
-## Isoform-Isoform interaction network
-For PPI analysis, we first obtain protein-protein interaction domain miner domain-domain interactions (ppidm)
-And use those ddis to predict ppis 
+## Isoform-Isoform interaction network (Only available for human data currently)
+For PPI analysis, we first obtain protein-protein interactions from a pre-derived network built from biogrid, ppidm, and elm
+And use these to show when a change in domain / SLiM changes ppi
 ```r
-## First we load from ppidm
-ppidm <- get_ppidm(test=TRUE)
-
-## Then we identify the predicted ppi, this can take some while. We should restrict to transcripts that we've found in the samples for computational efficiency
-restrict_protein_features <- protein_feature_total[ensembl_transcript_id %in% 
-                                    c(hits_domain$transcript_id_exc, hits_domain$transcript_id_inc)]
-ppi <- get_isoform_interactions(restrict_protein_features, ppidm, save = FALSE, load_dir = NULL, init = TRUE)
-
-## Now we can identify ppi switches and plot
-hits_final <- get_ppi_switches(hits_domain, ppi)
+ppi <- get_ppi_interactions()             
+hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 ppi_plot <- plot_ppi_summary(hits_final)
 
 ## We can also probe for enrichment of relevant genes:

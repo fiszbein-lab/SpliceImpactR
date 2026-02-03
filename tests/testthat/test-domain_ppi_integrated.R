@@ -93,14 +93,8 @@ test_that("integrated splicing → match → seq → compare → domains → enr
   domain_plot <- plot_enriched_domains_counts(enriched_domains, top_n = 20)
   expect_s3_class(domain_plot, "ggplot")
 
-  ppidm <- get_ppidm(test=TRUE)
-  expect_s3_class(ppidm, "data.table")
-  expect_true("I1" %in% names(ppidm))
-  expect_true("I2" %in% names(ppidm))
-
-  restrict_protein_features <- protein_feature_total[ensembl_transcript_id %in%
-                                                       c(hits_domain$transcript_id_exc, hits_domain$transcript_id_exc)]
-  ppi <- get_isoform_interactions(restrict_protein_features, ppidm, save = FALSE, load_dir = NULL, init = TRUE)
+  ppi <- get_ppi_interactions()             
+  hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
   expect_s3_class(ppi, "data.table")
   expect_true("IA" %in% names(ppi))
   expect_true("IB" %in% names(ppi))

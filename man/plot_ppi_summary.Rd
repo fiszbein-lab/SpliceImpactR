@@ -67,14 +67,8 @@ bg <- get_background(source = "hit_index",
                      input = sample_frame,
                      annotations = annotation_df$annotations,
                      protein_features = protein_feature_total)
-ppidm <- get_ppidm(test=TRUE)
-
-ppi <- get_isoform_interactions(protein_feature_total[ensembl_transcript_id \%in\%
-                                                        annotation_df$annotations[, unique(transcript_id)]],
-                                ppidm, save = FALSE, load_dir = '/projectnb2/evolution/zwakefield/proteinImpacts/', init = TRUE)
-
-
-hits_final <- get_ppi_switches(hits_domain, ppi)
+ppi <- get_ppi_interactions()             
+hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 ppi_plot <- plot_ppi_summary(hits_final)
 
 }
