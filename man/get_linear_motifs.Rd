@@ -15,16 +15,16 @@ get_linear_motifs(
 \item{gtf_df}{A \code{data.frame} or \code{data.table} containing GTF
 annotations; used to derive chromosome groups for batching.}
 
+\item{protein_seqs}{only necessary if loading SLiMs from elm get_annotation() 
+(default \code{"sequences"}) output}
+
 \item{species}{Character string giving the Ensembl BioMart
 dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 \code{"mmusculus_gene_ensembl"}.}
 
 \item{release}{release version from ensemble associated with the gencode
 version provided in the get_annotation (This can be found in gencode, for
-example in humans: https://www.gencodegenes.org/human/releases.html)}
-
-\item{sequences}{only necessary if loading SLiMs from elm get_annotation() 
-(default \code{"sequences}) output}
+example in humans: \url{"https://www.gencodegenes.org/human/releases.html"})}
 }
 \value{
 A \code{data.table} containing protein feature annotations

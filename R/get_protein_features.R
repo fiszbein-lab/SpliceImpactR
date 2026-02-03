@@ -387,14 +387,14 @@ add_user_features <- function(x, default_database = "user") {
 #'
 #' @param gtf_df A \code{data.frame} or \code{data.table} containing GTF
 #'   annotations; used to derive chromosome groups for batching.
-#' @param sequences only necessary if loading SLiMs from elm get_annotation() 
-#'   (default \code{"sequences}) output
+#' @param protein_seqs only necessary if loading SLiMs from elm get_annotation() 
+#'   (default \code{"sequences"}) output
 #' @param species Character string giving the Ensembl BioMart
 #'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 #'   \code{"mmusculus_gene_ensembl"}.
 #' @param release release version from ensemble associated with the gencode
 #' version provided in the get_annotation (This can be found in gencode, for
-#' example in humans: https://www.gencodegenes.org/human/releases.html)
+#' example in humans: \url{"https://www.gencodegenes.org/human/releases.html"})
 #'
 #' @return A \code{data.table} containing protein feature annotations
 #'   including transcript and peptide IDs, feature start/end positions,
