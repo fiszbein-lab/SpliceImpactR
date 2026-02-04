@@ -6,7 +6,11 @@
 #' 
 #' @export
 get_ppi_interactions <- function() {
-  path <- "/Users/zacharywakefield/Desktop/ppi_first.RDS"
+  path <- system.file(
+    "extdata",
+    "ppi.RDS",
+    package = "SpliceImpactR"
+  )
   con <- if (grepl("\\.gz$", path)) gzfile(path, "rb") else path
   on.exit(if (inherits(con, "connection")) close(con), add = TRUE)
   as.data.table(readRDS(con))
