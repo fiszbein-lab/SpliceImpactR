@@ -331,8 +331,8 @@ match_events_to_annotations_vec <- function(events,
   # 9) scoring & winner
   class_pref_map <- list(
     SE="internal", MXE="internal", RI="internal",
-    A5SS=c("first","internal","last"),
-    A3SS=c("last","internal","first"),
+    A5SS=c("first","internal"),
+    A3SS=c("last","internal"),
     AFE="first", HFE="first", ALE="last", HLE="last"
   )
   inc_hits[, class_pref_hit := mapply(function(et, cls) cls %chin% (class_pref_map[[et]] %||% character()),
