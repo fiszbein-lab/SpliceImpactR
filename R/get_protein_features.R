@@ -584,7 +584,7 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
       cds_rel_start,
       cds_rel_stop,
       cds_gen_start,
-      # cds_gen_stop
+      cds_gen_stop
     )
   ][order(ensembl_transcript_id, cds_rel_start)]
   setkey(cds_map, ensembl_transcript_id, cds_rel_start, cds_rel_stop)
