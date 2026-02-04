@@ -485,6 +485,10 @@ get_linear_motifs <- function(gtf_df,
 #' version provided in the get_annotation (This can be found in gencode, for
 #' example in human: \url{"https://www.gencodegenes.org/human/releases.html"})
 #' example in mouse: \url{"https://www.gencodegenes.org/mouse/releases.html"})
+#' @param test load small test data
+#' @param combine_overlap simplifies protein feature output an combines 
+#' protein features with the same ID and overlapping coords. Sometimes not 
+#' desireable
 #'
 #' @param test Logical; bool for whether to load from reduced test set
 #'

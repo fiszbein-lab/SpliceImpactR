@@ -14,7 +14,8 @@ get_protein_features(
   timeout = 600,
   species = c("human", "mouse")[1],
   release = c(109, 115)[1],
-  test = FALSE
+  test = FALSE,
+  combine_overlaps = FALSE
 )
 }
 \arguments{
@@ -42,6 +43,10 @@ example in human: \url{"https://www.gencodegenes.org/human/releases.html"})
 example in mouse: \url{"https://www.gencodegenes.org/mouse/releases.html"})}
 
 \item{test}{Logical; bool for whether to load from reduced test set}
+
+\item{combine_overlap}{simplifies protein feature output an combines 
+protein features with the same ID and overlapping coords. Sometimes not 
+desireable}
 }
 \value{
 A `data.table` with one row per protein feature and transcript coupling
