@@ -504,7 +504,8 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
                                  timeout = 600,
                                  species = c('human', 'mouse')[1],
                                  release = c(109, 115)[1],
-                                 test = FALSE) {
+                                 test = FALSE,
+                                 combine_overlaps = FALSE) {
   if (species == 'human') {
     species <- 'hsapiens_gene_ensembl'
   } else if (species == 'mouse') {
@@ -540,37 +541,35 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
     }
   }
   
-  
-  c("ensembl_transcript_id", "ensembl_peptide_id", "database", "feature_id", "name",  "alt_name", "start", "stop", "method")
-  
   message("[PROCESSING] Deduping and locating genomic coordinates")
   ## Dedup overlapping identical domains
   pf <- pf[ensembl_transcript_id %in% gtf_df$transcript_id]
 
   pf_i <- pf
-
-  pf <- as.data.table(pf)[, .(ensembl_transcript_id, feature_id, start, stop)]
-
-  pf[, `:=`(start = as.integer(start), stop = as.integer(stop))]
-
-  pf <- unique(pf)
-
-  setorder(pf, ensembl_transcript_id, feature_id, start, stop)
-
-  pf[, k := rleid(ensembl_transcript_id, feature_id)]
-
-  pf[, rmax := cummax(stop), by = k]
-  pf[, grp  := cumsum(start > data.table::shift(rmax, fill = -1)), by = k]
-
-  # aggregate per (key, grp) in one shot
-  ans <- pf[, .(start = min(start), stop = max(stop)),
-            by = .(ensembl_transcript_id, feature_id, grp)]
-  ans[, grp := NULL][]
-
-  pf <- merge(ans,
-        unique(pf_i[, .(ensembl_transcript_id, ensembl_peptide_id, database, feature_id, name, alt_name, method)]),
-        by = c("ensembl_transcript_id", "feature_id"))
-
+  
+  if (combine_overlaps) {
+    pf <- as.data.table(pf)[, .(ensembl_transcript_id, feature_id, start, stop)]
+  
+    pf[, `:=`(start = as.integer(start), stop = as.integer(stop))]
+  
+    pf <- unique(pf)
+  
+    setorder(pf, ensembl_transcript_id, feature_id, start, stop)
+  
+    pf[, k := rleid(ensembl_transcript_id, feature_id)]
+  
+    pf[, rmax := cummax(stop), by = k]
+    pf[, grp  := cumsum(start > data.table::shift(rmax, fill = -1)), by = k]
+  
+    # aggregate per (key, grp) in one shot
+    ans <- pf[, .(start = min(start), stop = max(stop)),
+              by = .(ensembl_transcript_id, feature_id, grp)]
+    ans[, grp := NULL][]
+  
+    pf <- merge(ans,
+          unique(pf_i[, .(ensembl_transcript_id, ensembl_peptide_id, database, feature_id, name, alt_name, method)]),
+          by = c("ensembl_transcript_id", "feature_id"))
+  } 
   ## get a unique genomic coord for domain
   cds_map <- as.data.table(gtf_df)[
     type == "exon" & cds_has == TRUE,
@@ -581,7 +580,7 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
       cds_rel_start,
       cds_rel_stop,
       cds_gen_start,
-      cds_gen_stop
+      # cds_gen_stop
     )
   ][order(ensembl_transcript_id, cds_rel_start)]
   setkey(cds_map, ensembl_transcript_id, cds_rel_start, cds_rel_stop)
