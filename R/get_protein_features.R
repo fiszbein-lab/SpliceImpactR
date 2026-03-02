@@ -516,7 +516,7 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
     species <- 'mmusculus_gene_ensembl'
   }
   if (test == TRUE) {
-    return(data.table::rbindlist(lapply(biomaRt_databases[biomaRt_databases %in% c("interpro", "signalp")], function(x) {
+    return(data.table::rbindlist(lapply(biomaRt_databases[biomaRt_databases %in% c("interpro", "signalp", "elm")], function(x) {
       fread(get_example_data(paste0("test_", x, ".csv")))
     })))
   }

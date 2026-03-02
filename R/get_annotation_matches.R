@@ -55,7 +55,7 @@ build_from_annotations <- function(ann) {
   ex[is.na(exon_number) | is.na(max_ex), classification := NA_character_]
   ex[, max_ex := NULL]
 
-  protein_tx <- unique(na.omit(tx$transcript_id[!is.na(tx$protein_id)]))
+  protein_tx <- unique(na.omit(tx$transcript_id[transcript_type == 'protein_coding' & !is.na(transcript_type)]))
   list(exons = ex, transcripts = tx, protein_tx = protein_tx)
 }
 
