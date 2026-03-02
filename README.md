@@ -25,7 +25,7 @@ You can install SpliceImpactR directly from GitHub using the devtools package. I
 ```r
 install.packages("devtools")
 ```
-Then, to install the package:
+Then, to install the package (devtools installation recommnded):
 ```r
 devtools::install_github("fiszbein-lab/SpliceImpactR")
 ```
@@ -40,79 +40,81 @@ BiocManager::install("fiszbein-lab/SpliceImpactR", version="devel")
 # Usage
 ## Access gencode information
 __SpliceImpactR__ requires the acceession of various genome annotations, accessed through biomaRt and directly through gencode, 
-here we access the gencode files. SpliceImpactR is built to work with either human or mouse data.
+here we access the gencode files. SpliceImpactR is built to work with either human or mouse data. 
+We will initially load a test set
 ```r
-## Loading annotations (if they aren't previously cached takes a bit of time)
-## We will initally load a test set
 annotation_df <- get_annotation(load = "test")
-
-## If we were looking to load the full annotations, we'd run the following (or load from paths of already downloaded gtf/fa files)
-# annotation_df <- get_annotation(load = "link", species = 'human', release = 45, base_dir = "./")
-
-## After the initial lengthy loading of annotations, we could quickly load from cached rds files
-# annotation_df <- get_annotation(load="cached", base_dir="./path/")
+```
+If we were looking to load the full annotations, we'd run the following
+```r
+annotation_df <- get_annotation(load = "link", species = 'human', release = 45, base_dir = "./")
+```
+Or to load from cached annotations previously loaded:
+```r
+annotation_df <- get_annotation(load="cached", base_dir="./path/")
 ```
 
 ## Access biomaRt information
 Here we obtain further annotations through biomaRt. The typical protein features accessed through biomaRt are: interpro, pfam, 
-signalp, ncoils, mobidblite. Any features added are able to be accessed if they have the three attributes (biomaRt::listAttributes(mart)): 
+signalp, ncoils, mobidblite. We also access the eukaryotic linear motif (ELM) database of short linear motifs.
+Any features added are able to be accessed if they have the three attributes (biomaRt::listAttributes(mart)): 
 {feature}, {feature}_start, {feature}_end. If there are more protein features desired, you can manually access them and upload through 
 get_manual_features() shown in the chunk below using peptide locations.
+
+We're loading test data here, but set test = FALSE to get the full set.
 ```r
-## We're loading test data here, but set test = FALSE to get the full set
-interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
-signalp_features <- get_protein_features(c("signalp"), annotation_df$annotations, timeout = 600, test = TRUE)
+interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, test = TRUE)
+signalp_features <- get_protein_features(c("signalp"), annotation_df$annotations, test = TRUE)
+elm_features <- get_protein_features(c("elm"), annotation_df$annotations, test = TRUE)
+```
 
+We can also load user-defined protein features by transcript/protein ensembl ids and the location of the protein feature within 
+```r
+user_df <- data.frame(
+ ensembl_transcript_id = c(
+   "ENST00000511072","ENST00000374900","ENST00000373020","ENST00000456328",
+   "ENST00000367770","ENST00000331789","ENST00000335137","ENST00000361567",
+   NA,                    "ENST00000380152"
+ ),
+ ensembl_peptide_id = c(
+   "ENSP00000426975", NA,                   "ENSP00000362048","ENSP00000407743",
+   "ENSP00000356802","ENSP00000326734", NA,                  "ENSP00000354587",
+   "ENSP00000364035", NA
+ ),
+ name = c(
+   "Low complexity","Transmembrane helix","Coiled-coil","Signal peptide",
+   "Transmembrane helix","Low complexity","Coiled-coil","Transmembrane helix",
+   "Signal peptide","Low complexity"
+ ),
+ start = c(80L, 201L, 35L, 1L, 410L, 150L, 220L, 30L, 1L, 300L),
+ stop  = c(120L,223L, 80L, 20L, 430L, 190L, 260L, 55L, 24L, 360L),
+ database   = c("seg","tmhmm","ncoils","signalp","tmhmm","seg","ncoils","tmhmm","signalp", NA),
+ alt_name   = c(NA,"TMhelix",NA,"SignalP-noTM", "TMhelix", NA, NA, "TMhelix", "SignalP-TAT", NA),
+ feature_id = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+)
+user_features <- get_manual_features(user_df, gtf_df = annotation_df$annotations)
+```
 
-## When loading multiple features from biomaRt, we suggest loading in separate get_protein_features calls for each individual feature database
-# interpro_features <- get_protein_features(c("signalp"), annotation_df$annotations, timeout = 600)
-# signalp_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600)
-
-## We can also load user-defined protein features by transcript/protein ensembl ids and the location of the protein feature within 
-# user_df <- data.frame(
-#  ensembl_transcript_id = c(
-#    "ENST00000511072","ENST00000374900","ENST00000373020","ENST00000456328",
-#    "ENST00000367770","ENST00000331789","ENST00000335137","ENST00000361567",
-#    NA,                    "ENST00000380152"
-#  ),
-#  ensembl_peptide_id = c(
-#    "ENSP00000426975", NA,                   "ENSP00000362048","ENSP00000407743",
-#    "ENSP00000356802","ENSP00000326734", NA,                  "ENSP00000354587",
-#    "ENSP00000364035", NA
-#  ),
-#  name = c(
-#    "Low complexity","Transmembrane helix","Coiled-coil","Signal peptide",
-#    "Transmembrane helix","Low complexity","Coiled-coil","Transmembrane helix",
-#    "Signal peptide","Low complexity"
-#  ),
-#  start = c(80L, 201L, 35L, 1L, 410L, 150L, 220L, 30L, 1L, 300L),
-#  stop  = c(120L,223L, 80L, 20L, 430L, 190L, 260L, 55L, 24L, 360L),
-#  database   = c("seg","tmhmm","ncoils","signalp","tmhmm","seg","ncoils","tmhmm","signalp", NA),
-#  alt_name   = c(NA,"TMhelix",NA,"SignalP-noTM", "TMhelix", NA, NA, "TMhelix", "SignalP-TAT", NA),
-#  feature_id = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
-# )
-# user_features <- get_manual_features(user_df, gtf_df = annotation_df$annotations)
-
-## We use this function to combine multiple protein features and the user-defined features
-protein_feature_total <- get_comprehensive_annotations(list(signalp_features, interpro_features))
-
-
-## Finally, we get the exon-level protein features from the prior overall features
+We use this function to combine multiple protein features and the user-defined features. 
+If no user_features are added, remove user_features from get_comprehensive_annotations()
+We also get the exon-level protein features from the prior overall features.
+```r
+protein_feature_total <- get_comprehensive_annotations(list(signalp_features, interpro_features, user_features))
 exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
-
 ```
 
 ## Loading data (rmats + hit index example)
 For the sake of this intro, we use toy versions (limited to a handful of genes)
 The sample data frame must have a path column pointing to where the files (rMATS output and hit_index is contained). We must also have sample_name and condition columns
+For the standard workflow, we require all output files within the same directory for each sample. rMATS analysis will look for the {AS}.MATS.JC/JCEC.txt and HIT Index will look for the .AFEPSI, .ALEPSI, and .exon files
+The data files should be organized as such for each sample:
 ```r
-# For purposes of these examples, data directory is in extdata to point to toy data, however this should be replaced with the directory path to  data
-
-# For the standard workflow, we require all output files within the same directory for each sample. rMATS analysis will look for the {AS}.MATS.JC/JCEC.txt and HIT Index will look for the .AFEPSI, .ALEPSI, and .exon files
-# The data files should be organized as such for each sample:
 print(list.files(check_extdata_dir('rawData/control_S5/')))
+```
 
-# If the rmats and hit index output are in separate directories, you can use get_hitindex() and get_rmats() to avoid reorganizing data files
+If the rmats and hit index output are in separate directories, you can use get_hitindex() and get_rmats(),
+then rbind on the shared columns (to avoid reorganizing data files)
+```r
 sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
                                     check_extdata_dir('rawData/control_S6/'),
                                     check_extdata_dir('rawData/control_S7/'),
@@ -124,36 +126,46 @@ sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
                            stringsAsFactors = FALSE)
-# Here we load both rmats and hit index data
+
 data <- get_rmats_hit(sample_frame, event_types = c("ALE", "AFE", "MXE", "SE", "A3SS", "A5SS", "RI"))
 
-## We can compare the HIT Index values across condition, to identify how classification/use of exons may change
+```
+
+Now that the data is loaded, we can make some initial comparisons. Such as comparing the hit index values across condition,
+if hit index is supplied. This identifies how classification/use of exons may change
+Or an overview of how the conditions compare as well. 
+Here, we probe whether there are changes in depth-normalized counts of AFE or the distribution of PSI across condition
+```r
 hit_compare <- compare_hit_index(sample_frame, condition_map = c(control = "control", test = "case"))
 
-## We can plot an overview of how the conditions compare as well. Here, we probe whether there are changes in depth-normalized counts of AFE or the distribution of PSI across condition
 ov <- overview_splicing_comparison_fixed(data, 
                                          sample_frame, 
                                          depth_norm = 'exon_files', 
                                          event_type = "AFE")
-
-
 ```
 
 
 ## Differential Inclusion
-First we perform differential inclusion analysis. This uses a quasibinomial glm and subsequent F test to identify significant changes in PSI across condition. The default here is 10 minimum read count, at least present (nonzero) in half of the samples within either of the conditions. This step does various filtering and with verbose = TRUE prints out how many events are filtered / kept.
+We then perform differential inclusion analysis. 
+This uses a quasibinomial glm and subsequent F test to identify significant changes in PSI across condition. 
+The default here is 10 minimum read count, 
+at least present (nonzero) in half of the samples within either of the conditions. 
+This step does various filtering and with verbose = TRUE prints out how many events are filtered / kept.
 
 We filter for fdr < 0.05 and delta_psi > 0.1 and output a volcano plot
+If using real data, this may take a long time. To speed it up, 
+add parallel_glm = TRUE and set cores_glm > 1
+Using keep_sig_pairs we filter for significance/threshold and plot with 
+plot_di_volcano
 ```r
-## If not using the toy data, we can add cores_glm = n, parallel_glm = TRUE to run the statistical analysis chunked in parallel
 res <- get_differential_inclusion(data, min_total_reads = 10)
 res_di <- keep_sig_pairs(res)
 volcano_plot <- plot_di_volcano_dt(res)
 ```
 
+We can also load user-supplied data from any source through: get_user_data and get_user_data_post_di. Here we use minimal example data frames
+pre-differential-inclusion:
 ```r
-## We can also load user-supplied data from any source through: get_user_data and get_user_data_post_di. Here we use minimal example data frames
-# pre-di
 example_df <- data.frame(
   event_id = rep("A3SS:1", 8),
   event_type = "A3SS",
@@ -171,8 +183,9 @@ example_df <- data.frame(
 )
 example_df$psi <- example_df$inclusion_reads / example_df$exclusion_reads
 user_data <- get_user_data(example_df)
-
-# post-di
+```
+post-differential-inclusion:
+```r
 example_user_data <- data.frame(
   event_id = rep("A3SS:1", 8),
   event_type = "A3SS",
@@ -192,21 +205,24 @@ example_user_data <- data.frame(
 )
 
 user_data <- get_user_data_post_di(example_user_data)
-
-## We are also able to load post differential inclusion rMATS data if this data
-## was supplied
-# input <- data.frame(
-#   path = c('/path/A3SS.MATS.JC.txt', '/path2/A5SS.MATS.JC.txt'),
-#   grp1 = c("WT","WT"),
-#   grp2 = c("KO","KO"),
-#   event_type = c("A3SS", "A5SS")
-# )
-# res <- get_rmats_post_di(meta)
 ```
 
-## We can also load from after rmats differential inclusion
+SpliceImpactR also handles data with differential inclusion values generated
+by rMATS
+Loading multiple splice types are loaded through:
 ```r
-# # Single rMATS table already loaded as df, see documentation for taking multiple as a data frame or more details on inputs
+# was supplied
+input <- data.frame(
+  path = c('/path/A3SS.MATS.JC.txt', '/path2/A5SS.MATS.JC.txt'),
+  grp1 = c("WT","WT"),
+  grp2 = c("KO","KO"),
+  event_type = c("A3SS", "A5SS")
+)
+res <- get_rmats_post_di(meta)
+```
+
+We can also load from a single rMATS table, preloaded:
+```r
 df <- data.frame(
   ID = 1L,
   GeneID = "ENSG00000182871",
@@ -243,8 +259,10 @@ Then we match the significant output to annotation. Here, we attach associated t
 matched <- get_matched_events_chunked(res_di, annotation_df$annotations, chunk_size = 2000)
 hits_sequences <- attach_sequences(matched, annotation_df$sequences)
 pairs <- get_pairs(hits_sequences, source="multi")
+```
 
-## We can also perform analysis looking at how events impact proximal/distal use of terminal exons
+We can also perform analysis looking at how events impact proximal/distal use of terminal exons
+```r
 proximal_output <- get_proximal_shift_from_hits(pairs)
 ```
 
@@ -252,11 +270,12 @@ proximal_output <- get_proximal_shift_from_hits(pairs)
 Use `probe_individual_event()` to visualize PSI distributions for a specific event across samples. For terminal exon events
 (`AFE`/`ALE`), PSI is separated by the `inc` entry to highlight proximal vs distal choices.
 
+Identify an event of interest from the differential inclusion results
 ```r
-# Identify an event of interest from the differential inclusion results
 event_to_probe <- res$event_id[1]
-
-# Plot PSI by sample/condition; missing combinations are filled with zeros by default
+```
+Plot PSI by sample/condition; missing combinations are filled with zeros by default
+```r
 probe <- probe_individual_event(res, event = event_to_probe)
 ```
 
@@ -278,8 +297,10 @@ And make a summary plot
 ```r
 seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 alignment_summary <- plot_alignment_summary(seq_compare)
+```
 
-## We can also perform analysis looking at how events impact protein length
+We can also perform analysis looking at how events impact protein length
+```r
 length_output <- plot_length_comparison(seq_compare)
 ```
 
@@ -295,19 +316,22 @@ bg <- get_background(source = "annotated",
 
 ## Get domain changes
 Here we identify when the alternative RNA processing event drives a change in protein features, then identify enriched domains using the backgrond set
+First get the domains that change across pairs
 ```r
-## First get the domains that change across pairs
 hits_domain <- get_domains(seq_compare, exon_features)
+```
 
-## Then we can probe for any enriched domains that are changing and plot
+Then we can probe for any enriched domains that are changing and plot
+```r
 enriched_domains <- enrich_domains_hypergeo(hits_domain, bg, db_filter = 'interpro')
 domain_plot <- plot_enriched_domains_counts(enriched_domains, top_n = 20)
+```
 
-## And we're able to search for A) specific events enrichment (AFE, ALE, etc)
-## or by database (Interpro, SignalP, etc)
+And we're able to search for A) specific events enrichment (AFE, ALE, etc)
+or by database (Interpro, SignalP, etc)
+```r
 enriched_domains <- enrich_by_event(hits_domain, bg, events = 'AFE', db_filter = 'interpro')
 enriched_domains <- enrich_by_db(hits_domain, bg, dbs = 'interpro')
-
 ```
 
 ## Isoform-Isoform interaction network (Only available for human data currently)
@@ -317,11 +341,13 @@ And use these to show when a change in domain / SLiM changes ppi
 ppi <- get_ppi_interactions()             
 hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 ppi_plot <- plot_ppi_summary(hits_final)
+```
 
-## We can also probe for enrichment of relevant genes:
-# enrichment_ppi <- get_enrichment(get_ppi_gene_enrichment(hits_final), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
-# enrichment_domain <- get_enrichment(get_domain_gene_for_enrichment(hits_domain), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
-# enrichment_di <- get_enrichment(get_di_gene_enrichment(res, .05, .1), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
+We can also probe for enrichment of relevant genes:
+```r
+enrichment_ppi <- get_enrichment(get_ppi_gene_enrichment(hits_final), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
+enrichment_domain <- get_enrichment(get_domain_gene_for_enrichment(hits_domain), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
+enrichment_di <- get_enrichment(get_di_gene_enrichment(res, .05, .1), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
 ```
 
 
