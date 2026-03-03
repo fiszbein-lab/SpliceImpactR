@@ -13,9 +13,9 @@ plot_length_comparison(
 }
 \arguments{
 \item{hits}{`data.frame` or `data.table` containing event-level results,
-including at least `prot_len_inc`, `prot_len_exc`, and `prot_len_diff`
+including at least `prot_len_case`, `prot_len_control`, and `prot_len_diff`
 for `mode = "protein"`, or their transcript analogues
-`tx_len_inc`, `tx_len_exc`, and `tx_len_diff`.}
+`tx_len_case`, `tx_len_control`, and `tx_len_diff`.}
 
 \item{phenotypes}{Named character vector of length 2 giving labels for
 control and experimental phenotypes. Must have names

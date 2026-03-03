@@ -124,7 +124,7 @@
   setkey(L, exon_id)
 
   DT <- as.data.table(H)[, .(row_id = .I,
-                             event_type = event_type_inc,
+                             event_type,
                              exons = get(col_exons))]
 
   # explode to long
@@ -211,8 +211,8 @@
 #'
 #' @param hits A \link[data.table]{data.table} or data.frame containing
 #'   isoform pairs. Must include columns:
-#'   \code{transcript_seq_inc}, \code{transcript_seq_exc},
-#'   \code{protein_seq_inc}, and \code{protein_seq_exc}. From prior analysis.
+#'   \code{transcript_seq_case}, \code{transcript_seq_control},
+#'   \code{protein_seq_case}, and \code{protein_seq_control}. From prior analysis.
 #' @param annotations output from get_annotations (annotations)
 #' @param include_sequences Logical; if \code{TRUE}, retains raw sequences in the output.
 #'   Defaults to \code{FALSE}.
@@ -222,8 +222,8 @@
 #'   sequence length, coding length, and alignment similarity metrics, including:
 #'   \itemize{
 #'     \item \code{pc_class}: protein-coding status ("protein_coding", "onePC", "noPC")
-#'     \item \code{prot_len_inc/exc}: protein sequence lengths
-#'     \item \code{tx_len_inc/exc}: transcript sequence lengths
+#'     \item \code{prot_len_case/control}: protein sequence lengths
+#'     \item \code{tx_len_case/control}: transcript sequence lengths
 #'     \item \code{exon_cds_len_*}, \code{exon_len_*}: summed exon/CDS lengths
 #'     \item \code{dna_pid}, \code{dna_score}, \code{prot_pid}, \code{prot_score}: alignment metrics
 #'   }
@@ -260,16 +260,16 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
   valid_nt <- colnames(NUC44)
 
   ## Fix aa and nt sequences in rare occurence of nonBLOSUM62/NUC44 chars
-  hits$protein_seq_inc <- vapply(
-    hits$protein_seq_inc,
+  hits$protein_seq_case <- vapply(
+    hits$protein_seq_case,
     function(s) {
       if (is.na(s)) return(NA_character_)
       paste0(strsplit(s, "")[[1]][ strsplit(s, "")[[1]] %chin% valid_aa ], collapse = "")
     },
     FUN.VALUE = character(1)
   )
-  hits$protein_seq_exc <- vapply(
-    hits$protein_seq_exc,
+  hits$protein_seq_control <- vapply(
+    hits$protein_seq_control,
     function(s) {
       if (is.na(s)) return(NA_character_)
       paste0(strsplit(s, "")[[1]][ strsplit(s, "")[[1]] %chin% valid_aa ], collapse = "")
@@ -277,8 +277,8 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
     FUN.VALUE = character(1)
   )
 
-  hits$transcript_seq_inc <- vapply(
-    hits$transcript_seq_inc,
+  hits$transcript_seq_case <- vapply(
+    hits$transcript_seq_case,
     function(s) {
       if (is.na(s)) return(NA_character_)
       paste0(strsplit(s, "")[[1]][ strsplit(s, "")[[1]] %chin% valid_nt ], collapse = "")
@@ -286,8 +286,8 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
     FUN.VALUE = character(1)
   )
 
-  hits$transcript_seq_exc <- vapply(
-    hits$transcript_seq_exc,
+  hits$transcript_seq_control <- vapply(
+    hits$transcript_seq_control,
     function(s) {
       if (is.na(s)) return(NA_character_)
       paste0(strsplit(s, "")[[1]][ strsplit(s, "")[[1]] %chin% valid_nt ], collapse = "")
@@ -298,32 +298,32 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
   DT <- as.data.table(hits)
 
   if (verbose == TRUE) print(paste0("[INFO] Processing ", dim(DT)[1], " transcript and protein sequence alignments, this may take a little..."))
-  inc_sum <- .sum_exon_lengths(DT, annotations, col_exons = "exons_inc",
+  case_sum <- .sum_exon_lengths(DT, annotations, col_exons = "exons_case",
                                out_prefix = c("cds","exon"),
                                exon_delim = "[,;|[:space:]]+")
 
-  exc_sum <- .sum_exon_lengths(DT, annotations, col_exons = "exons_exc",
+  control_sum <- .sum_exon_lengths(DT, annotations, col_exons = "exons_control",
                                out_prefix = c("cds","exon"),
                                exon_delim = "[,;|[:space:]]+")
 
   # lengths & classes
-  prot_len_inc <- .safe_nchar(DT$protein_seq_inc)
-  prot_len_exc <- .safe_nchar(DT$protein_seq_exc)
-  tx_len_inc   <- .safe_nchar(DT$transcript_seq_inc)
-  tx_len_exc   <- .safe_nchar(DT$transcript_seq_exc)
-  pc_class     <- mapply(.pc_class, DT$protein_seq_inc, DT$protein_seq_exc)
+  prot_len_case <- .safe_nchar(DT$protein_seq_case)
+  prot_len_control <- .safe_nchar(DT$protein_seq_control)
+  tx_len_case   <- .safe_nchar(DT$transcript_seq_case)
+  tx_len_control   <- .safe_nchar(DT$transcript_seq_control)
+  pc_class     <- mapply(.pc_class, DT$protein_seq_case, DT$protein_seq_control)
 
-  DT[, transcript_seq_inc := vapply(transcript_seq_inc, as.character, character(1))]
-  DT[, transcript_seq_exc := vapply(transcript_seq_exc, as.character, character(1))]
-  DT[, protein_seq_inc    := vapply(protein_seq_inc,    as.character, character(1))]
-  DT[, protein_seq_exc    := vapply(protein_seq_exc,    as.character, character(1))]
+  DT[, transcript_seq_case := vapply(transcript_seq_case, as.character, character(1))]
+  DT[, transcript_seq_control := vapply(transcript_seq_control, as.character, character(1))]
+  DT[, protein_seq_case    := vapply(protein_seq_case,    as.character, character(1))]
+  DT[, protein_seq_control    := vapply(protein_seq_control,    as.character, character(1))]
 
   # handle rows with missing sequences
   dna_res <- vector("list", nrow(DT))
   aa_res  <- vector("list", nrow(DT))
 
-  valid_dna <- !is.na(DT$transcript_seq_inc) & !is.na(DT$transcript_seq_exc)
-  valid_aa  <- !is.na(DT$protein_seq_inc)    & !is.na(DT$protein_seq_exc)
+  valid_dna <- !is.na(DT$transcript_seq_case) & !is.na(DT$transcript_seq_control)
+  valid_aa  <- !is.na(DT$protein_seq_case)    & !is.na(DT$protein_seq_control)
 
   # fill non-valid rows with default NA result list
   for (i in which(!valid_dna)) {
@@ -337,42 +337,42 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
   # align only valid rows
   dna_res[valid_dna] <- mapply(
     function(a, b) .align_dna(a, b, NUC44),
-    DT$transcript_seq_inc[valid_dna],
-    DT$transcript_seq_exc[valid_dna],
+    DT$transcript_seq_case[valid_dna],
+    DT$transcript_seq_control[valid_dna],
     SIMPLIFY = FALSE
   )
 
   aa_res[valid_aa] <- mapply(
     function(a, b) .align_aa(a, b, BLOSUM62),
-    DT$protein_seq_inc[valid_aa],
-    DT$protein_seq_exc[valid_aa],
+    DT$protein_seq_case[valid_aa],
+    DT$protein_seq_control[valid_aa],
     SIMPLIFY = FALSE
   )
 
   DT[, `:=`(
     pc_class   = as.character(pc_class),
 
-    prot_len_inc      = prot_len_inc,
-    prot_len_exc      = prot_len_exc,
-    prot_len_diff = prot_len_inc - prot_len_exc,
-    prot_len_diff_abs = abs(prot_len_inc - prot_len_exc),
+    prot_len_case      = prot_len_case,
+    prot_len_control      = prot_len_control,
+    prot_len_diff = prot_len_case - prot_len_control,
+    prot_len_diff_abs = abs(prot_len_case - prot_len_control),
 
-    tx_len_inc        = tx_len_inc,
-    tx_len_exc        = tx_len_exc,
-    tx_len_diff   = tx_len_inc - tx_len_exc,
-    tx_len_diff_abs   = abs(tx_len_inc - tx_len_exc),
+    tx_len_case        = tx_len_case,
+    tx_len_control        = tx_len_control,
+    tx_len_diff   = tx_len_case - tx_len_control,
+    tx_len_diff_abs   = abs(tx_len_case - tx_len_control),
 
     # coding lengths (CDS)
-    exon_cds_len_inc       = inc_sum$cds_len,
-    exon_cds_len_exc       = exc_sum$cds_len,
-    exon_cds_len_diff      = inc_sum$cds_len - exc_sum$cds_len,
-    exon_cds_len_diff_abs  = abs(inc_sum$cds_len - exc_sum$cds_len),
+    exon_cds_len_case       = case_sum$cds_len,
+    exon_cds_len_control       = control_sum$cds_len,
+    exon_cds_len_diff      = case_sum$cds_len - control_sum$cds_len,
+    exon_cds_len_diff_abs  = abs(case_sum$cds_len - control_sum$cds_len),
 
     # total exon lengths (feature length)
-    exon_len_inc      = inc_sum$exon_len,
-    exon_len_exc      = exc_sum$exon_len,
-    exon_len_diff     = inc_sum$exon_len - exc_sum$exon_len,
-    exon_len_diff_abs = abs(inc_sum$exon_le - exc_sum$exon_len),
+    exon_len_case      = case_sum$exon_len,
+    exon_len_control      = control_sum$exon_len,
+    exon_len_diff     = case_sum$exon_len - control_sum$exon_len,
+    exon_len_diff_abs = abs(case_sum$exon_len - control_sum$exon_len),
 
     dna_pid    = vapply(dna_res, `[[`, numeric(1), "pid"),
     dna_score  = vapply(dna_res, `[[`, numeric(1), "score"),
@@ -386,8 +386,8 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
 
   if (!isTRUE(include_sequences)) {
     keep <- setdiff(names(DT),
-                    c("transcript_seq_inc","transcript_seq_exc",
-                      "protein_seq_inc","protein_seq_exc"))
+                    c("transcript_seq_case","transcript_seq_control",
+                      "protein_seq_case","protein_seq_control"))
     DT <- DT[, ..keep]
   }
 

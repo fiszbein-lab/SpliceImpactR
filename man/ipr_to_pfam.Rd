@@ -7,7 +7,7 @@
 ipr_to_pfam(ipr_ids)
 }
 \arguments{
-\item{hits_domain}{data.table with gene_id_inc and list-cols inc_only_domains_list / exc_only_domains_list}
+\item{hits_domain}{data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list}
 
 \item{ppi}{wide interaction table from saved data (get_ppi)}
 

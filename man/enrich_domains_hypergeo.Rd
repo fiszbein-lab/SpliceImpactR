@@ -9,7 +9,7 @@ enrich_domains_hypergeo(
   background,
   domain_col_fg = "either_domains_list",
   domain_col_bg = "total_sd_domains",
-  event_col = "event_type_inc",
+  event_col = "event_type",
   event_filter = NULL,
   db_filter = NULL,
   min_fg_count = 2,
@@ -31,7 +31,7 @@ IDs (default: `"total_sd_domains"`).}
 \item{domain_col_bg}{Name of the domain list column in `background`.}
 
 \item{event_col}{Name of the column giving event type (default:
-`"event_type_inc"`). Set `NULL` to skip event filtering.}
+`"event_type"`). Set `NULL` to skip event filtering.}
 
 \item{event_filter}{Character vector of event types to include
 (e.g. `"A5SS"`, `"A3SS"`). If `NULL`, all events are used.}

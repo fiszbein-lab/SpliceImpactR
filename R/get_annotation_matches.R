@@ -492,7 +492,9 @@ get_matched_events_chunked <- function(events,
   # stitch and restore event order
   ans <- data.table::rbindlist(out_list, fill = TRUE)
   if ("event_row" %chin% names(ans)) data.table::setorder(ans, event_row)
-  ans
+  ans[, c("event_row", "inc_rows_by_idx") := NULL][, 
+                                                   "exons" := inc_exons_by_idx
+                                                   ][, "inc_exons_by_idx" := NULL]
 }
 
 

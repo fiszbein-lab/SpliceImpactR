@@ -14,8 +14,8 @@ compare_sequences_alignment(
 \arguments{
 \item{hits}{A \link[data.table]{data.table} or data.frame containing
 isoform pairs. Must include columns:
-\code{transcript_seq_inc}, \code{transcript_seq_exc},
-\code{protein_seq_inc}, and \code{protein_seq_exc}. From prior analysis.}
+\code{transcript_seq_case}, \code{transcript_seq_control},
+\code{protein_seq_case}, and \code{protein_seq_control}. From prior analysis.}
 
 \item{annotations}{output from get_annotations (annotations)}
 
@@ -29,8 +29,8 @@ A \link[data.table]{data.table} with added columns describing
   sequence length, coding length, and alignment similarity metrics, including:
   \itemize{
     \item \code{pc_class}: protein-coding status ("protein_coding", "onePC", "noPC")
-    \item \code{prot_len_inc/exc}: protein sequence lengths
-    \item \code{tx_len_inc/exc}: transcript sequence lengths
+    \item \code{prot_len_case/control}: protein sequence lengths
+    \item \code{tx_len_case/control}: transcript sequence lengths
     \item \code{exon_cds_len_*}, \code{exon_len_*}: summed exon/CDS lengths
     \item \code{dna_pid}, \code{dna_score}, \code{prot_pid}, \code{prot_score}: alignment metrics
   }

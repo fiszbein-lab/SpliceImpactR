@@ -20,7 +20,7 @@ get_ppi_interactions <- function() {
 
 #' Convert InterPro back to PFAM
 #'
-#' @param hits_domain data.table with gene_id_inc and list-cols inc_only_domains_list / exc_only_domains_list
+#' @param hits_domain data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list
 #' @param ppi wide interaction table from saved data (get_ppi)
 #' @param protein_feature_total table with database/clean_name/feature_id for interpro mapping
 #' @return hits_domain with added columns
@@ -41,10 +41,10 @@ ipr_to_pfam <- function(ipr_ids) {
 #' @keywords internal
 mark_changing_partners_split <- function(ppi,
                                          gene_id,
-                                         changed_pfam_inc,
-                                         changed_pfam_exc,
-                                         changed_motif_inc = character(),
-                                         changed_motif_exc = character()) {
+                                         changed_pfam_case,
+                                         changed_pfam_control,
+                                         changed_motif_case = character(),
+                                         changed_motif_control = character()) {
   ppi  <- as.data.table(ppi)
   sub <- ppi[geneA == gene_id | geneB == gene_id]
   
@@ -57,51 +57,51 @@ mark_changing_partners_split <- function(ppi,
   # ensure expected output cols exist even when sub is empty
   sub[, `:=`(
     partner_gene = if (nrow(sub)) fifelse(geneA == gene_id, geneB, geneA) else character(),
-    DDI_changed_inc = FALSE, DDI_changed_exc = FALSE,
-    DMI_changed_inc = FALSE, DMI_changed_exc = FALSE,
-    interaction_changed_inc = FALSE,
-    interaction_changed_exc = FALSE
+    DDI_changed_case = FALSE, DDI_changed_control = FALSE,
+    DMI_changed_case = FALSE, DMI_changed_control = FALSE,
+    interaction_changed_case = FALSE,
+    interaction_changed_control = FALSE
   )]
   
   if (!nrow(sub)) return(sub)
   
   if (all(c("DDI","DDI_A","DDI_B") %in% names(sub))) {
-    sub[, DDI_changed_inc := DDI & (any_in(DDI_A, changed_pfam_inc) | any_in(DDI_B, changed_pfam_inc)), by = .I]
-    sub[, DDI_changed_exc := DDI & (any_in(DDI_A, changed_pfam_exc) | any_in(DDI_B, changed_pfam_exc)), by = .I]
+    sub[, DDI_changed_case := DDI & (any_in(DDI_A, changed_pfam_case) | any_in(DDI_B, changed_pfam_case)), by = .I]
+    sub[, DDI_changed_control := DDI & (any_in(DDI_A, changed_pfam_control) | any_in(DDI_B, changed_pfam_control)), by = .I]
   }
   
   if (all(c("DMI","DMI_A","DMI_B") %in% names(sub))) {
     # convention: DMI_A is PFAM domain; DMI_B is motif/feature id (e.g., ELM)
-    sub[, DMI_changed_inc := DMI & (
-      any_in(DMI_A, changed_pfam_inc) |
-        (length(changed_motif_inc) > 0L && any_in(DMI_B, changed_motif_inc))
+    sub[, DMI_changed_case := DMI & (
+      any_in(DMI_A, changed_pfam_case) |
+        (length(changed_motif_case) > 0L && any_in(DMI_B, changed_motif_case))
     ), by = .I]
     
-    sub[, DMI_changed_exc := DMI & (
-      any_in(DMI_A, changed_pfam_exc) |
-        (length(changed_motif_exc) > 0L && any_in(DMI_B, changed_motif_exc))
+    sub[, DMI_changed_control := DMI & (
+      any_in(DMI_A, changed_pfam_control) |
+        (length(changed_motif_control) > 0L && any_in(DMI_B, changed_motif_control))
     ), by = .I]
   }
   
-  sub[, interaction_changed_inc := DDI_changed_inc | DMI_changed_inc]
-  sub[, interaction_changed_exc := DDI_changed_exc | DMI_changed_exc]
+  sub[, interaction_changed_case := DDI_changed_case | DMI_changed_case]
+  sub[, interaction_changed_control := DDI_changed_control | DMI_changed_control]
   sub[]
 }
 
 #' Annotate hits_domain with PPI changes for inclusion vs exclusion forms
 #'
-#' Adds list-cols inc_ppi/exc_ppi (partner genes) plus counts.
+#' Adds list-cols case_ppi/control_ppi (partner genes) plus counts.
 #' Also returns (optionally useful) per-event token sets in PFAM + ELM forms.
 #'
-#' @param hits_domain data.table with gene_id_inc and list-cols inc_only_domains_list / exc_only_domains_list
+#' @param hits_domain data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list
 #' @param ppi wide interaction table from saved data (get_ppi)
 #' @param protein_feature_total table with database/clean_name/feature_id for interpro mapping
 #' @return hits_domain with added columns
 #' @return A `data.table` identical to `hits_domain` with added columns:
 #' \describe{
-#'   \item{`inc_ppi`, `exc_ppi`}{Lists of partner transcripts unique to
+#'   \item{`case_ppi`, `control_ppi`}{Lists of partner transcripts unique to
 #'     inclusion or exclusion isoforms.}
-#'   \item{`n_inc_ppi`, `n_exc_ppi`}{Counts of gained/lost interactions.}
+#'   \item{`n_control_ppi`, `n_control_ppi`}{Counts of gained/lost interactions.}
 #'   \item{`n_ppi`}{Total PPI changes (sum of both directions).}
 #' }
 #'
@@ -141,7 +141,7 @@ mark_changing_partners_split <- function(ppi,
 #' hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 #' @examples
 #' 
-#' hits_domain[n_ppi > 0, .(event_id, gene_id_inc, n_inc_ppi, n_exc_ppi, n_ppi, inc_ppi, exc_ppi)]
+#' hits_domain[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
 #' 
 #' @export
 get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
@@ -186,59 +186,59 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
     )
   }
   
-  inc_ppi <- vector("list", nrow(hd))
-  exc_ppi <- vector("list", nrow(hd))
-  n_inc   <- integer(nrow(hd))
-  n_exc   <- integer(nrow(hd))
+  case_ppi <- vector("list", nrow(hd))
+  control_ppi <- vector("list", nrow(hd))
+  n_case   <- integer(nrow(hd))
+  n_control   <- integer(nrow(hd))
   n_all   <- integer(nrow(hd))
   
   # optional: keep token sets (useful for debugging / downstream)
-  inc_pfam <- vector("list", nrow(hd))
-  exc_pfam <- vector("list", nrow(hd))
-  inc_elm  <- vector("list", nrow(hd))
-  exc_elm  <- vector("list", nrow(hd))
+  case_pfam <- vector("list", nrow(hd))
+  control_pfam <- vector("list", nrow(hd))
+  case_elm  <- vector("list", nrow(hd))
+  control_elm  <- vector("list", nrow(hd))
   
   for (i in seq_len(nrow(hd))) {
-    gene_id <- as.character(hd$gene_id_inc[i])
+    gene_id <- as.character(hd$gene_id[i])
     if (is.na(gene_id) || !nzchar(gene_id)) next
     
-    tok_inc <- parse_tokens(hd$inc_only_domains_list[i])
-    tok_exc <- parse_tokens(hd$exc_only_domains_list[i])
+    tok_case <- parse_tokens(hd$case_only_domains_list[i])
+    tok_control <- parse_tokens(hd$control_only_domains_list[i])
     
-    inc_pfam[[i]] <- tok_inc$pfam
-    exc_pfam[[i]] <- tok_exc$pfam
-    inc_elm[[i]]  <- tok_inc$elm
-    exc_elm[[i]]  <- tok_exc$elm
+    case_pfam[[i]] <- tok_case$pfam
+    control_pfam[[i]] <- tok_control$pfam
+    case_elm[[i]]  <- tok_case$elm
+    control_elm[[i]]  <- tok_control$elm
     
     edges <- mark_changing_partners_split(
       ppi = ppi,
       gene_id = gene_id,
-      changed_pfam_inc = tok_inc$pfam,
-      changed_pfam_exc = tok_exc$pfam,
-      changed_motif_inc = tok_inc$elm,
-      changed_motif_exc = tok_exc$elm
+      changed_pfam_case = tok_case$pfam,
+      changed_pfam_control = tok_control$pfam,
+      changed_motif_case = tok_case$elm,
+      changed_motif_control = tok_control$elm
     )
     
-    inc_genes <- unique(edges[interaction_changed_inc == TRUE, partner_gene])
-    exc_genes <- unique(edges[interaction_changed_exc == TRUE, partner_gene])
+    case_genes <- unique(edges[interaction_changed_case == TRUE, partner_gene])
+    control_genes <- unique(edges[interaction_changed_control == TRUE, partner_gene])
     
-    inc_ppi[[i]] <- inc_genes
-    exc_ppi[[i]] <- exc_genes
-    n_inc[i]     <- length(inc_genes)
-    n_exc[i]     <- length(exc_genes)
-    n_all[i]     <- length(unique(c(inc_genes, exc_genes)))
+    case_ppi[[i]] <- case_genes
+    control_ppi[[i]] <- control_genes
+    n_case[i]     <- length(case_genes)
+    n_control[i]     <- length(control_genes)
+    n_all[i]     <- length(unique(c(case_genes, control_genes)))
   }
   
   hd[, `:=`(
-    inc_ppi   = inc_ppi,
-    exc_ppi   = exc_ppi,
-    n_inc_ppi = n_inc,
-    n_exc_ppi = n_exc,
+    case_ppi   = case_ppi,
+    control_ppi   = control_ppi,
+    n_case_ppi = n_case,
+    n_control_ppi = n_control,
     n_ppi     = n_all,
-    inc_pfam_changed = inc_pfam,
-    exc_pfam_changed = exc_pfam,
-    inc_elm_changed  = inc_elm,
-    exc_elm_changed  = exc_elm
+    case_pfam_changed = case_pfam,
+    control_pfam_changed = control_pfam,
+    case_elm_changed  = case_elm,
+    control_elm_changed  = control_elm
   )]
   
   hd[]
@@ -251,13 +251,13 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
 #' Visualizes the frequency and magnitude of gained/lost PPIs per event,
 #' using a dual-panel layout:
 #' - left: proportion of events with any PPI change
-#' - right: histograms of INC and EXC partner counts (non-zero only)
+#' - right: histograms of CASE and CONTROL partner counts (non-zero only)
 #'
 #' @param df `data.table` or `data.frame` with PPI counts per event,
 #'   as returned by [ppi_switches_for_hits()].
 #' @param bins Integer; number of histogram bins (default `30`).
 #' @param palette Named character vector of fill colors for the plot
-#'   (default includes `"no"`, `"yes"`, `"INC"`, `"EXC"`).
+#'   (default includes `"no"`, `"yes"`, `"CASE"`, `"CONTROL"`).
 #' @param output_file Optional path to save the figure (`.png` or `.pdf`).
 #' @param width,height Numeric dimensions (in inches) for saved plot.
 #'
@@ -312,7 +312,7 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
 plot_ppi_summary <- function(df,
                              bins = 30,
                              palette = c("no" = "grey80", "yes" = "deeppink4",
-                                         "INC" = "#2b8cbe", "EXC" = "#e34a33"),
+                                         "CASE" = "#2b8cbe", "CONTROL" = "#e34a33"),
                              output_file = NULL, width = 9, height = 4.8) {
   
   
@@ -333,14 +333,14 @@ plot_ppi_summary <- function(df,
   
   # ----- Right panel: histograms of non-zero INC/EXC PPI counts -----
   long_dt <- rbind(
-    DT[, .(type = "INC", value = as.integer(n_inc_ppi))],
-    DT[, .(type = "EXC", value = as.integer(n_exc_ppi))]
+    DT[, .(type = "CASE", value = as.integer(n_case_ppi))],
+    DT[, .(type = "CONTROL", value = as.integer(n_control_ppi))]
   )[value > 0]  # drop zeros as requested
   
   p_right <- ggplot(long_dt, aes(x = value, fill = type)) +
     geom_histogram(bins = bins, color = "white", linewidth = 0.2, show.legend = FALSE) +
     facet_wrap(~type, ncol = 1, scales = "free_y") +
-    scale_fill_manual(values = palette[c("INC","EXC")]) +
+    scale_fill_manual(values = palette[c("CASE","CONTROL")]) +
     labs(x = "PPI partners (non-zero)", y = "Count") +
     theme_bw(base_size = 11) +
     theme(strip.background = element_blank(),

@@ -535,8 +535,8 @@ build_coding_index <- function(ann) {
 #'
 #' @param hits `data.frame` or `data.table` containing splicing event metadata,
 #'   typically output from [compare_sequences_alignment()]. Must include
-#'   columns such as `event_type_inc`, `transcript_id_inc`, `transcript_id_exc`,
-#'   `exons_inc`, `exons_exc`, and `pc_class`.
+#'   columns such as `event_type`, `transcript_id_case`, `transcript_id_control`,
+#'   `exons_case`, `exons_control`, and `pc_class`.
 #' @param annotations from get_annotations (annotations)
 #' @param allow_ale_fs Logical (default `FALSE`).
 #'   Whether to allow ALE/HLE events to be considered frameshifting.
@@ -573,11 +573,11 @@ compare_frames <- function(hits,
   res <- H[, {
     if (pc_class == "protein_coding") {
 
-      et <- as.character(event_type_inc)
-      tx1 <- as.character(transcript_id_inc)
-      tx2 <- as.character(transcript_id_exc)
-      e1  <- .parse_exon_list(as.character(exons_inc))
-      e2  <- .parse_exon_list(as.character(exons_exc))
+      et <- as.character(event_type)
+      tx1 <- as.character(transcript_id_case)
+      tx2 <- as.character(transcript_id_control)
+      e1  <- .parse_exon_list(as.character(exons_case))
+      e2  <- .parse_exon_list(as.character(exons_control))
       if (et %chin% c("AFE","HFE","ALE","HLE")) {
         mode <- if (et %chin% c("AFE","HFE")) "AFE" else "ALE"
         pick <- .pick_terminal_overlap(E, tx1, tx2, mode)
@@ -645,7 +645,7 @@ compare_frames <- function(hits,
   # stitch back to input
   out <- cbind(H, res[, .(frame_call, rescue, frame_check_exon1, frame_check_exon2)])
   if (allow_ale_fs == FALSE) {
-    out[event_type_exc %chin% c("ALE", "HLE") | event_type_inc %chin% c("ALE", "HLE"), `:=` (frame_call = "PartialMatch",
+    out[event_type %chin% c("ALE", "HLE"), `:=` (frame_call = "PartialMatch",
                                                                                              rescue = "noRescue")]
   }
   print(paste0("[INFO] ", sum(out$frame_call[!is.na(out$frame_call)] == "FrameShift") ," frameshifts (",
@@ -717,7 +717,7 @@ compare_sequence_frame <- function(complete_hits, ann) {
   hits_compare_frame[, summary_classification := pc_class]
   hits_compare_frame[frame_call == 'FrameShift', summary_classification := 'FrameShift']
   hits_compare_frame[rescue != 'noRescue' & !is.na(rescue), summary_classification := 'Rescue']
-  hits_compare_frame[protein_seq_exc == protein_seq_inc & !is.na(protein_seq_inc), summary_classification := "Match"]
+  hits_compare_frame[protein_seq_control == protein_seq_case & !is.na(protein_seq_case), summary_classification := "Match"]
 
   return(hits_compare_frame)
 }

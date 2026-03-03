@@ -133,7 +133,7 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
 #'
 #' @details
 #' The function compares the genomic coordinates of the inclusion
-#' (`inc_inc`) and exclusion (`inc_exc`) segments per event:
+#' (`inc_case`) and exclusion (`inc_control`) segments per event:
 #' \itemize{
 #'   \item For **AFE** events, proximal = exon with smaller start
 #'         coordinate on the `+` strand (or larger end on `-` strand).
@@ -148,10 +148,10 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
 #' @param hits `data.frame` or `data.table` containing at least:
 #'   \itemize{
 #'     \item `event_id`
-#'     \item `event_type_inc`
-#'     \item `strand_inc`
-#'     \item `inc_inc`, `inc_exc`
-#'     \item `delta_psi_inc`, `delta_psi_exc`
+#'     \item `event_type`
+#'     \item `strand`
+#'     \item `inc_case`, `inc_control`
+#'     \item `delta_psi_case`, `delta_psi_control`
 #'   }
 #'
 #' @return A `data.table` identical to `hits` with an additional
@@ -181,7 +181,7 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
 #' proximal_output <- get_proximal_shift_from_hits(pairs)
 #' @export
 get_proximal_shift_from_hits <- function(hits) {
-  H <- data.table::as.data.table(hits)[event_type_inc %in% c('AFE', 'ALE'), .(event_id, event_type = event_type_inc, strand = strand_inc, pos = inc_inc, delta_psi_inc, neg = inc_exc, delta_psi_exc)]
+  H <- data.table::as.data.table(hits)[event_type %in% c('AFE', 'ALE'), .(event_id, event_type, strand, pos = inc_case, delta_psi_case, neg = inc_control, delta_psi_control)]
   res <- H[, {
     pos <- .split_coord(pos)
     neg <- .split_coord(neg)
@@ -311,9 +311,9 @@ plot_prox_dist <- function(res) {
 #' }
 #'
 #' @param hits `data.frame` or `data.table` containing event-level results,
-#'   including at least `prot_len_inc`, `prot_len_exc`, and `prot_len_diff`
+#'   including at least `prot_len_case`, `prot_len_control`, and `prot_len_diff`
 #'   for `mode = "protein"`, or their transcript analogues
-#'   `tx_len_inc`, `tx_len_exc`, and `tx_len_diff`.
+#'   `tx_len_case`, `tx_len_control`, and `tx_len_diff`.
 #' @param phenotypes Named character vector of length 2 giving labels for
 #'   control and experimental phenotypes. Must have names
 #'   `"control"` and `"experimental"`.
@@ -370,9 +370,9 @@ plot_length_comparison <- function(
 
   # ---- choose columns --------------------------------------------------------
   if (mode == "protein") {
-    cols <- c(inc = "prot_len_inc", exc = "prot_len_exc", diff = "prot_len_diff")
+    cols <- c(inc = "prot_len_case", exc = "prot_len_control", diff = "prot_len_diff")
   } else {
-    cols <- c(inc = "tx_len_inc",   exc = "tx_len_exc",   diff = "tx_len_diff")
+    cols <- c(inc = "tx_len_case",   exc = "tx_len_control",   diff = "tx_len_diff")
   }
   if (!all(cols %in% names(H))) {
     stop("Missing required columns for mode='", mode, "'. Looking for: ",
@@ -561,8 +561,8 @@ plot_alignment_summary <- function(hits,
                                    mode = c("protein", "transcript")[1],
                                    output_file = NULL) {
   if (mode == "protein") pid_col <- 'prot_pid' else pid_col <- 'dna_pid'
-  A <- hits[, .(score = get(pid_col), summary_classification, event_type_exc)]
-  C <- A[, .N, by = .(summary_classification, event_type_exc)]
+  A <- hits[, .(score = get(pid_col), summary_classification, event_type)]
+  C <- A[, .N, by = .(summary_classification, event_type)]
   A <- A[!is.na(score)]
 
   lvl <- rev(c("noPC", "onePC", "protein_coding", "FrameShift", "Rescue", "Match") )
@@ -577,14 +577,14 @@ plot_alignment_summary <- function(hits,
     ggplot2::geom_bar(position="stack", stat="identity") +
     ggplot2::scale_fill_manual(values=c('noPC' = "azure4", 'onePC' = "azure2", "Match" = "#E69F00", 'Rescue' = "#56B4E9", 'FrameShift' = "pink", 'protein_coding' = "deeppink4")) +
     ggplot2::theme_classic() + ggplot2::xlab("") + ggplot2::ylab("Count") + theme(axis.ticks.x = element_blank(),axis.text.x = element_blank()) +
-    facet_wrap(~event_type_exc, ncol = 1, scales = 'free_y')
+    facet_wrap(~event_type, ncol = 1, scales = 'free_y')
 
   gdf <- ggplot2::ggplot(A, ggplot2::aes(x = score, fill = summary_classification)) +
     ggplot2::geom_histogram(ggplot2::aes(y=ggplot2::after_stat(count/sum(count))), colour = 1,
                             bins = 20) +
     ggplot2::scale_fill_manual(values=c('noPC' = "azure4", 'onePC' = "azure2", "Match" = "#E69F00", 'Rescue' = "#56B4E9", 'FrameShift' = "pink", 'protein_coding' = "deeppink4")) +
     ggplot2::theme_classic() + ggplot2::xlab("Alignment Score") + ggplot2::ylab("Fraction")+
-    facet_wrap(~event_type_exc, ncol = 1, scales = 'free_y')
+    facet_wrap(~event_type, ncol = 1, scales = 'free_y')
 
   gdf_comp <- ggpubr::ggarrange(propCoding, gdf, nrow = 1, widths = c(1, 3),
                                 common.legend = TRUE)
@@ -1152,7 +1152,7 @@ compare_hit_index <- function(
 #'
 #' @param hits `data.frame` or `data.table` output from [`compare_sequence_frame()`],
 #'   containing per-event alignment and domain information (e.g. `summary_classification`,
-#'   `prot_pid`, `event_type_inc`, `inc_only_n`, `exc_only_n`, etc.).
+#'   `prot_score`, `event_type`, `case_only_n`, `control_only_n`, etc.).
 #' @param pre_filter_hits `data.frame` or `data.table` representing the unfiltered
 #'   input events (e.g. raw differential inclusion table prior to sequence comparison).
 #'
@@ -1161,8 +1161,7 @@ compare_hit_index <- function(
 #' \itemize{
 #'   \item Event-type composition and class proportions
 #'   \item Protein alignment quality distribution
-#'   \item Domain-change prevalence (INC/EXC/both)
-#'   \item Gene and domain cross-event intersections (UpSet plots)
+#'   \item Domain-change prevalence (case/control/both)
 #'   \item Event-type coordination heatmap (Jaccard similarity across genes)
 #'   \item Relative event retention pre- vs post-filtering
 #' }
@@ -1214,7 +1213,6 @@ compare_hit_index <- function(
 #' @importFrom scales percent percent_format rescale
 #' @importFrom stats median quantile
 #' @importFrom ggplot2 stat_summary ylim xlim
-#' @importFrom ComplexUpset upset upset_set_size intersection_size
 #' @export
 integrated_event_summary <- function(
     hits,
@@ -1222,8 +1220,6 @@ integrated_event_summary <- function(
 ) {
   DT <- as.data.table(hits)
 
-  DT[, event_type := event_type_inc]
-  DT <- DT[!is.na(event_type) & nzchar(event_type)]
 
   DT[, class_raw := as.character(summary_classification)]
   # map any synonyms to our palette keys
@@ -1244,17 +1240,17 @@ integrated_event_summary <- function(
     Rescue       = "#56B4E9"
   )
 
-  DT[, score := as.numeric(prot_pid)]
+  DT[, score := as.numeric(if ("prot_pid" %in% names(DT)) prot_pid else prot_score)]
 
   ## ---------- domain-change fields ----------
   DT[, `:=`(
-    inc_only_flag = as.integer(inc_only_n > 0),
-    exc_only_flag = as.integer(exc_only_n > 0),
-    any_dom_flag  = as.integer((inc_only_n > 0) | (exc_only_n > 0))
+    case_only_flag = as.integer(case_only_n > 0),
+    control_only_flag = as.integer(control_only_n > 0),
+    any_dom_flag  = as.integer((case_only_n > 0) | (control_only_n > 0))
   )]
-  DT[, dom_kind := fifelse(inc_only_flag==1 & exc_only_flag==0, "inc_only",
-                           fifelse(inc_only_flag==0 & exc_only_flag==1, "exc_only",
-                                   fifelse(inc_only_flag==1 & exc_only_flag==1, "both", "none")))]
+  DT[, dom_kind := fifelse(case_only_flag == 1 & control_only_flag == 0, "case_only",
+                           fifelse(case_only_flag == 0 & control_only_flag == 1, "control_only",
+                                   fifelse(case_only_flag == 1 & control_only_flag == 1, "both", "none")))]
 
   ## =====================  summaries  =====================
   by_type <- DT[, .(n = .N), by = event_type][order(-n)]
@@ -1268,17 +1264,17 @@ integrated_event_summary <- function(
   class_props[, summary_classification :=
                 factor(summary_classification, levels = lvl)]
 
-  score_summary <- DT[is.finite(prot_score),
+  score_summary <- DT[is.finite(score),
                       .(n = .N,
-                        median = median(prot_score),
-                        q25 = quantile(prot_score, .25),
-                        q75 = quantile(prot_score, .75)),
+                        median = median(score),
+                        q25 = quantile(score, .25),
+                        q75 = quantile(score, .75)),
                       by = event_type][order(-n)]
 
   dom_prev <- DT[, .(
     prop_any  = mean(any_dom_flag==1, na.rm = TRUE),
-    prop_inc  = mean(dom_kind=="inc_only", na.rm = TRUE),
-    prop_exc  = mean(dom_kind=="exc_only", na.rm = TRUE),
+    prop_case  = mean(dom_kind=="case_only", na.rm = TRUE),
+    prop_control  = mean(dom_kind=="control_only", na.rm = TRUE),
     prop_both = mean(dom_kind=="both",     na.rm = TRUE)
   ), by = event_type]
 
@@ -1306,7 +1302,7 @@ integrated_event_summary <- function(
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   } else ggplot() + theme_void() + ggtitle("Alignment scores not available")
 
-  # P3: domain change prevalence (any/inc/exc/both) per type
+  # P3: domain change prevalence (any/case/control/both) per type
   dom_long <- melt(dom_prev, id.vars = "event_type",
                    variable.name = "kind", value.name = "prop")
 
@@ -1315,15 +1311,14 @@ integrated_event_summary <- function(
     scale_y_continuous(labels = percent_format(accuracy = 1)) +
     scale_fill_manual(values = c(
       prop_any  = "cadetblue4",
-      prop_inc  = "deeppink4",
-      prop_exc  = "#56B4E9",
+      prop_case  = "deeppink4",
+      prop_control  = "#56B4E9",
       prop_both = "#E69F00"
-    ), labels = c("Any","INC-only","EXC-only","Both")) +
+    ), labels = c("Any","CASE-only","CONTROL-only","Both")) +
     labs(x = NULL, y = "Proportion", fill = NULL,
          title = "Domain-change prevalence") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  have_upset <- requireNamespace("ComplexUpset", quietly = TRUE)
 
   DT2 <- as.data.table(DT)[pc_class == "protein_coding"]
 
@@ -1345,13 +1340,13 @@ integrated_event_summary <- function(
   DT_long <- melt(
     DT2,
     id.vars = "event_type",
-    measure.vars = c("n_inc_ppi", "n_exc_ppi"),
+    measure.vars = c("n_case_ppi", "n_control_ppi"),
     variable.name = "ppi_direction",
     value.name  = "ppi_count"
   )
 
   DT_long[, ppi_direction := factor(ppi_direction,
-                                    labels = c("INC gained","EXC gained"))]
+                                    labels = c("CASE gained","CONTROL gained"))]
 
   ppi2 <- ggplot(DT_long[ppi_count > 0],
                aes(x = event_type, y = ppi_count, color = ppi_direction)) +
@@ -1362,120 +1357,11 @@ integrated_event_summary <- function(
          color = "") +
     theme_bw(base_size = 12)
 
-  ## ---------- 1) Gene x Event-Type UpSet ----------
-  # Coalesce gene id (prefers *_inc, falls back to *_exc, then NA removed)
-  gene_col <- c("gene_id_inc","gene_id_exc")[c("gene_id_inc","gene_id_exc") %in% names(DT)][1]
-  if (is.na(gene_col)) {
-    gene_col <- c("gene_id","gene")[c("gene_id","gene") %in% names(DT)][1]
-  }
-  if (!is.na(gene_col)) {
-    G <- unique(DT[!is.na(get(gene_col)) & nzchar(get(gene_col)),
-                   .(gene = as.character(get(gene_col)), event_type)])
-    gene_wide <- dcast(G[, .(present = TRUE), by = .(gene, event_type)],
-                       gene ~ event_type, value.var = "present", fill = FALSE)
-    # Optional: hide hybrid redundancy if both AFE/HFE or ALE/HLE exist for same gene
-    for (pair in list(c("AFE","HFE"), c("ALE","HLE"))) {
-      if (all(pair %in% names(gene_wide))) {
-        gene_wide[[pair[2]]] <- ifelse(gene_wide[[pair[1]]] & gene_wide[[pair[2]]], FALSE, gene_wide[[pair[2]]])
-      }
-    }
-    if (have_upset && ncol(gene_wide) > 2) {
-      # gene_upset <- ComplexUpset::upset(
-      #   gene_wide,
-      #   intersect = setdiff(names(gene_wide), "gene"),
-      #   name = "Gene intersections",
-      #   set_sizes = ComplexUpset::upset_set_size(),
-      #   base_annotations = list(
-      #     'Counts' = ComplexUpset::intersection_size(text = list(size = 3))
-      #   ),
-      #   width_ratio = 0.15
-      # )
-      gene_upset <- ComplexUpset::upset(
-        gene_wide,
-        intersect = setdiff(names(gene_wide), "gene"),
-        name = "Gene intersections",
-        set_sizes = ComplexUpset::upset_set_size(),
-        base_annotations = list(
-          'Counts' = ComplexUpset::intersection_size(text = list(size = 3))
-        ),
-        width_ratio = 0.15,
-        themes = list(
-          # valid ggplot theme for elements upset will override
-          `intersections_matrix` = theme(
-            axis.title.x = element_blank(),
-            axis.title.y = element_blank()
-          )
-        )
-      )
-    } else {
-      gene_upset <- ggplot() + theme_void() + ggtitle("Gene UpSet (ComplexUpset not installed / not enough sets)")
-    }
-  } else {
-    gene_upset <- ggplot() + theme_void() + ggtitle("Gene UpSet (no gene column found)")
-  }
-
-  domain_list_cols <- c("either_domains_list","inc_only_domains_list","exc_only_domains_list")
-  dom_col_present <- domain_list_cols[domain_list_cols %in% names(DT)]
-
-  if (length(dom_col_present)) {
-    # Build a "domain" vector per row (prefers 'either' if present)
-    if ("either_domains_list" %in% dom_col_present) {
-      Dtmp <- DT[, .(event_type,
-                     domain = unlist(either_domains_list, use.names = FALSE)), by = .I]
-    } else {
-      # fallback: union inc-only and exc-only
-      Dtmp <- DT[, {
-        incv <- if ("inc_only_domains_list" %in% dom_col_present) unlist(inc_only_domains_list) else character(0)
-        exec <- if ("exc_only_domains_list" %in% dom_col_present) unlist(exc_only_domains_list) else character(0)
-        list(domain = unique(c(incv, exec)))
-      }, by = .(event_type, .I)]
-    }
-    Dtmp <- Dtmp[!is.na(domain) & nzchar(domain)]
-    if (nrow(Dtmp)) {
-      Dwide <- dcast(unique(Dtmp[, .(domain, event_type, present = TRUE)]),
-                     domain ~ event_type, value.var = "present", fill = FALSE)
-      if (have_upset && ncol(Dwide) > 2) {
-        domain_upset <- ComplexUpset::upset(
-          Dwide,
-          intersect = setdiff(names(Dwide), "gene"),
-          name = "Domain intersections",
-          set_sizes = ComplexUpset::upset_set_size(),
-          base_annotations = list(
-            'Counts' = ComplexUpset::intersection_size(text = list(size = 3))
-          ),
-          width_ratio = 0.15,
-          themes = list(
-            # valid ggplot theme for elements upset will override
-            `intersections_matrix` = theme(
-              axis.title.x = element_blank(),
-              axis.title.y = element_blank()
-            )
-          )
-        )
-
-        # domain_upset <- ComplexUpset::upset(
-        #   Dwide,
-        #   intersect = setdiff(names(Dwide), "domain"),
-        #   name = "Domain intersections",
-        #   set_sizes = ComplexUpset::upset_set_size(),
-        #   base_annotations = list(
-        #     'Counts' = ComplexUpset::intersection_size(text = list(size = 3))
-        #   ),
-        #   width_ratio = 0.15
-        # )
-      } else {
-        domain_upset <- ggplot() + theme_void() + ggtitle("Domain UpSet (ComplexUpset not installed / not enough sets)")
-      }
-    } else {
-      domain_upset <- ggplot() + theme_void() + ggtitle("Domain UpSet (no domains present)")
-    }
-  } else {
-    domain_upset <- ggplot() + theme_void() + ggtitle("Domain UpSet (domain list columns not found)")
-  }
-  if (!is.na(gene_col)) {
+    
+  if ("gene_id" %in% names(DT)) {
     # Binary matrix: genes x event types
-    M <- dcast(unique(DT[!is.na(get(gene_col)) & nzchar(get(gene_col)),
-                         .(gene = as.character(get(gene_col)), event_type, present = TRUE)]),
+    M <- dcast(unique(DT[!is.na(gene_id) & nzchar(gene_id),
+                         .(gene = as.character(gene_id), event_type, present = TRUE)]),
                gene ~ event_type, value.var = "present", fill = FALSE)
     evt <- setdiff(names(M), "gene")
     if (length(evt) >= 2) {
@@ -1522,10 +1408,9 @@ integrated_event_summary <- function(
   ru <- relative_use_pre_post(pre_filter_hits, hits)
 
   top_row    <- wrap_plots(list(p1, p2), ncol = 2)
-  top2_row <- wrap_plots(list(p3, ppi1, ppi2), ncol = 3)
-  middle_row <- wrap_plots(list(gene_upset, ru$plot), ncol = 2, widths = c(2.5, .5))
-  bottom_row <- wrap_plots(list(domain_upset, coord_heatmap), ncol = 2, widths = c(2.5, .5))
-  combined   <- (top_row / top2_row / middle_row / bottom_row) + plot_layout(heights = c(1, 1, 1, 1))
+  middle_row <- wrap_plots(list(p3, ppi1, ppi2), ncol = 3)
+  bottom_row <- wrap_plots(list(ru$plot, coord_heatmap), ncol = 2, widths = c(1, 1))
+  combined   <- (top_row / middle_row / bottom_row) + plot_layout(heights = c(1, 1, 1))
 
   return(list(
     summaries = list(
@@ -1568,6 +1453,22 @@ relative_use_pre_post <- function(
 ){
   PRE  <- as.data.table(pre_filter_hits)
   POST <- as.data.table(hits)
+  req_pre <- c("event_id", "event_type")
+  req_post <- c("event_id", "event_type")
+  miss_pre <- setdiff(req_pre, names(PRE))
+  miss_post <- setdiff(req_post, names(POST))
+  if (length(miss_pre)) {
+    stop(
+      "relative_use_pre_post: `pre_filter_hits` missing required column(s): ",
+      paste(miss_pre, collapse = ", ")
+    )
+  }
+  if (length(miss_post)) {
+    stop(
+      "relative_use_pre_post: `hits` missing required column(s): ",
+      paste(miss_post, collapse = ", ")
+    )
+  }
 
   # --- count unique events pre ---
   pre_counts <- unique(PRE[, .(event_type = event_type,
@@ -1575,7 +1476,7 @@ relative_use_pre_post <- function(
                                  , .(n_pre = .N), by = event_type]
 
   # --- count unique events post ---
-  post_counts <- unique(POST[, .(event_type = event_type_inc,
+  post_counts <- unique(POST[, .(event_type = event_type,
                                  event_id   = event_id)])[
                                    , .(n_post = .N), by = event_type]
 
@@ -1925,7 +1826,7 @@ get_enrichment <- function(
 #' enrichment <- get_enrichment(get_domain_gene_for_enrichment(hits_domain), bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
 #' }
 get_domain_gene_for_enrichment <- function(hits) {
-  enriched_genes <- hits$gene_id_inc[hits$diff_n > 0]
+  enriched_genes <- hits$gene_id_case[hits$diff_n > 0]
   return(enriched_genes)
 }
 
@@ -1975,7 +1876,7 @@ get_domain_gene_for_enrichment <- function(hits) {
 #' enrichment <- get_enrichment(get_ppi_gene_enrichment(hits_final), bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
 #' }
 get_ppi_gene_enrichment <- function(hits) {
-  ppi_genes <- hits$gene_id_inc[hits$n_ppi > 0]
+  ppi_genes <- hits$gene_id_case[hits$n_ppi > 0]
   return(ppi_genes)
 }
 
@@ -2029,8 +1930,6 @@ get_ppi_gene_enrichment <- function(hits) {
 get_di_gene_enrichment <- function(hits, padj_threshold, delta_psi_threshold) {
   di_genes <- hits$gene_id[hits$padj < padj_threshold & abs(hits$delta_psi) > delta_psi_threshold]
 }
-
-
 
 
 

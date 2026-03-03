@@ -261,7 +261,7 @@ user_matched <- compare_transcript_pairs(transcript_pairs, annotation_df$annotat
 Here, we compare sequence using protein-coding status, sequence alignment percent identity, protein length, and whether frame shifts / rescues are produced.
 And make a summary plot
 ```{r}
-seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
+seq_compare <- compare_sequence_frame(pairs, annotation_df$annotations)
 alignment_summary <- plot_alignment_summary(seq_compare)
 
 ## We can also perform analysis looking at how events impact protein length
@@ -283,7 +283,7 @@ Here we identify when the alternative RNA processing event drives a change in pr
 hits_domain <- get_domains(seq_compare, exon_features)
 
 ## Then we can probe for any enriched domains that are changing and plot
-enriched_domains <- enrich_domains_hypergeo(hits_domain, bg, db_filter = 'interpro')
+enriched_domains <- enrich_domains_hypergeo(hits_domain, bg)
 domain_plot <- plot_enriched_domains_counts(enriched_domains, top_n = 20)
 
 ## And we're able to search for A) specific events enrichment (AFE, ALE, etc)

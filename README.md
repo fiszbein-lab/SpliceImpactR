@@ -351,8 +351,8 @@ enrichment_di <- get_enrichment(get_di_gene_enrichment(res, .05, .1), bg$gene_id
 
 ## Visualize specific transcript changes
 Here we can look at how protein features are changing across the matched 
-transcripts / proteins in two views: genomic (transcript-oriented) and compact
-(protein-oriented). This orients everything reading from L-R, so - strand is
+transcripts / proteins in two views: transcript (genomic-oriented) and protein
+(amino-acid-oriented). This orients everything reading from L-R, so - strand is
 reversed before visualization
 ```
 transcript_centric <- plot_two_transcripts_with_domains_unified(

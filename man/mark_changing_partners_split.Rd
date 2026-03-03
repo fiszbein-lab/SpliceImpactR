@@ -7,10 +7,10 @@
 mark_changing_partners_split(
   ppi,
   gene_id,
-  changed_pfam_inc,
-  changed_pfam_exc,
-  changed_motif_inc = character(),
-  changed_motif_exc = character()
+  changed_pfam_case,
+  changed_pfam_control,
+  changed_motif_case = character(),
+  changed_motif_control = character()
 )
 }
 \description{

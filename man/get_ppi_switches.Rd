@@ -7,7 +7,7 @@
 get_ppi_switches(hits_domain, ppi, protein_feature_total)
 }
 \arguments{
-\item{hits_domain}{data.table with gene_id_inc and list-cols inc_only_domains_list / exc_only_domains_list}
+\item{hits_domain}{data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list}
 
 \item{ppi}{wide interaction table from saved data (get_ppi)}
 
@@ -18,14 +18,14 @@ hits_domain with added columns
 
 A `data.table` identical to `hits_domain` with added columns:
 \describe{
-  \item{`inc_ppi`, `exc_ppi`}{Lists of partner transcripts unique to
+  \item{`case_ppi`, `control_ppi`}{Lists of partner transcripts unique to
     inclusion or exclusion isoforms.}
-  \item{`n_inc_ppi`, `n_exc_ppi`}{Counts of gained/lost interactions.}
+  \item{`n_control_ppi`, `n_control_ppi`}{Counts of gained/lost interactions.}
   \item{`n_ppi`}{Total PPI changes (sum of both directions).}
 }
 }
 \description{
-Adds list-cols inc_ppi/exc_ppi (partner genes) plus counts.
+Adds list-cols case_ppi/control_ppi (partner genes) plus counts.
 Also returns (optionally useful) per-event token sets in PFAM + ELM forms.
 }
 \examples{
@@ -63,6 +63,6 @@ bg <- get_background(source = "hit_index",
 ppi <- get_ppi_interactions()             
 hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 
-hits_domain[n_ppi > 0, .(event_id, gene_id_inc, n_inc_ppi, n_exc_ppi, n_ppi, inc_ppi, exc_ppi)]
+hits_domain[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
 
 }

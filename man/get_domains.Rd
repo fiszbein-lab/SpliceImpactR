@@ -8,24 +8,24 @@ get_domains(hits, exon_features, show_protein_domains = FALSE)
 }
 \arguments{
 \item{hits}{`data.frame` or `data.table` containing transcript pairs with
-at least `transcript_id_inc`, `transcript_id_exc`, `exons_inc`,
-`exons_exc`, and `event_type_inc` (or `event_type_exc`).}
+at least `transcript_id_case`, `transcript_id_control`, `exons_case`,
+`exons_control`, and `event_type` (or `event_type`).}
 
 \item{exon_features}{`data.frame` of exon-domain annotations with columns
 `ensembl_transcript_id`, `ensembl_peptide_id`, `exon_id`, `database`,
 `feature_id`, `name`, `overlap_aa_start`, `overlap_aa_end`.}
 
 \item{show_protein_domains}{Logical; if `TRUE`, include full protein-level
-domain sets (`domains_protein_inc` / `domains_protein_exc`).}
+domain sets (`domains_protein_case` / `domains_protein_control`).}
 }
 \value{
 The input `hits` table with added columns:
 \itemize{
-  \item `domains_exons_inc`, `domains_exons_exc` domains found on event exons
-  \item `inc_only_domains`, `exc_only_domains` domains unique to each isoform
-  \item `inc_only_domains_list`, `exc_only_domains_list`, `either_domains_list` list-columns
-  \item `inc_only_n`, `exc_only_n`, `diff_n` domain counts
-  \item optionally, `domains_protein_inc` / `domains_protein_exc`
+  \item `domains_exons_case`, `domains_exons_control` domains found on event exons
+  \item `case_only_domains`, `control_only_domains` domains unique to each isoform
+  \item `case_only_domains_list`, `control_only_domains_list`, `either_domains_list` list-columns
+  \item `case_only_n`, `control_only_n`, `diff_n` domain counts
+  \item optionally, `domains_protein_case` / `domains_protein_control`
 }
 }
 \description{
@@ -36,10 +36,10 @@ lost, or uniquely present in inclusion or exclusion isoforms.
 Internally, this function builds a domain lookup table from an exon feature
 annotation (e.g. InterPro, Pfam) and extracts per-exon and per-transcript
 domain lists for each isoform in `hits`. Differences between the inclusion
-(`*_inc`) and exclusion (`*_exc`) isoforms are then summarized as:
+(`*_case`) and exclusion (`*_control`) isoforms are then summarized as:
 
-* `inc_only_domains`: domains unique to the inclusion isoform
-* `exc_only_domains`: domains unique to the exclusion isoform
+* `case_only_domains`: domains unique to the inclusion isoform
+* `control_only_domains`: domains unique to the exclusion isoform
 * `diff_n`: total number of non-shared domains
 
 If `show_protein_domains = TRUE`, additional columns report full domain

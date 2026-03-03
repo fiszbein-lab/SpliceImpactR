@@ -155,32 +155,32 @@ collapse_domains <- function(v) {
 #' Internally, this function builds a domain lookup table from an exon feature
 #' annotation (e.g. InterPro, Pfam) and extracts per-exon and per-transcript
 #' domain lists for each isoform in `hits`. Differences between the inclusion
-#' (`*_inc`) and exclusion (`*_exc`) isoforms are then summarized as:
+#' (`*_case`) and exclusion (`*_control`) isoforms are then summarized as:
 #'
-#' * `inc_only_domains`: domains unique to the inclusion isoform
-#' * `exc_only_domains`: domains unique to the exclusion isoform
+#' * `case_only_domains`: domains unique to the inclusion isoform
+#' * `control_only_domains`: domains unique to the exclusion isoform
 #' * `diff_n`: total number of non-shared domains
 #'
 #' If `show_protein_domains = TRUE`, additional columns report full domain
 #' sets across the entire inclusion/exclusion proteins.
 #'
 #' @param hits `data.frame` or `data.table` containing transcript pairs with
-#'   at least `transcript_id_inc`, `transcript_id_exc`, `exons_inc`,
-#'   `exons_exc`, and `event_type_inc` (or `event_type_exc`).
+#'   at least `transcript_id_case`, `transcript_id_control`, `exons_case`,
+#'   `exons_control`, and `event_type` (or `event_type`).
 #' @param exon_features `data.frame` of exon-domain annotations with columns
 #'   `ensembl_transcript_id`, `ensembl_peptide_id`, `exon_id`, `database`,
 #'   `feature_id`, `name`, `overlap_aa_start`, `overlap_aa_end`.
 #' @param show_protein_domains Logical; if `TRUE`, include full protein-level
-#'   domain sets (`domains_protein_inc` / `domains_protein_exc`).
+#'   domain sets (`domains_protein_case` / `domains_protein_control`).
 #'
 #' @return
 #' The input `hits` table with added columns:
 #' \itemize{
-#'   \item `domains_exons_inc`, `domains_exons_exc` domains found on event exons
-#'   \item `inc_only_domains`, `exc_only_domains` domains unique to each isoform
-#'   \item `inc_only_domains_list`, `exc_only_domains_list`, `either_domains_list` list-columns
-#'   \item `inc_only_n`, `exc_only_n`, `diff_n` domain counts
-#'   \item optionally, `domains_protein_inc` / `domains_protein_exc`
+#'   \item `domains_exons_case`, `domains_exons_control` domains found on event exons
+#'   \item `case_only_domains`, `control_only_domains` domains unique to each isoform
+#'   \item `case_only_domains_list`, `control_only_domains_list`, `either_domains_list` list-columns
+#'   \item `case_only_n`, `control_only_n`, `diff_n` domain counts
+#'   \item optionally, `domains_protein_case` / `domains_protein_control`
 #' }
 #'
 #' @examples
@@ -218,10 +218,10 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
 
   res <- H[, {
 
-    txi <- as.character(transcript_id_inc)
-    txe <- as.character(transcript_id_exc)
-    exi <- .parse_exon_ids(exons_inc)
-    exe <- .parse_exon_ids(exons_exc)
+    txi <- as.character(transcript_id_case)
+    txe <- as.character(transcript_id_control)
+    exi <- .parse_exon_ids(exons_case)
+    exe <- .parse_exon_ids(exons_control)
 
     dpi <- domains_on_protein(Dtx,  txi)
     dpe <- domains_on_protein(Dtx,  txe)
@@ -229,7 +229,7 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
     dee <- domains_on_exons(  Dexon, txe, exe)
 
     # event class
-    et <- as.character(event_type_inc %||% event_type_exc %||% "")
+    et <- as.character(event_type %||% event_type %||% "")
 
     term <- et %chin% c("AFE","ALE","HFE","HLE")
     if (term) {
@@ -238,11 +238,11 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
       dee_dt <- .parse_domain_coords(dee)
       dpi_dt <- .parse_domain_coords(dpi)
 
-      inc_only_dt <- .diff_domains(dei_dt, dpe_dt)
-      exc_only_dt <- .diff_domains(dee_dt, dpi_dt)
+      case_only_dt <- .diff_domains(dei_dt, dpe_dt)
+      control_only_dt <- .diff_domains(dee_dt, dpi_dt)
 
-      inc_only <- if (nrow(inc_only_dt) == 0) character(0) else inc_only_dt$domain
-      exc_only <- if (nrow(exc_only_dt) == 0) character(0) else exc_only_dt$domain
+      case_only <- if (nrow(case_only_dt) == 0) character(0) else case_only_dt$domain
+      control_only <- if (nrow(control_only_dt) == 0) character(0) else control_only_dt$domain
 
     } else {
       dei_dt <- .parse_domain_coords(dei)  # inc event exons
@@ -250,8 +250,8 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
       dpi_dt <- .parse_domain_coords(dpi)  # inc full protein
       dpe_dt <- .parse_domain_coords(dpe)  # exc full protein
       
-      inc_only_dt <- .diff_domains(dei_dt, dpe_dt)  # inc event vs exc protein
-      exc_only_dt <- .diff_domains(dee_dt, dpi_dt)
+      case_only_dt <- .diff_domains(dei_dt, dpe_dt)  # inc event vs exc protein
+      control_only_dt <- .diff_domains(dee_dt, dpi_dt)
       
       # dei_dt <- .parse_domain_coords(dei)
       # dee_dt <- .parse_domain_coords(dee)
@@ -259,8 +259,8 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
       # inc_only_dt <- .diff_domains(dei_dt, dee_dt)
       # exc_only_dt <- .diff_domains(dee_dt, dei_dt)
 
-      inc_only <- if (nrow(inc_only_dt) == 0) character(0) else inc_only_dt$domain
-      exc_only <- if (nrow(exc_only_dt) == 0) character(0) else exc_only_dt$domain
+      case_only <- if (nrow(case_only_dt) == 0) character(0) else case_only_dt$domain
+      control_only <- if (nrow(control_only_dt) == 0) character(0) else control_only_dt$domain
     }
 
     dpi <- sub(" chr[0-9]+.*$", "", dpi)
@@ -270,22 +270,22 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
 
     c(
       if (isTRUE(show_protein_domains)) list(
-        domains_protein_inc = collapse_domains(dpi),
-        domains_protein_exc = collapse_domains(dpe)
+        domains_protein_case = collapse_domains(dpi),
+        domains_protein_control = collapse_domains(dpe)
       ),
       list(
-        domains_exons_inc = collapse_domains(dei),
-        domains_exons_exc = collapse_domains(dee),
+        domains_exons_case = collapse_domains(dei),
+        domains_exons_control = collapse_domains(dee),
 
-        inc_only_domains  = collapse_domains(inc_only),
-        exc_only_domains  = collapse_domains(exc_only),
-        inc_only_domains_list  = list(inc_only),
-        exc_only_domains_list  = list(exc_only),
-        either_domains_list = list(unlist(c(inc_only, exc_only))),
-        inc_only_n        = uniqueN(inc_only[inc_only != ""]),
-        exc_only_n        = uniqueN(exc_only[exc_only != ""]),
-        diff_n            = uniqueN(inc_only[inc_only != ""]) +
-          uniqueN(exc_only[exc_only != ""])
+        case_only_domains  = collapse_domains(case_only),
+        control_only_domains  = collapse_domains(control_only),
+        case_only_domains_list  = list(case_only),
+        control_only_domains_list  = list(control_only),
+        either_domains_list = list(unlist(c(case_only, control_only))),
+        case_only_n        = uniqueN(case_only[case_only != ""]),
+        control_only_n        = uniqueN(control_only[control_only != ""]),
+        diff_n            = uniqueN(case_only[case_only != ""]) +
+          uniqueN(control_only[control_only != ""])
       )
     )
   }, by = .I]

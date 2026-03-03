@@ -7,7 +7,7 @@
 plot_ppi_summary(
   df,
   bins = 30,
-  palette = c(no = "grey80", yes = "deeppink4", INC = "#2b8cbe", EXC = "#e34a33"),
+  palette = c(no = "grey80", yes = "deeppink4", CASE = "#2b8cbe", CONTROL = "#e34a33"),
   output_file = NULL,
   width = 9,
   height = 4.8
@@ -20,7 +20,7 @@ as returned by [ppi_switches_for_hits()].}
 \item{bins}{Integer; number of histogram bins (default `30`).}
 
 \item{palette}{Named character vector of fill colors for the plot
-(default includes `"no"`, `"yes"`, `"INC"`, `"EXC"`).}
+(default includes `"no"`, `"yes"`, `"CASE"`, `"CONTROL"`).}
 
 \item{output_file}{Optional path to save the figure (`.png` or `.pdf`).}
 
@@ -33,7 +33,7 @@ A `ggplot` object combining two panels (using `patchwork`).
 Visualizes the frequency and magnitude of gained/lost PPIs per event,
 using a dual-panel layout:
 - left: proportion of events with any PPI change
-- right: histograms of INC and EXC partner counts (non-zero only)
+- right: histograms of CASE and CONTROL partner counts (non-zero only)
 }
 \examples{
 sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),

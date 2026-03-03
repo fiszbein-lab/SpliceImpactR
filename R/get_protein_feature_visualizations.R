@@ -383,8 +383,8 @@
 
 #' Construct highlight rectangles for inclusion/exclusion spans
 #'
-#' Internal helper to convert event span annotations (e.g., `inc_inc`, `exc_inc`,
-#' `inc_exc`, `exc_exc`) into per-transcript highlight rectangles. In genomic
+#' Internal helper to convert event span annotations (e.g., `inc_case`, `exc_case`,
+#' `inc_control`, `exc_control`) into per-transcript highlight rectangles. In genomic
 #' mode, spans are used directly. In compact mode, spans are projected to compact
 #' coordinates using each transcript's exon map and strand.
 #'
@@ -392,8 +392,8 @@
 #' vertical bounds (`yr`) so each transcript's highlight band is independent.
 #'
 #' @param hits_row A single-row data.frame/data.table describing an event with at
-#'   least `transcript_id_inc`, `transcript_id_exc`, and up to four span columns
-#'   (`inc_inc`, `exc_inc`, `inc_exc`, `exc_exc`) containing `"start-end"` strings.
+#'   least `transcript_id_case`, `transcript_id_control`, and up to four span columns
+#'   (`inc_case`, `exc_case`, `inc_control`, `exc_control`) containing `"start-end"` strings.
 #' @param yr A data.table giving per-transcript vertical bounds with columns
 #'   `transcript`, `y_top`, `y_bottom`.
 #' @param tx_info Named list keyed by transcript ID, each element containing
@@ -421,18 +421,18 @@
   
   spans <- data.table::rbindlist(list(
     {
-      tx <- r$transcript_id_inc
-      a <- .parse_span(r$inc_inc)
-      b <- .parse_span(r$exc_inc)
+      tx <- r$transcript_id_case
+      a <- .parse_span(r$inc_case)
+      b <- .parse_span(r$exc_case)
       data.table::rbindlist(list(
         if (!is.null(a)) data.table::data.table(transcript=tx, xmin=a[1], xmax=a[2], fill=col_blue),
         if (!is.null(b)) data.table::data.table(transcript=tx, xmin=b[1], xmax=b[2], fill=col_red)
       ), fill=TRUE)
     },
     {
-      tx <- r$transcript_id_exc
-      a <- .parse_span(r$inc_exc)
-      b <- .parse_span(r$exc_exc)
+      tx <- r$transcript_id_control
+      a <- .parse_span(r$inc_control)
+      b <- .parse_span(r$exc_control)
       data.table::rbindlist(list(
         if (!is.null(a)) data.table::data.table(transcript=tx, xmin=a[1], xmax=a[2], fill=col_blue),
         if (!is.null(b)) data.table::data.table(transcript=tx, xmin=b[1], xmax=b[2], fill=col_red)
@@ -543,6 +543,28 @@ plot_two_transcripts_with_features <- function(transcripts,
   } else { 
     mode <- 'compact'
     }
+  
+  highlight_row <- NULL
+  
+  if (!is.null(highlight_hits) && !is.null(highlight_event_id)) {
+    row <- data.table::as.data.table(highlight_hits)[event_id %in% highlight_event_id][1]
+    if (nrow(row)) {
+      highlight_row <- row
+      
+      tx_case <- if ("transcript_id_case" %in% names(row)) row[["transcript_id_case"]] else row[["transcript_id_inc"]]
+      tx_ctrl <- if ("transcript_id_control" %in% names(row)) row[["transcript_id_control"]] else row[["transcript_id_exc"]]
+      
+      tx_pair <- as.character(c(tx_case, tx_ctrl))
+      if (length(tx_pair) == 2L && all(!is.na(tx_pair)) && all(nzchar(tx_pair))) {
+        transcripts <- tx_pair
+      }
+    }
+  }
+  
+  if (length(transcripts) != 2L || anyNA(transcripts) || any(!nzchar(transcripts))) {
+    stop("Could not resolve two valid transcripts for plotting.")
+  }
+  
   stopifnot(length(transcripts) == 2)
   
   # prep transcript 1
@@ -623,12 +645,9 @@ plot_two_transcripts_with_features <- function(transcripts,
   
   hl <- NULL
   event_type_label <- NULL
-  if (!is.null(highlight_hits) && !is.null(highlight_event_id)) {
-    row <- data.table::as.data.table(highlight_hits)[event_id == highlight_event_id][1]
-    if (nrow(row)) {
-      hl <- .make_highlights(row, yr, tx_info, mode = mode, alpha = highlight_alpha)
-      event_type_label <- row$event_type_exc[1]
-    }
+  if (!is.null(highlight_row) && nrow(highlight_row)) {
+    hl <- .make_highlights(highlight_row, yr, tx_info, mode = mode, alpha = highlight_alpha)
+    event_type_label <- highlight_row$event_type[1]
   }
   
   # x column names based on mode
@@ -894,7 +913,7 @@ p
 #'
 #' **Event highlighting**
 #' If \code{highlight_hits} and \code{highlight_event_id} are provided, event spans are
-#' parsed from \code{inc_inc}, \code{exc_inc}, \code{inc_exc}, \code{exc_exc} columns.
+#' parsed from \code{inc_case}, \code{exc_case}, \code{inc_control}, \code{exc_control} columns.
 #' In transcript/genomic view spans are used directly; in protein/compact view spans are
 #' projected into compact coordinates per transcript using exon maps.
 #'
@@ -941,60 +960,70 @@ p
 #' @section Highlight input (\code{custom_hits_domain}) example:
 #' The \code{highlight_hits} object is expected to be a table (data.frame/data.table)
 #' with at least one row per event. Use \code{highlight_event_id} to select the row to plot.
-#' Required columns are \code{event_id}, \code{event_type_exc}, \code{transcript_id_inc},
-#' \code{transcript_id_exc}. Span columns may include \code{inc_inc}, \code{exc_inc},
-#' \code{inc_exc}, \code{exc_exc} and should be genomic coordinate strings of the form
+#' Required columns are \code{event_id}, \code{event_type_control}, \code{transcript_id_case},
+#' \code{transcript_id_control}. Span columns may include \code{inc_case}, \code{exc_case},
+#' \code{inc_control}, \code{exc_control} and should be genomic coordinate strings of the form
 #' \code{"start-end"} (or \code{NA_character_} when absent).
 #'
 #' \preformatted{
 #' custom_hits_domain <- data.table::data.table(
 #'   event_id = event:n,
-#'   event_type_exc = event,
-#'   transcript_id_inc = transcript_id,
-#'   transcript_id_exc = transcript_id,
-#'   inc_inc = inc_inc,
-#'   inc_exc = inc_exc,
-#'   exc_inc = exc_inc,
-#'   exc_exc = exc_exc
+#'   event_type = event,
+#'   transcript_id_case = transcript_id,
+#'   transcript_id_control = transcript_id,
+#'   inc_case = inc_case,
+#'   inc_control = inc_control,
+#'   exc_case = exc_case,
+#'   exc_control = exc_control
 #' )
 #' }
 #' @examples
 #' \dontrun{
-#' # Example highlight row (skipped exon / SE)
+#' # Example highlight row (skipped exon / SE), but can usually just use 
+#' # hits_domain/hits_final and supply the event_id in highlight_event_id
 #' custom_hits_domain <- data.table::data.table(
-#'   event_id = "SE:1",
-#'   event_type_exc = "SE",
-#'   transcript_id_inc = "ENST00000350763",
-#'   transcript_id_exc = "ENST00000542877",
-#'   inc_inc = "115046409-115057425",
-#'   inc_exc = "115046409-115057425",
-#'   exc_inc = "115048259-115048532",
-#'   exc_exc = NA_character_
+#'   event_id = "AFE:1",
+#'   event_type = "AFE",
+#'   transcript_id_case = "ENST00000337907",
+#'   transcript_id_control = "ENST00000476556",
+#'   inc_case = "8655973-8656441",
+#'   inc_control = "8423561-8423666",
+#'   exc_case = NA,
+#'   exc_control = NA
 #' )
 #'
 #' # Transcript (genomic) view: introns included, strand-aware axis
 #' p_tx <- plot_two_transcripts_with_domains_unified(
-#'   transcripts = c("ENST00000350763", "ENST00000542877"),
 #'   gtf_df = annotation_df$annotations,
 #'   protein_features = protein_feature_total,
 #'   feature_db = c("interpro", "pfam"),
 #'   highlight_hits = custom_hits_domain,
-#'   highlight_event_id = "SE:1",
+#'   highlight_event_id = "AFE:1",
 #'   combine_domains = FALSE,
-#'   view = "transcript"
+#'   view = "protein"
 #' )
 #'
 #' # Protein (compact) view: introns removed
 #' p_prot <- plot_two_transcripts_with_domains_unified(
-#'   transcripts = c("ENST00000350763", "ENST00000542877"),
 #'   gtf_df = annotation_df$annotations,
 #'   protein_features = protein_feature_total,
 #'   feature_db = c("interpro", "pfam", "elm", "seg"),
-#'   highlight_hits = custom_hits_domain,
-#'   highlight_event_id = "SE:1",
+#'   highlight_hits = hits_final,
+#'   highlight_event_id = "ENSG00000142599:AFE",
+#'   combine_domains = TRUE,
+#'   view = "transcript"
+#' )
+#' #' 
+#' # We are also able to just probe 2 random transcripts from annotations
+#' p_prot <- plot_two_transcripts_with_domains_unified(
+#'   transcripts = c("ENST00000337907","ENST00000476556"),
+#'   gtf_df = annotation_df$annotations,
+#'   protein_features = protein_feature_total,
+#'   feature_db = c("interpro", "pfam", "elm", "seg"),
 #'   combine_domains = TRUE,
 #'   view = "protein"
 #' )
+#' 
 #' }
 #'
 #' @seealso \code{\link[ggplot2]{ggplot}} for rendering and theming.

@@ -71,7 +71,7 @@
 #' @param domain_col_fg Name of the domain list column in `hits`.
 #' @param domain_col_bg Name of the domain list column in `background`.
 #' @param event_col Name of the column giving event type (default:
-#'   `"event_type_inc"`). Set `NULL` to skip event filtering.
+#'   `"event_type"`). Set `NULL` to skip event filtering.
 #' @param event_filter Character vector of event types to include
 #'   (e.g. `"A5SS"`, `"A3SS"`). If `NULL`, all events are used.
 #' @param db_filter Character vector of database prefixes to retain
@@ -141,7 +141,7 @@ enrich_domains_hypergeo <- function(
     background,
     domain_col_fg = "either_domains_list",
     domain_col_bg = "total_sd_domains",
-    event_col     = "event_type_inc",      # set NULL if you don't want event filtering
+    event_col     = "event_type",      # set NULL if you don't want event filtering
     event_filter  = NULL,                  # e.g. c("A5SS","A3SS") or "AFE"
     db_filter     = NULL,                  # e.g. "Pfam" | c("Pfam","SMART")
     min_fg_count  = 2,                     # minimum foreground hits to test a domain

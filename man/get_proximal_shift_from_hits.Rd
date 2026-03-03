@@ -10,10 +10,10 @@ get_proximal_shift_from_hits(hits)
 \item{hits}{`data.frame` or `data.table` containing at least:
 \itemize{
   \item `event_id`
-  \item `event_type_inc`
-  \item `strand_inc`
-  \item `inc_inc`, `inc_exc`
-  \item `delta_psi_inc`, `delta_psi_exc`
+  \item `event_type`
+  \item `strand`
+  \item `inc_case`, `inc_control`
+  \item `delta_psi_case`, `delta_psi_control`
 }}
 }
 \value{
@@ -29,7 +29,7 @@ genomic coordinates and strand orientation.
 }
 \details{
 The function compares the genomic coordinates of the inclusion
-(`inc_inc`) and exclusion (`inc_exc`) segments per event:
+(`inc_case`) and exclusion (`inc_control`) segments per event:
 \itemize{
   \item For **AFE** events, proximal = exon with smaller start
         coordinate on the `+` strand (or larger end on `-` strand).

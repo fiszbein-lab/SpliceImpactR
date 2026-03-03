@@ -9,7 +9,7 @@ integrated_event_summary(hits, pre_filter_hits)
 \arguments{
 \item{hits}{`data.frame` or `data.table` output from [`compare_sequence_frame()`],
 containing per-event alignment and domain information (e.g. `summary_classification`,
-`prot_pid`, `event_type_inc`, `inc_only_n`, `exc_only_n`, etc.).}
+`prot_score`, `event_type`, `case_only_n`, `control_only_n`, etc.).}
 
 \item{pre_filter_hits}{`data.frame` or `data.table` representing the unfiltered
 input events (e.g. raw differential inclusion table prior to sequence comparison).}
@@ -36,8 +36,7 @@ The function integrates multiple layers of event-level characterization:
 \itemize{
   \item Event-type composition and class proportions
   \item Protein alignment quality distribution
-  \item Domain-change prevalence (INC/EXC/both)
-  \item Gene and domain cross-event intersections (UpSet plots)
+  \item Domain-change prevalence (case/control/both)
   \item Event-type coordination heatmap (Jaccard similarity across genes)
   \item Relative event retention pre- vs post-filtering
 }

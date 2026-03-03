@@ -51,10 +51,6 @@ get_pairs <- function(x,
   # --- guards ---
   miss <- setdiff("event_id", names(DT))
   if (length(miss)) stop("Missing key columns: ", paste(miss, collapse=", "))
-  if (source == "rmats"    && !("form" %in% names(DT)))
-    stop("rmats mode requires column '", "form", "'.")
-  if (source == "hitindex" && !("delta_psi" %in% names(DT)))
-    stop("hitindex mode requires column '", "delta_psi", "'.")
 
   setkeyv(DT, "event_id")
 
@@ -86,8 +82,8 @@ get_pairs <- function(x,
     # suffix and join
     inc_cols <- setdiff(names(INC), "event_id")
     exc_cols <- setdiff(names(EXC), "event_id")
-    setnames(INC, inc_cols, paste0(inc_cols, "_inc"))
-    setnames(EXC, exc_cols, paste0(exc_cols, "_exc"))
+    setnames(INC, inc_cols, paste0(inc_cols, "_case"))
+    setnames(EXC, exc_cols, paste0(exc_cols, "_control"))
 
     setkeyv(INC, "event_id")
     setkeyv(EXC, "event_id")
@@ -111,21 +107,31 @@ get_pairs <- function(x,
   # suffix and pair (cartesian join)
   left_cols  <- setdiff(names(POS), "event_id")
   right_cols <- setdiff(names(NEG), "event_id")
-  setnames(POS, left_cols,  paste0(left_cols,  "_inc"))
-  setnames(NEG, right_cols, paste0(right_cols, "_exc"))
+  setnames(POS, left_cols,  paste0(left_cols,  "_case"))
+  setnames(NEG, right_cols, paste0(right_cols, "_control"))
 
   setkeyv(POS, "event_id")
   setkeyv(NEG, "event_id")
   out <- merge(POS, NEG, by = 'event_id', allow.cartesian = TRUE)
 
   # order like combine_inc_exc(): by key (then strongest |deltaPSI| on each side if available)
-  dA <- paste0('delta_psi', "_inc")
-  dB <- paste0('delta_psi', "_exc")
+  dA <- paste0('delta_psi', "_case")
+  dB <- paste0('delta_psi', "_control")
   out[, ordA := -abs(get(dA))]
   out[, ordB := -abs(get(dB))]
   data.table::setorderv(out, c("event_id", "ordA", "ordB"))
   out[, c("ordA","ordB") := NULL]
-
-
+  col_names_ord <- c("form", "exons", "protein_id", "inc", "exc", "delta_psi", "p.value", "padj", "n_samples", "n_control", "n_case", "transcript_seq", "protein_seq")
+  cn_adjust <- unlist(lapply(col_names_ord, function(x) paste0(x, c("_control","_case"))))
+  
+  cols_old <- c("event_id", "gene_id_control", "transcript_id_control", "transcript_id_case",
+                "chr_control", "strand_control", "event_type_control", cn_adjust)
+  
+  cols_new <- c("event_id", "gene_id", "transcript_id_control", "transcript_id_case",
+                "chr", "strand", "event_type", cn_adjust)
+  
+  data.table::setcolorder(out, cols_old)
+  out <- out[, ..cols_old]
+  data.table::setnames(out, old = cols_old, new = cols_new)
   out[]
 }

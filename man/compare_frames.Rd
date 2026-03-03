@@ -9,8 +9,8 @@ compare_frames(hits, annotations, allow_ale_fs = FALSE)
 \arguments{
 \item{hits}{`data.frame` or `data.table` containing splicing event metadata,
 typically output from [compare_sequences_alignment()]. Must include
-columns such as `event_type_inc`, `transcript_id_inc`, `transcript_id_exc`,
-`exons_inc`, `exons_exc`, and `pc_class`.}
+columns such as `event_type`, `transcript_id_case`, `transcript_id_control`,
+`exons_case`, `exons_control`, and `pc_class`.}
 
 \item{annotations}{from get_annotations (annotations)}
 
