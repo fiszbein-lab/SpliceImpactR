@@ -211,14 +211,13 @@ SpliceImpactR also handles data with differential inclusion values generated
 by rMATS
 Loading multiple splice types are loaded through:
 ```r
-# was supplied
 input <- data.frame(
   path = c('/path/A3SS.MATS.JC.txt', '/path2/A5SS.MATS.JC.txt'),
   grp1 = c("WT","WT"),
   grp2 = c("KO","KO"),
   event_type = c("A3SS", "A5SS")
 )
-res <- get_rmats_post_di(meta)
+# res_rmats_di <- get_rmats_post_di(input)
 ```
 
 We can also load from a single rMATS table, preloaded:
@@ -276,7 +275,7 @@ event_to_probe <- res$event_id[1]
 ```
 Plot PSI by sample/condition; missing combinations are filled with zeros by default
 ```r
-probe <- probe_individual_event(res, event = event_to_probe)
+probe <- probe_individual_event(data, event = event_to_probe)
 ```
 
 If you already have sets of transcripts you want to compare, you can feed them into 
@@ -350,6 +349,30 @@ enrichment_domain <- get_enrichment(get_domain_gene_for_enrichment(hits_domain),
 enrichment_di <- get_enrichment(get_di_gene_enrichment(res, .05, .1), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
 ```
 
+## Visualize specific transcript changes
+Here we can look at how protein features are changing across the matched 
+transcripts / proteins in two views: genomic (transcript-oriented) and compact
+(protein-oriented). This orients everything reading from L-R, so - strand is
+reversed before visualization
+```
+transcript_centric <- plot_two_transcripts_with_domains_unified(
+  transcripts = c("ENST00000371514", "ENST00000430330"),
+  gtf_df = annotation_df$annotations,
+  protein_features = protein_feature_total,
+  feature_db = c("interpro"),
+  combine_domains = TRUE,
+  view = "genomic"
+)
+
+protein_centric <- plot_two_transcripts_with_domains_unified(
+  transcripts = c("ENST00000371514", "ENST00000430330"),
+  gtf_df = annotation_df$annotations,
+  protein_features = protein_feature_total,
+  feature_db = c("interpro"),
+  combine_domains = TRUE,
+  view = "compact"
+)
+```
 
 ## Integrative Analysis
 Here we identify some holistic patterns / integrative analysis using all event types
@@ -360,12 +383,28 @@ int_summary <- integrated_event_summary(hits_final, res)
 ### Understanding the `hits_final` columns
 The `hits_final` table contains the paired isoform metadata together with alignment, domain, and PPI annotations that flow through the workflow. Key columns include:
 
-* **Event metadata** – `event_id` plus the paired exon IDs (`exons_inc`, `exons_exc`) and event type labels (`event_type_inc`, `event_type_exc`) used throughout downstream comparisons. Transcript identifiers for each isoform (`transcript_id_inc`, `transcript_id_exc`) anchor all subsequent annotations. (`inc_inc`, `inc_exc`) and (`exc_inc`, `exc_exc`) each refer to the respective included and excluded exon coordinates queried in (`transcript_id_inc`, `transcript_id_exc`) and (`exons_`) (`inc`) and (`exc`) are the exons identified
+* **Event metadata** – `event_id` plus the paired exon IDs 
+(`exons_inc`, `exons_exc`) and event type labels 
+(`event_type_inc`, `event_type_exc`) used throughout downstream comparisons. 
+Transcript identifiers for each isoform (`transcript_id_inc`, `transcript_id_exc`) 
+anchor all subsequent annotations. (`inc_inc`, `inc_exc`) and (`exc_inc`, `exc_exc`) 
+each refer to the respective included and excluded exon coordinates queried i
+n (`transcript_id_inc`, `transcript_id_exc`) and (`exons_`) (`inc`) and (`exc`) are the exons identified
 * **Additional metadata** – (`delta_psi`, `p.value`, `padj`) are differential inclusion statistics calculated for each event
-* **Sequence content and alignment metrics** – nucleotide and protein sequences for inclusion and exclusion isoforms (`transcript_seq_inc/exc`, `protein_seq_inc/exc`) together with coding status (`pc_class`), protein and transcript lengths, exon/CDS length differences, and alignment statistics (`dna_pid/score/width`, `prot_pid/score/width`).
-* **Frame-shift classification** – frame comparison and rescue outcomes (`frame_call`, `rescue`) and the consolidated `summary_classification` label used in plots (e.g., `Match`, `FrameShift`, `Rescue`, or inherited protein-coding class).
-* **Domain changes** – domains observed on the event exons for inclusion vs. exclusion isoforms (`domains_exons_inc`, `domains_exons_exc`); isoform-specific domain sets (`inc_only_domains`, `exc_only_domains`), list-columns holding the underlying identifiers, and counts of changed domains (`inc_only_n`, `exc_only_n`, `diff_n`).
-* **Predicted PPI switches** – partners unique to the inclusion or exclusion isoform (`inc_ppi`, `exc_ppi`) and their counts (`n_inc_ppi`, `n_exc_ppi`, with `n_ppi` as the total number of altered interactions).
+* **Sequence content and alignment metrics** – nucleotide and protein sequences 
+for inclusion and exclusion isoforms (`transcript_seq_inc/exc`, `protein_seq_inc/exc`) 
+together with coding status (`pc_class`), protein and transcript lengths, 
+exon/CDS length differences, and alignment statistics (`dna_pid/score/width`, `prot_pid/score/width`).
+* **Frame-shift classification** – frame comparison and rescue outcomes 
+(`frame_call`, `rescue`) and the consolidated `summary_classification` label 
+used in plots (e.g., `Match`, `FrameShift`, `Rescue`, or inherited protein-coding class).
+* **Domain changes** – domains observed on the event exons for inclusion vs. 
+exclusion isoforms (`domains_exons_inc`, `domains_exons_exc`); isoform-specific 
+domain sets (`inc_only_domains`, `exc_only_domains`), list-columns holding the 
+underlying identifiers, and counts of changed domains (`inc_only_n`, `exc_only_n`, `diff_n`).
+* **Predicted PPI switches** – partners unique to the inclusion or exclusion 
+isoform (`inc_ppi`, `exc_ppi`) and their counts (`n_inc_ppi`, `n_exc_ppi`, 
+with `n_ppi` as the total number of altered interactions).
 
 These columns provide the necessary context to trace how an alternative splicing event alters coding potential, protein domains, and predicted interaction partners.
 

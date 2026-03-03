@@ -532,12 +532,17 @@ plot_two_transcripts_with_features <- function(transcripts,
                                                highlight_box_pad_frac = 0.006,
                                                highlight_box_lwd = 0.45,
                                                combine_domains = FALSE,
-                                               mode = c("genomic", "compact"),
+                                               mode = c("genomic", "transcript", "compact", "protein"),
                                                domain_base_gap = 0.85,
                                                domain_track_step = 0.6,
                                                domain_label_dy = 0.20) {
   
   mode <- match.arg(mode)
+  if (mode %in% c('genomic', 'transcript')) {
+    mode <- 'genomic'
+  } else { 
+    mode <- 'compact'
+    }
   stopifnot(length(transcripts) == 2)
   
   # prep transcript 1
@@ -1007,15 +1012,3 @@ plot_two_transcripts_with_domains_unified <- function(...,
   mode <- if (view == "transcript") "genomic" else "compact"
   plot_two_transcripts_with_features(..., mode = mode)
 }
-
-# 
-p1 <- plot_two_transcripts_with_domains_unified(
-  transcripts = c("ENST00000337907", "ENST00000400908"),
-  gtf_df = annotation_df$annotations,
-  protein_features = protein_feature_total,
-  highlight_hits = custom_hits_domain,
-  feature_db = c("interpro"),
-  highlight_event_id = "SE:1",
-  combine_domains = TRUE,
-  view = "transcript"
-)

@@ -32,7 +32,7 @@
 #' @keywords internal
 build_from_annotations <- function(ann) {
   ann <- data.table::as.data.table(ann)
-
+  
   tx <- ann[type == "transcript",
             .(rownum = row_uid,
               chr, start, stop = end, strand,
@@ -55,7 +55,7 @@ build_from_annotations <- function(ann) {
   ex[is.na(exon_number) | is.na(max_ex), classification := NA_character_]
   ex[, max_ex := NULL]
 
-  protein_tx <- unique(na.omit(tx$transcript_id[transcript_type == 'protein_coding' & !is.na(transcript_type)]))
+  protein_tx <- unique(na.omit(tx[transcript_type == 'protein_coding' & !is.na(transcript_type), transcript_id]))
   list(exons = ex, transcripts = tx, protein_tx = protein_tx)
 }
 
