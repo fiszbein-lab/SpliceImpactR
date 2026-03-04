@@ -380,34 +380,147 @@ Here we identify some holistic patterns / integrative analysis using all event t
 int_summary <- integrated_event_summary(hits_final, res)
 ```
 
-### Understanding the `hits_final` columns
-The `hits_final` table contains the paired isoform metadata together with alignment, domain, and PPI annotations that flow through the workflow. Key columns include:
+### Understanding output columns (`hits_final`, `data`, `res`)
+The pipeline returns three core tables in `data.table` mode:
+- `data`: sample-level event measurements before differential modeling.
+- `res`: differential inclusion results per tested event/site.
+- `hits_final`: paired case/control isoform effects with sequence, domain, and PPI annotations.
 
-* **Event metadata** – `event_id` plus the paired exon IDs 
-(`exons_case`, `exons_control`) and event type label 
-(`event_type) used throughout downstream comparisons. 
-Transcript identifiers for each isoform (`transcript_id_case`, `transcript_id_control`) 
-anchor all subsequent annotations. (`inc_case`, `inc_control`) and (`exc_case`, `exc_control`) 
-each refer to the respective included and excluded exon coordinates queried i
-n (`transcript_id_case`, `transcript_id_control`) and (`exons_`) (`case`) and (`control`) are the exons identified
-* **Additional metadata** – (`delta_psi`, `p.value`, `padj`) are differential inclusion statistics calculated for each event
-* **Sequence content and alignment metrics** – nucleotide and protein sequences 
-for inclusion and exclusion isoforms (`transcript_seq_case/control`, `protein_seq_case/control`) 
-together with coding status (`pc_class`), protein and transcript lengths, 
-exon/CDS length differences, and alignment statistics (`dna_pid/score/width`, `prot_pid/score/width`).
-* **Frame-shift classification** – frame comparison and rescue outcomes 
-(`frame_call`, `rescue`) and the consolidated `summary_classification` label 
-used in plots (e.g., `Match`, `FrameShift`, `Rescue`, or inherited protein-coding class).
-* **Domain changes** – domains observed on the event exons for inclusion vs. 
-exclusion isoforms (`domains_exons_case`, `domains_exons_control`); isoform-specific 
-domain sets (`case_only_domains`, `control_only_domains`), list-columns holding the 
-underlying identifiers, and counts of changed domains (`case_only_n`, `control_only_n`, `diff_n`).
-* **Predicted PPI switches** – partners unique to the inclusion or exclusion 
-isoform (`case_ppi`, `control_ppi`) and their counts (`n_case_ppi`, `n_control_ppi`, 
-with `n_ppi` as the total number of altered interactions).
+Suffix convention used throughout:
+- `_case` = case-preferred isoform values.
+- `_control` = control-preferred isoform values.
 
-These columns provide the necessary context to trace how an alternative splicing event alters coding potential, protein domains, and predicted interaction partners.
+#### `hits_final` (integrated event-level output)
+Use this table for biological interpretation and downstream plotting.
 
+**1) Event and isoform identifiers**
+- `event_id`: event identifier used across all outputs.
+- `event_type`: splicing class (`SE`, `A3SS`, `A5SS`, `MXE`, `RI`, `AFE`, `ALE`, `HFE`, `HLE`).
+- `gene_id`: Ensembl gene identifier.
+- `chr`, `strand`: genomic chromosome and strand.
+- `transcript_id_case`, `transcript_id_control`: paired transcript IDs.
+- `protein_id_case`, `protein_id_control`: paired protein IDs (if protein-coding).
+- `form_case`, `form_control`: row form labels used during pairing.
+- `exons_case`, `exons_control`: event exon IDs used for case/control mapping.
+
+**2) Event coordinates and differential statistics**
+- `inc_case`, `inc_control`: inclusion coordinate strings for each isoform.
+- `exc_case`, `exc_control`: exclusion coordinate strings for each isoform.
+- `delta_psi_case`, `delta_psi_control`: signed PSI shift for each side of the pair.
+- `p.value_case`, `p.value_control`: differential model p-values.
+- `padj_case`, `padj_control`: multiple-testing-adjusted p-values.
+- `n_samples_case`, `n_samples_control`: total samples used.
+- `n_case_case`, `n_case_control`: case sample counts.
+- `n_control_case`, `n_control_control`: control sample counts.
+
+**3) Sequence content and coding context**
+- `transcript_seq_case`, `transcript_seq_control`: transcript nucleotide sequences.
+- `protein_seq_case`, `protein_seq_control`: translated protein sequences.
+- `pc_class`: coding relationship class for the pair.
+- Length metrics: `prot_len_*`, `tx_len_*`, `exon_cds_len_*`, `exon_len_*`, and associated `*_diff` / `*_diff_abs` columns.
+
+**4) Alignment and frame classification**
+- DNA alignment: `dna_pid`, `dna_score`, `dna_width`.
+- Protein alignment: `prot_pid`, `prot_score`, `prot_width`.
+- Frame diagnostics: `frame_call`, `rescue`, `frame_check_exon1`, `frame_check_exon2`.
+- Final summary label: `summary_classification`.
+
+**5) Domain-level change annotations**
+- `domains_exons_case`, `domains_exons_control`: domains mapped on event exons.
+- `case_only_domains`, `control_only_domains`: collapsed domain strings unique to each side.
+- `case_only_domains_list`, `control_only_domains_list`, `either_domains_list`: list-columns of domain tokens.
+- Counts: `case_only_n`, `control_only_n`, `diff_n`.
+
+**6) Predicted interaction rewiring (PPI/DDI/DMI-aware)**
+- Partners: `case_ppi`, `control_ppi` (list-columns).
+- Counts: `n_case_ppi`, `n_control_ppi`, `n_ppi`.
+- Feature drivers: `case_pfam_changed`, `control_pfam_changed`, `case_elm_changed`, `control_elm_changed`.
+
+#### `data` (raw sample-level input table)
+Use `data` to inspect per-sample evidence feeding differential inclusion.
+
+Core columns:
+- `event_id`, `event_type`, `form`, `gene_id`, `chr`, `strand`.
+- `inc`, `exc`: coordinate strings for inclusion/exclusion forms.
+- `inclusion_reads`, `exclusion_reads`: read support.
+- `psi`: sample-level PSI value.
+- `sample`, `condition`: sample metadata.
+- `source_file`: source path used during import.
+
+Often present depending on import path:
+- HITindex metadata such as `HITindex`, `class`, `nFE`, `nLE`, `nUP`, `nDOWN`, `nTXPT`, `psi_original`, `total_reads`, `source`.
+
+#### `res` (differential inclusion output)
+Use `res` to rank significant events before downstream pairing/domain/PPI steps.
+
+Core columns:
+- `site_id`: tested site/event key used by the model.
+- `event_id`, `event_type`, `gene_id`, `chr`, `strand`, `inc`, `exc`, `form`.
+- `n_samples`, `n_control`, `n_case`: sample counts used.
+- `mean_psi_ctrl`, `mean_psi_case`: group PSI means.
+- `delta_psi`: case minus control PSI shift.
+- `p.value`, `padj`: statistical significance.
+- `cooks_max`: maximum Cook's distance seen for the fitted site.
+- `n`, `n_used`: total rows and rows retained after model filtering.
+
+## S4 Workflow and Accessors
+You can run the full pipeline with `get_splicing_impact()` and choose either compact `data.table` outputs or a single S4 object.
+
+```r
+# End-to-end (combined HITindex + rMATS)
+out <- get_splicing_impact(
+  sample_frame = sample_frame,
+  source_data = "both",                 # "hitindex" | "rmats" | "both"
+  event_types = c("ALE", "AFE", "MXE", "SE", "A3SS", "A5SS", "RI"),
+  annotation_df = annotation_df,
+  protein_feature_total = protein_feature_total,
+  return_class = "data.table"
+)
+
+# Compact returns in data.table mode
+data <- out$data
+res <- out$res
+hits_final <- out$hits_final
+```
+
+```r
+# Return a single S4 object
+obj <- get_splicing_impact(
+  sample_frame = sample_frame,
+  source_data = "both",
+  annotation_df = annotation_df,
+  protein_feature_total = protein_feature_total,
+  return_class = "S4"
+)
+
+# Convert slots back to data.table
+raw_dt <- as_dt_from_s4(obj, "raw_events")
+di_dt <- as_dt_from_s4(obj, "di_events")
+hits_dt <- as_dt_from_s4(obj, "paired_hits")
+```
+
+For paired-hit summaries, use fast accessors:
+
+```r
+# Generic subset accessor
+core_dt <- get_hits_final_view(obj, col_subset = "core")
+dom_dt <- get_hits_final_view(obj, col_subset = "domain")
+ppi_dt <- get_hits_final_view(obj, col_subset = "ppi")
+seq_dt <- get_hits_final_view(obj, col_subset = "sequence")
+
+# Tiny wrappers
+core_dt <- get_hits_core(obj)
+dom_dt <- get_hits_domain(obj)
+ppi_dt <- get_hits_ppi(obj)
+seq_dt <- get_hits_sequence(obj)
+```
+
+To inspect S4 schema and slot usage:
+
+```r
+spliceimpact_s4_schema()
+spliceimpact_s4_guide()
+```
 ## Contributing
 Contributions to SpliceImpactR are welcome, including bug reports, feature requests, and pull requests. Please see CONTRIBUTING.md for guidelines on how to contribute.
 

@@ -351,6 +351,64 @@ int_summary <- integrated_event_summary(hits_final, res)
 ```
 
 
+## S4 workflow and accessors
+You can run the full pipeline in one call and choose either compact `data.table` outputs or a single S4 object.
+
+```{r}
+# End-to-end (combined HITindex + rMATS)
+out <- get_splicing_impact(
+  sample_frame = sample_frame,
+  source_data = "both",                 # "hitindex" | "rmats" | "both"
+  event_types = c("ALE", "AFE", "MXE", "SE", "A3SS", "A5SS", "RI"),
+  annotation_df = annotation_df,
+  protein_feature_total = protein_feature_total,
+  return_class = "data.table"
+)
+
+# Compact returns in data.table mode
+data <- out$data
+res <- out$res
+hits_final <- out$hits_final
+```
+
+```{r}
+# Return a single S4 object
+obj <- get_splicing_impact(
+  sample_frame = sample_frame,
+  source_data = "both",
+  annotation_df = annotation_df,
+  protein_feature_total = protein_feature_total,
+  return_class = "S4"
+)
+
+# Convert slots back to data.table
+raw_dt <- as_dt_from_s4(obj, "raw_events")
+di_dt <- as_dt_from_s4(obj, "di_events")
+hits_dt <- as_dt_from_s4(obj, "paired_hits")
+```
+
+For paired-hit summaries, use either the generic accessor or convenience wrappers:
+
+```{r}
+# Generic subset accessor
+core_dt <- get_hits_final_view(obj, col_subset = "core")
+dom_dt <- get_hits_final_view(obj, col_subset = "domain")
+ppi_dt <- get_hits_final_view(obj, col_subset = "ppi")
+seq_dt <- get_hits_final_view(obj, col_subset = "sequence")
+
+# Tiny wrappers
+core_dt <- get_hits_core(obj)
+dom_dt <- get_hits_domain(obj)
+ppi_dt <- get_hits_ppi(obj)
+seq_dt <- get_hits_sequence(obj)
+```
+
+You can inspect schema and slot usage with:
+
+```{r}
+spliceimpact_s4_schema()
+spliceimpact_s4_guide()
+```
 ## Session Info
 ```{r}
 sessionInfo()
