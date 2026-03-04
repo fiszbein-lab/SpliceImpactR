@@ -57,6 +57,7 @@ Here we obtain further annotations through biomaRt. The typical protein features
 ## We're loading test data here, but set test = FALSE to get the full set
 interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 signalp_features <- get_protein_features(c("signalp"), annotation_df$annotations, timeout = 600, test = TRUE)
+elm_features <- get_protein_features(c("elm"), annotation_df$annotations, timeout = 600, test = TRUE)
 ```
 
 ```{r, eval=FALSE}
@@ -92,7 +93,7 @@ signalp_features <- get_protein_features(c("signalp"), annotation_df$annotations
 
 ```{r}
 ## We use this function to combine multiple protein features and the user-defined features
-protein_feature_total <- get_comprehensive_annotations(list(signalp_features, interpro_features))
+protein_feature_total <- get_comprehensive_annotations(list(signalp_features, interpro_features, elm_features))
 
 
 ## Finally, we get the exon-level protein features from the prior overall features
@@ -307,6 +308,41 @@ ppi_plot <- plot_ppi_summary(hits_final)
 # enrichment_di <- get_enrichment(get_di_gene_enrichment(res, .05, .1), bg$gene_id, species = 'human', 'ensembl', 'GO:BP')
 ```
 
+## Visualize specific transcript changes
+Here we can look at how protein features are changing across the matched 
+transcripts / proteins in two views: transcript (genomic-oriented) and protein
+(amino-acid-oriented). This orients everything reading from L-R, so - strand is
+reversed before visualization
+```{r}
+transcript_centric <- plot_two_transcripts_with_domains_unified(
+  transcripts = c("ENST00000371514", "ENST00000430330"),
+  gtf_df = annotation_df$annotations,
+  protein_features = protein_feature_total,
+  feature_db = c("interpro"),
+  combine_domains = TRUE,
+  view = "transcript"
+)
+
+protein_centric <- plot_two_transcripts_with_domains_unified(
+  transcripts = c("ENST00000371514", "ENST00000430330"),
+  gtf_df = annotation_df$annotations,
+  protein_features = protein_feature_total,
+  feature_db = c("interpro"),
+  combine_domains = TRUE,
+  view = "protein"
+)
+```
+
+## Inspect PSI for a single event
+Use `probe_individual_event()` to visualize PSI distributions for a specific event across samples. For terminal exon events
+(`AFE`/`ALE`), PSI is separated by the `inc` entry to highlight proximal vs distal choices.
+
+Identify an event of interest from the differential inclusion results and 
+plot PSI by sample/condition; missing combinations are filled with zeros by default
+```{r}
+event_to_probe <- res$event_id[1]
+probe <- probe_individual_event(data, event = event_to_probe)
+```
 
 ## Integrative Analysis
 Here we identify some holistic patterns / integrative analysis using all event types

@@ -265,7 +265,7 @@ We can also perform analysis looking at how events impact proximal/distal use of
 proximal_output <- get_proximal_shift_from_hits(pairs)
 ```
 
-### Inspect PSI for a single event
+## Inspect PSI for a single event
 Use `probe_individual_event()` to visualize PSI distributions for a specific event across samples. For terminal exon events
 (`AFE`/`ALE`), PSI is separated by the `inc` entry to highlight proximal vs distal choices.
 
@@ -361,7 +361,7 @@ transcript_centric <- plot_two_transcripts_with_domains_unified(
   protein_features = protein_feature_total,
   feature_db = c("interpro"),
   combine_domains = TRUE,
-  view = "genomic"
+  view = "transcript"
 )
 
 protein_centric <- plot_two_transcripts_with_domains_unified(
@@ -370,7 +370,7 @@ protein_centric <- plot_two_transcripts_with_domains_unified(
   protein_features = protein_feature_total,
   feature_db = c("interpro"),
   combine_domains = TRUE,
-  view = "compact"
+  view = "protein"
 )
 ```
 
@@ -384,26 +384,26 @@ int_summary <- integrated_event_summary(hits_final, res)
 The `hits_final` table contains the paired isoform metadata together with alignment, domain, and PPI annotations that flow through the workflow. Key columns include:
 
 * **Event metadata** – `event_id` plus the paired exon IDs 
-(`exons_inc`, `exons_exc`) and event type labels 
-(`event_type_inc`, `event_type_exc`) used throughout downstream comparisons. 
-Transcript identifiers for each isoform (`transcript_id_inc`, `transcript_id_exc`) 
-anchor all subsequent annotations. (`inc_inc`, `inc_exc`) and (`exc_inc`, `exc_exc`) 
+(`exons_case`, `exons_control`) and event type label 
+(`event_type) used throughout downstream comparisons. 
+Transcript identifiers for each isoform (`transcript_id_case`, `transcript_id_control`) 
+anchor all subsequent annotations. (`inc_case`, `inc_control`) and (`exc_case`, `exc_control`) 
 each refer to the respective included and excluded exon coordinates queried i
-n (`transcript_id_inc`, `transcript_id_exc`) and (`exons_`) (`inc`) and (`exc`) are the exons identified
+n (`transcript_id_case`, `transcript_id_control`) and (`exons_`) (`case`) and (`control`) are the exons identified
 * **Additional metadata** – (`delta_psi`, `p.value`, `padj`) are differential inclusion statistics calculated for each event
 * **Sequence content and alignment metrics** – nucleotide and protein sequences 
-for inclusion and exclusion isoforms (`transcript_seq_inc/exc`, `protein_seq_inc/exc`) 
+for inclusion and exclusion isoforms (`transcript_seq_case/control`, `protein_seq_case/control`) 
 together with coding status (`pc_class`), protein and transcript lengths, 
 exon/CDS length differences, and alignment statistics (`dna_pid/score/width`, `prot_pid/score/width`).
 * **Frame-shift classification** – frame comparison and rescue outcomes 
 (`frame_call`, `rescue`) and the consolidated `summary_classification` label 
 used in plots (e.g., `Match`, `FrameShift`, `Rescue`, or inherited protein-coding class).
 * **Domain changes** – domains observed on the event exons for inclusion vs. 
-exclusion isoforms (`domains_exons_inc`, `domains_exons_exc`); isoform-specific 
-domain sets (`inc_only_domains`, `exc_only_domains`), list-columns holding the 
-underlying identifiers, and counts of changed domains (`inc_only_n`, `exc_only_n`, `diff_n`).
+exclusion isoforms (`domains_exons_case`, `domains_exons_control`); isoform-specific 
+domain sets (`case_only_domains`, `control_only_domains`), list-columns holding the 
+underlying identifiers, and counts of changed domains (`case_only_n`, `control_only_n`, `diff_n`).
 * **Predicted PPI switches** – partners unique to the inclusion or exclusion 
-isoform (`inc_ppi`, `exc_ppi`) and their counts (`n_inc_ppi`, `n_exc_ppi`, 
+isoform (`case_ppi`, `control_ppi`) and their counts (`n_case_ppi`, `n_control_ppi`, 
 with `n_ppi` as the total number of altered interactions).
 
 These columns provide the necessary context to trace how an alternative splicing event alters coding potential, protein domains, and predicted interaction partners.
