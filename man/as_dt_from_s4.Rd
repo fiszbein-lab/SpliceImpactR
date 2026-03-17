@@ -6,14 +6,18 @@
 \usage{
 as_dt_from_s4(
   x,
-  slot = c("raw_events", "di_events", "paired_hits"),
+  slot = c("raw_events", "di_events", "res_di", "matched", "sample_frame",
+    "hits_sequences", "paired_hits"),
   keep_internal_keys = FALSE
 )
 }
 \arguments{
 \item{x}{`SpliceImpactResult`}
 
-\item{slot}{One of `raw_events`, `di_events`, `paired_hits`.}
+\item{slot}{One of `raw_events`, `di_events`, `res_di`, `matched`,
+`sample_frame`,
+`paired_hits`. For backward compatibility, `"hits_sequences"` is treated
+as `"matched"`.}
 
 \item{keep_internal_keys}{Keep internal key columns (`raw_key`, `di_key`, `pair_key`).}
 }

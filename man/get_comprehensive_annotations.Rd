@@ -27,7 +27,7 @@ Aggregates all available feature tables (e.g., biomaRt + manual)
 into a single unified long-format annotation table.
 }
 \examples{
-annotation_df <- get_annotation(load = "test")
+annotation_df <- load_example_data("annotation_df")$annotation_df
 user_df <- data.frame(
   ensembl_transcript_id = c(
     "ENST00000511072","ENST00000374900","ENST00000373020","ENST00000456328",
@@ -50,8 +50,9 @@ user_df <- data.frame(
   alt_name   = c(NA,"TMhelix",NA,"SignalP-noTM", "TMhelix", NA, NA, "TMhelix", "SignalP-TAT", NA),
   feature_id = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
 )
-user_features <- get_manual_features(user_df, annotation_df$annotation)
+user_features <- get_manual_features(user_df, annotation_df$annotations)
 interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 protein_feature_total <- get_comprehensive_annotations(list(user_features, interpro_features))
+print(protein_feature_total)
 
 }

@@ -14,6 +14,13 @@ SpliceImpact result container (S4)
 
 \item{\code{di_events}}{`GRanges` of differential inclusion rows.}
 
+\item{\code{res_di}}{`GRanges` of threshold-filtered differential rows.}
+
+\item{\code{matched}}{`S4Vectors::DataFrame` of annotation-matched DI rows.}
+
+\item{\code{sample_frame}}{`S4Vectors::DataFrame` sample manifest (`path`,
+`sample_name`, `condition`) when available.}
+
 \item{\code{paired_hits}}{`GRanges` of paired event-level rows.}
 
 \item{\code{segments}}{`GRangesList` of per-event segment parts (`inc_case`, etc.).}

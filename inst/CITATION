@@ -1,0 +1,14 @@
+citHeader("To cite SpliceImpactR in publications, please cite the preprint:")
+
+bibentry(
+  bibtype = "Article",
+  title = "SpliceImpactR maps alternative RNA processing events driving protein functional diversity",
+  author = c(
+    person(given = c("Zachary", "Peters"), family = "Wakefield"),
+    person(given = "Ana", family = "Fiszbein")
+  ),
+  year = "2025",
+  journal = "bioRxiv",
+  doi = "10.1101/2025.06.20.660706",
+  url = "https://www.biorxiv.org/content/10.1101/2025.06.20.660706v1"
+)

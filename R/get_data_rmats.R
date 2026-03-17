@@ -83,23 +83,28 @@
 #' }
 #' @importFrom data.table fread rbindlist as.data.table setkey setcolorder
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' rmats <- load_rmats(sample_frame, event_types = c("MXE", "SE", "A3SS", "A5SS", "RI"))
+#' print(rmats)
 #'
 #' @export
 load_rmats <- function(paths,
-                       use = c("JC","JCEC")[2],
+                       use = c("JC", "JCEC"),
                        event_types = c("SE","RI","A5SS","A3SS","MXE")) {
+  .spi_obj <- NULL
+
+  if (methods::is(paths, "SpliceImpactResult")) {
+    .spi_obj <- paths
+    sf <- as_dt_from_s4(paths, "sample_frame")
+    if (!nrow(sf) && !is.null(paths@metadata$sample_df)) {
+      sf <- data.table::as.data.table(paths@metadata$sample_df)
+    }
+    if (!nrow(sf)) {
+      stop("load_rmats: SpliceImpactResult input requires non-empty `sample_frame` slot (or `metadata$sample_df`).")
+    }
+    paths <- as.data.frame(sf)
+  }
 
   use <- match.arg(use)
 
@@ -151,6 +156,13 @@ load_rmats <- function(paths,
     miss <- setdiff(need, names(DT)); if (length(miss)) stop("Missing columns: ", paste(miss, collapse=", "))
     setkey(DT, sample, condition, event_type, ID)
     DT[, source := "rmats"]
+    if (methods::is(.spi_obj, "SpliceImpactResult")) {
+      out_obj <- .spi_obj
+      out_obj@metadata$rmats_loaded <- DT[]
+      out_obj@metadata$rmats_use <- use
+      out_obj@metadata$rmats_event_types <- event_types
+      return(out_obj)
+    }
     return(DT[])
   }
 
@@ -184,20 +196,21 @@ load_rmats <- function(paths,
 #' @importFrom data.table as.data.table copy fifelse setorder setcolorder rbindlist %chin% :=
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' rmats <- get_rmats(load_rmats(sample_frame, event_types = c("MXE", "SE", "A3SS", "A5SS", "RI")))
+#' print(rmats)
 #' @export
 get_rmats <- function(DT) {
+  .spi_obj <- NULL
+  if (methods::is(DT, "SpliceImpactResult")) {
+    .spi_obj <- DT
+    DT <- DT@metadata$rmats_loaded
+    if (is.null(DT) || !is.data.frame(DT) || !nrow(DT)) {
+      stop("get_rmats: SpliceImpactResult input requires `metadata$rmats_loaded`. Run load_rmats(obj, ...) first.")
+    }
+  }
+
   x <- data.table::as.data.table(DT)
   x[, strand := fifelse(strand %chin% c("+","-"), as.character(strand), "+")]
 
@@ -462,9 +475,23 @@ get_rmats <- function(DT) {
 #'   stringsAsFactors = FALSE
 #' )
 #' res2 <- get_rmats_post_di(df, event_type = "A3SS")
+#' print(res2)
 #' @export
 get_rmats_post_di <- function(input,
                                event_type=NULL) {
+  if (methods::is(input, "SpliceImpactResult")) {
+    input <- as_dt_from_s4(input, slot = "di_events")
+  }
+
+  canonical_di_cols <- c(
+    "site_id", "event_type", "event_id", "gene_id", "chr", "strand",
+    "inc", "exc", "n_samples", "n_control", "n_case",
+    "mean_psi_ctrl", "mean_psi_case", "delta_psi", "p.value",
+    "padj", "cooks_max", "form", "n", "n_used"
+  )
+  if (all(canonical_di_cols %in% colnames(input))) {
+    return(data.table::as.data.table(input))
+  }
 
   if (sum(c("path", "event_type") %in% colnames(input)) == 2) {
     out_list <- lapply(seq_len(nrow(input)), function(i) {
@@ -702,16 +729,13 @@ get_rmats_post_di <- function(input,
                                  "inc", "exc",
                                  "delta_psi", "p.value", "padj"))
 
-  return(out[, .SD, .SDcols = c("event_id","event_type",
+  out <- out[, .SD, .SDcols = c("event_id","event_type",
                                 "form","gene_id",
                                 "chr","strand",
                                 "inc","exc", "p.value",
-                                "delta_psi", "padj")])
+                                "delta_psi", "padj")]
+  return(out)
 }
-
-
-
-
 
 
 

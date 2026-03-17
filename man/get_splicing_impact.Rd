@@ -21,9 +21,11 @@ get_splicing_impact(
   terminal_fill = "event_max",
   cooks_cutoff = "Inf",
   adjust_method = "fdr",
+  fdr_threshold = 0.05,
+  delta_psi_threshold = 0.1,
   parallel_glm = TRUE,
   chunk_size_glm = 1000L,
-  cores_glm = 1L,
+  BPPARAM = BiocParallel::SerialParam(),
   chunk_size_match = 2000L,
   source_pairs = c("multi", "paired"),
   show_protein_domains = FALSE,
@@ -78,7 +80,10 @@ Use both terminal and non-terminal types for `source_data = "both"`.}
 
 \item{chunk_size_glm}{Passed to [get_differential_inclusion()].}
 
-\item{cores_glm}{Passed to [get_differential_inclusion()].}
+\item{BPPARAM}{Passed to [get_differential_inclusion()]. Use a
+[BiocParallel::BiocParallelParam-class] object (for example
+[BiocParallel::SerialParam()], [BiocParallel::SnowParam()], or
+[BiocParallel::MulticoreParam()]).}
 
 \item{chunk_size_match}{Chunk size for [get_matched_events_chunked()].}
 

@@ -6,18 +6,16 @@
 \usage{
 fit_sites_parallel(
   x,
-  cores = 8L,
   chunk_size = 2000L,
   progress = TRUE,
   verbose = TRUE,
-  cooks_cutoff
+  cooks_cutoff,
+  BPPARAM = BiocParallel::SerialParam()
 )
 }
 \arguments{
 \item{x}{A `data.frame` or `data.table` with columns:
 `site_id`, `condition`, `psi_adj`, `psi_raw`, and `total`.}
-
-\item{cores}{Integer. Number of parallel workers (default 8).}
 
 \item{chunk_size}{Integer. Approximate number of sites per chunk
 to send to each worker (default 2000).}
@@ -28,6 +26,9 @@ to send to each worker (default 2000).}
 
 \item{cooks_cutoff}{Numeric or character. Cook's distance cutoff,
 passed to [cutoff_num()].}
+
+\item{BPPARAM}{A [BiocParallel::BiocParallelParam-class] object controlling
+backend and worker settings. Default is [BiocParallel::SerialParam()].}
 }
 \value{
 A `data.table` with one row per site and columns:

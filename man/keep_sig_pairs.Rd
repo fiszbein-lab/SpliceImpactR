@@ -4,7 +4,12 @@
 \alias{keep_sig_pairs}
 \title{Filter event pairs by significance and deltaPSI thresholds}
 \usage{
-keep_sig_pairs(DT, padj_thr = 0.05, dpsi_thr = 0.1)
+keep_sig_pairs(
+  DT,
+  padj_thr = 0.05,
+  dpsi_thr = 0.1,
+  return_class = c("auto", "data.table", "S4")
+)
 }
 \arguments{
 \item{DT}{A `data.frame` or `data.table` containing at least `event_id`,
@@ -13,28 +18,24 @@ keep_sig_pairs(DT, padj_thr = 0.05, dpsi_thr = 0.1)
 \item{padj_thr}{Numeric. Adjusted p-value threshold (default `0.05`).}
 
 \item{dpsi_thr}{Numeric. Absolute deltaPSI threshold (default `0.1`).}
+
+\item{return_class}{Character. Output mode: `"data.table"`, `"S4"`, or
+`"auto"` (default). In `auto`, S4 input returns updated S4 output.}
 }
 \value{
-A `data.table` containing all rows from event pairs in which
-  at least one row meets the significance criteria.
+A `data.table` (or updated `SpliceImpactResult` when
+`return_class` resolves to S4) containing all rows from event pairs in which
+at least one row meets the significance criteria.
 }
 \description{
 Keeps all rows belonging to events where at least one isoform or site
 passes adjusted p-value and deltaPSI significance criteria.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
 sig_di <- keep_sig_pairs(res)
+print(sig_di)
 }

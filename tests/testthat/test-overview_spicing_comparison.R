@@ -1,11 +1,11 @@
-test_that("overview_splicing_comparison_fixed works on extdata HIT events", {
+test_that("overview_spicing_comparison works on extdata HIT events", {
 
   skip_on_cran()
 
   sf <- data.frame(
     path        = c(
-      check_extdata_dir("rawData/control_S5/"),
-      check_extdata_dir("rawData/case_S1/")
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S5/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S1/")
     ),
     sample_name = c("S5", "S1"),
     condition   = c("control", "case"),
@@ -21,7 +21,7 @@ test_that("overview_splicing_comparison_fixed works on extdata HIT events", {
 
 
   # Run overview plot
-  ov <- overview_splicing_comparison_fixed(
+  ov <- overview_spicing_comparison(
     events,
     sf,
     depth_norm = "exon_files",

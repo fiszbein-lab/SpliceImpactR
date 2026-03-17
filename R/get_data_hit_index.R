@@ -151,21 +151,26 @@
 #'
 #' @importFrom data.table rbindlist setcolorder
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame, keep_annotated_first_last = TRUE)
+#' print(hit_index)
 #'
 #' @export
 get_hitindex <- function(paths_df, keep_annotated_first_last = FALSE) {
+  .spi_obj <- NULL
+  if (methods::is(paths_df, "SpliceImpactResult")) {
+    .spi_obj <- paths_df
+    sf <- as_dt_from_s4(paths_df, "sample_frame")
+    if (!nrow(sf) && !is.null(paths_df@metadata$sample_df)) {
+      sf <- data.table::as.data.table(paths_df@metadata$sample_df)
+    }
+    if (!nrow(sf)) {
+      stop("get_hitindex: SpliceImpactResult input requires non-empty `sample_frame` slot (or `metadata$sample_df`).")
+    }
+    paths_df <- as.data.frame(sf)
+  }
+
   stopifnot(is.data.frame(paths_df))
   req <- c("path", "condition")
   miss <- setdiff(req, names(paths_df))
@@ -211,6 +216,9 @@ get_hitindex <- function(paths_df, keep_annotated_first_last = FALSE) {
     "sample", "condition", "source_file", "HITindex", "class"
   ))
 
+  if (methods::is(.spi_obj, "SpliceImpactResult")) {
+    return(add_splice_part(.spi_obj, data = DT[]))
+  }
   DT[]
 }
 
@@ -222,18 +230,10 @@ get_hitindex <- function(paths_df, keep_annotated_first_last = FALSE) {
 #' @param keep_annotated_first_last Logical; if TRUE, retain only annotated first/last exons and normalize PSI.
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' data <- get_rmats_hit(sample_frame, event_types = c("ALE", "AFE", "MXE", "SE", "A3SS", "A5SS", "RI"))
+#' print(data)
 #' @return a `data.table` for all the event types desired from the paths supplied
 #' contains: event_id (unique id for event), event_type (AS event type), form
 #' (INC/EXC), gene_id (ensembl id), strand, inc, exc (inclusion and exclusion coords)
@@ -243,6 +243,19 @@ get_rmats_hit <- function(sample_frame,
                           event_types = c("ALE", "AFE", "MXE", "SE", "A3SS", "A5SS", "RI"),
                           use = 'JCEC',
                           keep_annotated_first_last = TRUE) {
+  .spi_obj <- NULL
+  if (methods::is(sample_frame, "SpliceImpactResult")) {
+    .spi_obj <- sample_frame
+    sf <- as_dt_from_s4(sample_frame, "sample_frame")
+    if (!nrow(sf) && !is.null(sample_frame@metadata$sample_df)) {
+      sf <- data.table::as.data.table(sample_frame@metadata$sample_df)
+    }
+    if (!nrow(sf)) {
+      stop("get_rmats_hit: SpliceImpactResult input requires non-empty `sample_frame` slot (or `metadata$sample_df`).")
+    }
+    sample_frame <- as.data.frame(sf)
+  }
+
   if ("ALE" %in% event_types | "AFE" %in% event_types) {
     hit_index <- get_hitindex(sample_frame, keep_annotated_first_last)
     if (sum(c("MXE", "SE", "A3SS", "A5SS", "RI") %in% event_types) > 0) {
@@ -255,10 +268,11 @@ get_rmats_hit <- function(sample_frame,
   } else if (sum(c("MXE", "SE", "A3SS", "A5SS", "RI") %in% event_types) > 0) {
     data <- get_rmats(load_rmats(sample_frame, use, event_types))
   }
+  if (methods::is(.spi_obj, "SpliceImpactResult")) {
+    return(add_splice_part(.spi_obj, data = data))
+  }
   return(data)
 }
-
-
 
 
 

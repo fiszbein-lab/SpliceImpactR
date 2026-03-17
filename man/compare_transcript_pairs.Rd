@@ -19,11 +19,12 @@ Builds a matched-like table for pairs of transcripts by extracting
 all coding exon coordinates from annotations.
 }
 \examples{
-annotation_df <- get_annotation(load = "test")
+annotation_df <- load_example_data("annotation_df")$annotation_df
 pairs <- data.frame(
     transcript1 = c("ENST00000337907", "ENST00000426559"),
     transcript2 = c("ENST00000400908", "ENST00000399728")
 )
 matched <- compare_transcript_pairs(pairs, annotation_df$annotations)
+print(matched)
 
 }

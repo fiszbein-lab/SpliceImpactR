@@ -35,9 +35,10 @@ with exon coding spans defined by transcript-relative CDS coordinates.
 }
 \examples{
 annotation_df <- get_annotation(load = 'test')
-interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 
 exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
+print(exon_features)
 
 }

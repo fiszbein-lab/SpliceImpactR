@@ -7,19 +7,21 @@
 get_annotation(
   load = c("link", "path", "cached", "test"),
   base_dir = NULL,
-  species = c("human", "mouse")[1],
+  species = c("human", "mouse"),
   release = 45,
   gtf_path = NULL,
   transcript_path = NULL,
   translation_path = NULL,
-  filter_tsl = c("1", "2", "3", "4", "5")[c(1, 2, 3)]
+  filter_tsl = c("1", "2", "3")
 )
 }
 \arguments{
 \item{load}{Character string specifying load mode:
 one of `"link"`, `"path"`, `"cached"`, `"test"`.}
 
-\item{base_dir}{Directory to cache/load processed objects.}
+\item{base_dir}{Optional cache root. If `NULL` (default), uses a
+persistent package cache under `tools::R_user_dir("SpliceImpactR", "cache")`.
+A package-specific `BiocFileCache` is created under this root.}
 
 \item{species}{Species label used in filenames (default `"human"`).}
 
@@ -51,43 +53,43 @@ optionally caches the processed objects for future fast access.
 Four loading modes are supported:
 \describe{
   \item{`test`}{Load small internal test data shipped with the package.}
-  \item{`cached`}{Load previously cached GTF, transcript sequences, protein sequences, and hybrid tables from `base_dir`.}
-  \item{`path`}{Read local GTF and FASTA files, process, then cache results in `base_dir`.}
-  \item{`link`}{Download GENCODE files from URLs, process, then cache results in `base_dir`.}
+  \item{`cached`}{Load previously processed objects from package `BiocFileCache`.}
+  \item{`path`}{Read local GTF and FASTA files, process, then cache processed objects in package `BiocFileCache`.}
+  \item{`link`}{Download GENCODE files from URLs, process, then cache processed objects in package `BiocFileCache`.
+  Optional `gtf_path`, `transcript_path`, and `translation_path` are only used as overrides
+  when they are existing local files or valid URLs; otherwise downloaded GENCODE assets are used.}
 }
 
-Cached files created in `base_dir`:
+Processed objects are cached in package `BiocFileCache` entries:
 \preformatted{
-{species}_gencode_v{release}.gtf.rds
-{species}_gencode_v{release}_transcripts.rds
-{species}_gencode_v{release}_proteins.rds
-{species}_gencode_v{release}_hybrids.rds
+annotation/{species}/v{release}/tsl-{...}/annotations.rds
+annotation/{species}/v{release}/tsl-{...}/sequences.rds
+annotation/{species}/v{release}/tsl-{...}/hybrids.rds
 }
 }
 \examples{
 # Load bundled test data
-ann <- get_annotation(load = "test")
+ann <- load_example_data("annotation_df")$annotation_df
+print(ann)
 
-#
-#  # Load from local files and cache results
-#  ann <- get_annotation(
-#    load = "path",
-#    base_dir = "/project/annotation_cache/",
-#    gtf_path = "gencode.v45.annotation.gtf.gz",
-#    transcript_path = "gencode.v45.pc_transcripts.fa.gz",
-#    translation_path = "gencode.v45.pc_translations.fa.gz"
-#  )
+# Load from local files and cache processed objects
+# ann <- get_annotation(
+#   load = "path",
+#   gtf_path = "/downloaded_gtf_directory/gencode.v45.annotation.gtf.gz",
+#   transcript_path = "/downloaded_gtf_directory/gencode.v45.pc_transcripts.fa.gz",
+#   translation_path = "/downloaded_gtf_directory/gencode.v45.pc_translations.fa.gz"
+# )
 
-#  # Download files, process, and cache
-#  ann <- get_annotation(
-#    load = "link",
-#    base_dir = "/project/annotation_cache/"
-#  )
+# Download files, process, and cache to a custom cache root
+# ann <- get_annotation(
+#   load = "link",
+#   base_dir = "/project/annotation_cache/"
+# )
 
 # Load from cached RDS (fast)
-#  ann <- get_annotation(
-#    load = "cached",
-#    base_dir = "/project/annotation_cache/"
-#  )
+# ann <- get_annotation(
+#   load = "cached",
+#   base_dir = "/project/annotation_cache/"
+# )
 
 }

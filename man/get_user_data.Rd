@@ -74,5 +74,6 @@ example_df <- data.frame(
 )
 example_df$psi < example_df$inclusion_reads / example_df$exclusion_reads
 user_data <- get_user_data(example_df)
+print(user_data)
 
 }

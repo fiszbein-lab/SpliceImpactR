@@ -6,7 +6,7 @@
 \usage{
 plot_alignment_summary(
   hits,
-  mode = c("protein", "transcript")[1],
+  mode = c("protein", "transcript"),
   output_file = NULL
 )
 }
@@ -30,25 +30,17 @@ composition of hits, showing both the categorical composition and
 histogram of alignment identity values.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
-annotation_df <- get_annotation(load = "test")
+annotation_df <- load_example_data("annotation_df")$annotation_df
 matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 x_seq <- attach_sequences(matched, annotation_df$sequences)
 pairs <- get_pairs(x_seq, source="multi")
 seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 alignment_summary <- plot_alignment_summary(seq_compare)
+print(alignment_summary)
 }
 \seealso{
 [plot_length_comparison()]

@@ -4,7 +4,11 @@
 \alias{coerce_to_dt}
 \title{Coerce input to data.table for internal pipelines}
 \usage{
-coerce_to_dt(x, what = c("raw_events", "di_events", "paired_hits"))
+coerce_to_dt(
+  x,
+  what = c("raw_events", "di_events", "res_di", "matched", "sample_frame",
+    "hits_sequences", "paired_hits")
+)
 }
 \description{
 Coerce input to data.table for internal pipelines

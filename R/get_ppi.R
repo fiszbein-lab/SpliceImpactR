@@ -3,6 +3,7 @@
 #' Generation details in inst/scripts
 #' @examples
 #' ppi_int <- get_ppi_interactions()
+#' print(ppi_int)
 #' 
 #' @export
 get_ppi_interactions <- function() {
@@ -20,7 +21,8 @@ get_ppi_interactions <- function() {
 
 #' Convert InterPro back to PFAM
 #'
-#' @param hits_domain data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list
+#' @param hits_domain `data.table`, `data.frame`, or `SpliceImpactResult` with
+#'   `gene_id` and list-cols `case_only_domains_list` / `control_only_domains_list`.
 #' @param ppi wide interaction table from saved data (get_ppi)
 #' @param protein_feature_total table with database/clean_name/feature_id for interpro mapping
 #' @return hits_domain with added columns
@@ -96,8 +98,10 @@ mark_changing_partners_split <- function(ppi,
 #' @param hits_domain data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list
 #' @param ppi wide interaction table from saved data (get_ppi)
 #' @param protein_feature_total table with database/clean_name/feature_id for interpro mapping
-#' @return hits_domain with added columns
-#' @return A `data.table` identical to `hits_domain` with added columns:
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
+#' @return A `data.table` identical to `hits_domain` with added columns
+#' (or updated `SpliceImpactResult` when `return_class` resolves to S4):
 #' \describe{
 #'   \item{`case_ppi`, `control_ppi`}{Lists of partner transcripts unique to
 #'     inclusion or exclusion isoforms.}
@@ -106,27 +110,18 @@ mark_changing_partners_split <- function(ppi,
 #' }
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 #'
 #' annotation_df <- get_annotation(load = 'test')
-#' interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -139,13 +134,17 @@ mark_changing_partners_split <- function(ppi,
 #'                      protein_features = protein_feature_total)
 #' ppi <- get_ppi_interactions()             
 #' hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
+#' print(hits_ppi)
 #' @examples
 #' 
 #' hits_domain[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
 #' 
 #' @export
-get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
-  hd <- as.data.table(hits_domain)
+get_ppi_switches <- function(hits_domain, ppi, protein_feature_total, return_class = c("auto", "data.table", "S4")) {
+  return_class <- match.arg(return_class)
+  .spi_in <- .resolve_splice_input(hits_domain, what = "paired_hits")
+  .spi_obj <- .spi_in$obj
+  hd <- as.data.table(.spi_in$dt)
   
   ipr_map <- unique(as.data.table(protein_feature_total)[
     database == "interpro",
@@ -192,11 +191,9 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
   n_control   <- integer(nrow(hd))
   n_all   <- integer(nrow(hd))
   
-  # optional: keep token sets (useful for debugging / downstream)
-  case_pfam <- vector("list", nrow(hd))
-  control_pfam <- vector("list", nrow(hd))
-  case_elm  <- vector("list", nrow(hd))
-  control_elm  <- vector("list", nrow(hd))
+  # merged per-side driver tokens used to infer PPI rewiring
+  case_drivers <- vector("list", nrow(hd))
+  control_drivers <- vector("list", nrow(hd))
   
   for (i in seq_len(nrow(hd))) {
     gene_id <- as.character(hd$gene_id[i])
@@ -205,10 +202,8 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
     tok_case <- parse_tokens(hd$case_only_domains_list[i])
     tok_control <- parse_tokens(hd$control_only_domains_list[i])
     
-    case_pfam[[i]] <- tok_case$pfam
-    control_pfam[[i]] <- tok_control$pfam
-    case_elm[[i]]  <- tok_case$elm
-    control_elm[[i]]  <- tok_control$elm
+    case_drivers[[i]] <- unique(c(paste0("pfam;", tok_case$pfam), paste0("elm;", tok_case$elm)))
+    control_drivers[[i]] <- unique(c(paste0("pfam;", tok_control$pfam), paste0("elm;", tok_control$elm)))
     
     edges <- mark_changing_partners_split(
       ppi = ppi,
@@ -229,19 +224,21 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
     n_all[i]     <- length(unique(c(case_genes, control_genes)))
   }
   
+  # remove legacy split driver columns if present
+  legacy_cols <- intersect(c("case_pfam_changed", "control_pfam_changed", "case_elm_changed", "control_elm_changed"), names(hd))
+  if (length(legacy_cols)) hd[, (legacy_cols) := NULL]
+
   hd[, `:=`(
     case_ppi   = case_ppi,
     control_ppi   = control_ppi,
     n_case_ppi = n_case,
     n_control_ppi = n_control,
     n_ppi     = n_all,
-    case_pfam_changed = case_pfam,
-    control_pfam_changed = control_pfam,
-    case_elm_changed  = case_elm,
-    control_elm_changed  = control_elm
+    case_ppi_drivers = case_drivers,
+    control_ppi_drivers = control_drivers
   )]
   
-  hd[]
+  return(.return_splice_output(hd[], obj = .spi_obj, what = "paired_hits", return_class = return_class))
 }
 
 
@@ -264,27 +261,18 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
 #' @return A `ggplot` object combining two panels (using `patchwork`).
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 #'
 #' annotation_df <- get_annotation(load = 'test')
-#' interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -298,6 +286,7 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total) {
 #' ppi <- get_ppi_interactions()             
 #' hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 #' ppi_plot <- plot_ppi_summary(hits_final)
+#' print(ppi_plot)
 #'
 #' @seealso [ppi_switches_for_hits()]
 #'
@@ -316,7 +305,8 @@ plot_ppi_summary <- function(df,
                              output_file = NULL, width = 9, height = 4.8) {
   
   
-  DT <- as.data.table(df)
+  .spi_in <- .resolve_splice_input(df, what = "paired_hits")
+  DT <- as.data.table(.spi_in$dt)
   
   # ----- Left panel: binary any-ppi -----
   left_dt <- DT[, .(has_ppi = ifelse(n_ppi > 0, "yes", "no"))][, .N, by = has_ppi]
@@ -337,16 +327,33 @@ plot_ppi_summary <- function(df,
     DT[, .(type = "CONTROL", value = as.integer(n_control_ppi))]
   )[value > 0]  # drop zeros as requested
   
-  p_right <- ggplot(long_dt, aes(x = value, fill = type)) +
-    geom_histogram(bins = bins, color = "white", linewidth = 0.2, show.legend = FALSE) +
-    facet_wrap(~type, ncol = 1, scales = "free_y") +
-    scale_fill_manual(values = palette[c("CASE","CONTROL")]) +
-    labs(x = "PPI partners (non-zero)", y = "Count") +
-    theme_bw(base_size = 11) +
-    theme(strip.background = element_blank(),
-          strip.text = element_text(face = "bold"),
-          panel.grid.minor = element_blank(),
-          plot.margin = margin(5.5, 5.5, 5.5, 10))
+  if (!nrow(long_dt)) {
+    long_dt <- data.table::data.table(
+      type = factor(c("CASE", "CONTROL"), levels = c("CASE", "CONTROL")),
+      value = c(0L, 0L)
+    )
+    p_right <- ggplot(long_dt, aes(x = value, fill = type)) +
+      geom_blank() +
+      facet_wrap(~type, ncol = 1, scales = "free_y") +
+      scale_fill_manual(values = palette[c("CASE", "CONTROL")]) +
+      labs(x = "PPI partners (non-zero)", y = "Count") +
+      theme_bw(base_size = 11) +
+      theme(strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            panel.grid.minor = element_blank(),
+            plot.margin = margin(5.5, 5.5, 5.5, 10))
+  } else {
+    p_right <- ggplot(long_dt, aes(x = value, fill = type)) +
+      geom_histogram(bins = bins, color = "white", linewidth = 0.2, show.legend = FALSE) +
+      facet_wrap(~type, ncol = 1, scales = "free_y") +
+      scale_fill_manual(values = palette[c("CASE","CONTROL")]) +
+      labs(x = "PPI partners (non-zero)", y = "Count") +
+      theme_bw(base_size = 11) +
+      theme(strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            panel.grid.minor = element_blank(),
+            plot.margin = margin(5.5, 5.5, 5.5, 10))
+  }
   
   # ----- Assemble -----
   plt <- p_left + p_right + plot_layout(widths = c(1, 2))

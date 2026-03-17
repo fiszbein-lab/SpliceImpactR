@@ -102,26 +102,17 @@
 #' @importFrom methods is
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 #' annotation_df <- get_annotation(load = 'test')
-#' interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -134,6 +125,7 @@
 #'                      protein_features = protein_feature_total)
 #'
 #' enriched_domains <- enrich_domains_hypergeo(hits_domain, bg, db_filter = 'interpro')
+#' print(enriched_domains)
 #'
 #' @export
 enrich_domains_hypergeo <- function(
@@ -147,7 +139,8 @@ enrich_domains_hypergeo <- function(
     min_fg_count  = 2,                     # minimum foreground hits to test a domain
     delim         = "[,;|[:space:]]+"
 ) {
-  FG <- as.data.table(hits)
+  .spi_in <- .resolve_splice_input(hits, what = "paired_hits")
+  FG <- as.data.table(.spi_in$dt)
   BG <- as.data.table(background)
 
   # Optional event filtering
@@ -251,26 +244,17 @@ enrich_domains_hypergeo <- function(
 #' @return Combined `data.table` with an added `event_type` column.
 #' @seealso [enrich_by_db()]
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 #' annotation_df <- get_annotation(load = 'test')
-#' interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -283,6 +267,7 @@ enrich_domains_hypergeo <- function(
 #'                      protein_features = protein_feature_total)
 #'
 #' enriched_domains <- enrich_by_event(hits_domain, bg, events = 'AFE', db_filter = 'interpro')
+#' print(enriched_domains)
 #'
 #'
 #' @export
@@ -307,26 +292,17 @@ enrich_by_event <- function(hits, background, events, ...) {
 #' @seealso [enrich_by_event()]
 #' @examples
 #'
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 #' annotation_df <- get_annotation(load = 'test')
-#' interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -339,6 +315,7 @@ enrich_by_event <- function(hits, background, events, ...) {
 #'                      protein_features = protein_feature_total)
 #'
 #' enriched_domains <- enrich_by_db(hits_domain, bg, dbs = 'interpro')
+#' print(enriched_domains)
 #'
 #'
 #' @export
@@ -379,26 +356,17 @@ enrich_by_db <- function(hits, background, dbs, ...) {
 #'   enrichment significance.
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 #' annotation_df <- get_annotation(load = 'test')
-#' interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -420,7 +388,15 @@ enrich_by_db <- function(hits, background, dbs, ...) {
 #' @export
 plot_enriched_domains_counts <- function(enriched_domains,
                                          top_n      = 25) {
-  DT <- as.data.table(enriched_domains)
+  if (methods::is(enriched_domains, "SpliceImpactResult")) {
+    if (!is.null(enriched_domains@metadata$enriched_domains)) {
+      DT <- as.data.table(enriched_domains@metadata$enriched_domains)
+    } else {
+      stop("plot_enriched_domains_counts: S4 input requires `obj@metadata$enriched_domains` (output from enrich_domains_hypergeo/enrich_by_event/enrich_by_db).")
+    }
+  } else {
+    DT <- as.data.table(enriched_domains)
+  }
 
   # count event_ids from the pipe-separated 'events' column
   DT[, n_events := vapply(strsplit(as.character(events), "\\|"),

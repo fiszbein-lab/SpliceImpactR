@@ -673,13 +673,17 @@ compare_frames <- function(hits,
 #' 3. `"Rescue"` - frame restored downstream.
 #' 4. Otherwise, inherited from `pc_class`.
 #'
-#' @param complete_hits `data.frame` or `data.table` containing complete event
-#'   information for inclusion/exclusion transcript pairs, typically from
-#'   [get_pairs()] or similar.
+#' @param complete_hits `data.frame`, `data.table`, or `SpliceImpactResult`
+#'   containing complete event information for inclusion/exclusion transcript
+#'   pairs, typically from [get_pairs()] or similar.
 #' @param ann Annotation object (output of [get_annotation()]) used for both
 #'   sequence alignment and coding index construction.
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
 #'
-#' @return A `data.table` containing all columns from `complete_hits`, plus:
+#' @return A `data.table` (or updated `SpliceImpactResult` when
+#' `return_class` resolves to S4) containing all columns from
+#' `complete_hits`, plus:
 #' \describe{
 #'   \item{frame_call}{Result from [compare_frames()].}
 #'   \item{rescue}{Rescue classification.}
@@ -690,27 +694,23 @@ compare_frames <- function(hits,
 #' @seealso [compare_frames()], [compare_sequences_alignment()]
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annots <- get_annotation(load = "test")
+#' annots <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annots$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annots$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annots$annotations)
+#' print(seq_compare)
 #' @export
-compare_sequence_frame <- function(complete_hits, ann) {
-  hits_compare_sequence <- compare_sequences_alignment(hits = complete_hits, annotations = ann, include_sequences = TRUE, verbose = TRUE)
+compare_sequence_frame <- function(complete_hits, ann, return_class = c("auto", "data.table", "S4")) {
+  return_class <- match.arg(return_class)
+  .spi_in <- .resolve_splice_input(complete_hits, what = "paired_hits")
+  .spi_obj <- .spi_in$obj
+  hits_in <- data.table::as.data.table(.spi_in$dt)
+  hits_compare_sequence <- compare_sequences_alignment(hits = hits_in, annotations = ann, include_sequences = TRUE, verbose = TRUE)
   hits_compare_frame <- compare_frames(hits = hits_compare_sequence, annotations = ann,allow_ale_fs = FALSE)
 
   # summarize classifications for plotting
@@ -719,5 +719,5 @@ compare_sequence_frame <- function(complete_hits, ann) {
   hits_compare_frame[rescue != 'noRescue' & !is.na(rescue), summary_classification := 'Rescue']
   hits_compare_frame[protein_seq_control == protein_seq_case & !is.na(protein_seq_case), summary_classification := "Match"]
 
-  return(hits_compare_frame)
+  return(.return_splice_output(hits_compare_frame, obj = .spi_obj, what = "paired_hits", return_class = return_class))
 }

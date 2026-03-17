@@ -17,10 +17,10 @@ test_that("sequence comparison and length/identity visualizations run on extdata
 
   sf <- data.frame(
     path = c(
-      check_extdata_dir('rawData/control_S5/'),
-      check_extdata_dir('rawData/control_S6/'),
-      check_extdata_dir('rawData/case_S1/'),
-      check_extdata_dir('rawData/case_S2/')
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S5/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S6/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S1/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S2/")
     ),
     sample_name  = c("S5","S6","S1","S2"),
     condition    = c("control","control","case","case"),
@@ -42,7 +42,7 @@ test_that("sequence comparison and length/identity visualizations run on extdata
   seq_compare <- compare_sequence_frame(pairs, ann$annotations)
 
   expect_s3_class(seq_compare, "data.table")
-  expect_true(all(c("frame_call","summary_classification","prot_len_inc","prot_len_exc") %in% colnames(seq_compare)))
+  expect_true(all(c("frame_call","summary_classification","prot_len_case","prot_len_control") %in% colnames(seq_compare)))
   expect_true(nrow(seq_compare) == nrow(pairs))
 
   # --- Alignment summary plot ---

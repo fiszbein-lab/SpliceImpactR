@@ -7,6 +7,9 @@
 as_splice_impact_result(
   data = NULL,
   res = NULL,
+  res_di = NULL,
+  matched = NULL,
+  sample_frame = NULL,
   hits_final = NULL,
   metadata = list()
 )
@@ -15,6 +18,12 @@ as_splice_impact_result(
 \item{data}{Optional sample-level input table.}
 
 \item{res}{Optional differential inclusion result table.}
+
+\item{res_di}{Optional threshold-filtered differential inclusion table.}
+
+\item{matched}{Optional annotation-matched DI table.}
+
+\item{sample_frame}{Optional sample manifest table.}
 
 \item{hits_final}{Optional paired/final hit table.}
 

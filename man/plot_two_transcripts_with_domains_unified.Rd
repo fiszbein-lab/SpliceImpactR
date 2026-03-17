@@ -157,7 +157,7 @@ p_prot <- plot_two_transcripts_with_domains_unified(
   combine_domains = TRUE,
   view = "transcript"
 )
-#' 
+
 # We are also able to just probe 2 random transcripts from annotations
 p_prot <- plot_two_transcripts_with_domains_unified(
   transcripts = c("ENST00000337907","ENST00000476556"),

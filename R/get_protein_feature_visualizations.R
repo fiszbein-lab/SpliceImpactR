@@ -12,7 +12,7 @@
 #'
 #' @keywords internal
 #' @noRd
-.parse_span <- function(s, numeric = FALSE) {
+.viz_parse_span <- function(s, numeric = FALSE) {
   if (is.null(s) || is.na(s) || !nzchar(s)) return(NULL)
   xy <- strsplit(s, "-", fixed = TRUE)[[1]]
   if (length(xy) != 2) return(NULL)
@@ -422,8 +422,8 @@
   spans <- data.table::rbindlist(list(
     {
       tx <- r$transcript_id_case
-      a <- .parse_span(r$inc_case)
-      b <- .parse_span(r$exc_case)
+      a <- .viz_parse_span(r$inc_case)
+      b <- .viz_parse_span(r$exc_case)
       data.table::rbindlist(list(
         if (!is.null(a)) data.table::data.table(transcript=tx, xmin=a[1], xmax=a[2], fill=col_blue),
         if (!is.null(b)) data.table::data.table(transcript=tx, xmin=b[1], xmax=b[2], fill=col_red)
@@ -431,8 +431,8 @@
     },
     {
       tx <- r$transcript_id_control
-      a <- .parse_span(r$inc_control)
-      b <- .parse_span(r$exc_control)
+      a <- .viz_parse_span(r$inc_control)
+      b <- .viz_parse_span(r$exc_control)
       data.table::rbindlist(list(
         if (!is.null(a)) data.table::data.table(transcript=tx, xmin=a[1], xmax=a[2], fill=col_blue),
         if (!is.null(b)) data.table::data.table(transcript=tx, xmin=b[1], xmax=b[2], fill=col_red)
@@ -1013,7 +1013,7 @@ p
 #'   combine_domains = TRUE,
 #'   view = "transcript"
 #' )
-#' #' 
+#'
 #' # We are also able to just probe 2 random transcripts from annotations
 #' p_prot <- plot_two_transcripts_with_domains_unified(
 #'   transcripts = c("ENST00000337907","ENST00000476556"),
@@ -1039,5 +1039,9 @@ plot_two_transcripts_with_domains_unified <- function(...,
                                                       view = c("transcript", "protein")) {
   view <- match.arg(view)
   mode <- if (view == "transcript") "genomic" else "compact"
-  plot_two_transcripts_with_features(..., mode = mode)
+  args <- list(...)
+  if ("highlight_hits" %in% names(args) && methods::is(args$highlight_hits, "SpliceImpactResult")) {
+    args$highlight_hits <- as_dt_from_s4(args$highlight_hits, slot = "paired_hits")
+  }
+  do.call(plot_two_transcripts_with_features, c(args, list(mode = mode)))
 }

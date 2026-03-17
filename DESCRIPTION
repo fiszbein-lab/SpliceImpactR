@@ -63,3 +63,4 @@ Suggests:
     org.Mm.eg.db
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+BugReports: https://github.com/fiszbein-lab/SpliceImpactR/issues

@@ -87,4 +87,5 @@ df <- data.frame(
   stringsAsFactors = FALSE
 )
 res2 <- get_rmats_post_di(df, event_type = "A3SS")
+print(res2)
 }

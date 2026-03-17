@@ -18,17 +18,9 @@ A standardized `data.table` of HIT index PSI values with inclusion/exclusion and
 Load HIT index PSI files for one or more samples/conditions.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame, keep_annotated_first_last = TRUE)
+print(hit_index)
 
 }

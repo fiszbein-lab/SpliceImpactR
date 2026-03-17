@@ -4,7 +4,12 @@
 \alias{get_ppi_switches}
 \title{Annotate hits_domain with PPI changes for inclusion vs exclusion forms}
 \usage{
-get_ppi_switches(hits_domain, ppi, protein_feature_total)
+get_ppi_switches(
+  hits_domain,
+  ppi,
+  protein_feature_total,
+  return_class = c("auto", "data.table", "S4")
+)
 }
 \arguments{
 \item{hits_domain}{data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list}
@@ -12,11 +17,13 @@ get_ppi_switches(hits_domain, ppi, protein_feature_total)
 \item{ppi}{wide interaction table from saved data (get_ppi)}
 
 \item{protein_feature_total}{table with database/clean_name/feature_id for interpro mapping}
+
+\item{return_class}{Character. Output mode: `"data.table"`, `"S4"`, or
+`"auto"` (default). In `auto`, S4 input returns updated S4 output.}
 }
 \value{
-hits_domain with added columns
-
-A `data.table` identical to `hits_domain` with added columns:
+A `data.table` identical to `hits_domain` with added columns
+(or updated `SpliceImpactResult` when `return_class` resolves to S4):
 \describe{
   \item{`case_ppi`, `control_ppi`}{Lists of partner transcripts unique to
     inclusion or exclusion isoforms.}
@@ -29,27 +36,18 @@ Adds list-cols case_ppi/control_ppi (partner genes) plus counts.
 Also returns (optionally useful) per-event token sets in PFAM + ELM forms.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
-annotation_df <- get_annotation(load = "test")
+annotation_df <- load_example_data("annotation_df")$annotation_df
 matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 x_seq <- attach_sequences(matched, annotation_df$sequences)
 pairs <- get_pairs(x_seq, source="multi")
 seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
 
 annotation_df <- get_annotation(load = 'test')
-interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 
 exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -62,6 +60,7 @@ bg <- get_background(source = "hit_index",
                      protein_features = protein_feature_total)
 ppi <- get_ppi_interactions()             
 hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
+print(hits_ppi)
 
 hits_domain[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
 

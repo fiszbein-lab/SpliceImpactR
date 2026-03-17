@@ -91,27 +91,28 @@
 #'
 #' @param x A `data.frame` or `data.table` with columns:
 #'   `site_id`, `condition`, `psi_adj`, `psi_raw`, and `total`.
-#' @param cores Integer. Number of parallel workers (default 8).
 #' @param chunk_size Integer. Approximate number of sites per chunk
 #'   to send to each worker (default 2000).
 #' @param progress Logical. Show progress bar (default `TRUE`).
 #' @param verbose Logical. Print progress messages (default `TRUE`).
 #' @param cooks_cutoff Numeric or character. Cook's distance cutoff,
 #'   passed to [cutoff_num()].
+#' @param BPPARAM A [BiocParallel::BiocParallelParam-class] object controlling
+#'   backend and worker settings. Default is [BiocParallel::SerialParam()].
 #'
 #' @return A `data.table` with one row per site and columns:
 #'   `site_id`, `p.value`, `cooks_max`, `n`, `n_used`,
 #'   `mean_psi_ctrl`, `mean_psi_case`, and `delta_psi`.
 #'
-#' @importFrom BiocParallel MulticoreParam bplapply
+#' @importFrom BiocParallel bplapply
 #' @importFrom data.table as.data.table rbindlist setcolorder
 #' @keywords internal
 fit_sites_parallel <- function(x,
-                               cores       = 8L,
                                chunk_size  = 2000L,
                                progress    = TRUE,
                                verbose     = TRUE,
-                               cooks_cutoff) {
+                               cooks_cutoff,
+                               BPPARAM = BiocParallel::SerialParam()) {
 
   if (verbose) cat("[PROCESSING] Fitting quasi-binomial GLMs per site...\n")
 
@@ -148,7 +149,11 @@ fit_sites_parallel <- function(x,
     data.table::rbindlist(out, use.names = TRUE, fill = TRUE)
   }
 
-  param <- BiocParallel::MulticoreParam(workers = cores, progressbar = progress)
+  if (!methods::is(BPPARAM, "BiocParallelParam")) {
+    stop("BPPARAM must be a BiocParallelParam object.")
+  }
+  param <- BPPARAM
+  try(BiocParallel::bpprogressbar(param) <- isTRUE(progress), silent = TRUE)
 
 
   # Parallel over chunks with a progress bar
@@ -193,7 +198,8 @@ cutoff_num <- function(n_rows, cooks_cutoff) {
 #' (`psi_adj ~ condition`) to estimate deltaPSI and significance, optionally
 #' using parallel processing.
 #'
-#' @param DT A `data.frame` or `data.table` containing at least the columns
+#' @param DT A `data.frame`, `data.table`, or `SpliceImpactResult` containing
+#'   at least the columns
 #'   `event_type`, `gene_id`, `chr`, `inc`, `exclusion_reads`,
 #'   `inclusion_reads`, `condition`, and `sample`.
 #' @param min_total_reads Integer. Minimum total reads per site/sample
@@ -224,9 +230,14 @@ cutoff_num <- function(n_rows, cooks_cutoff) {
 #'   [fit_sites_parallel()] (default `TRUE`).
 #' @param chunk_size_glm Integer. Number of sites per parallel chunk
 #'   (default `1000`).
-#' @param cores_glm Integer. Number of parallel workers (default `1`).
+#' @param BPPARAM A [BiocParallel::BiocParallelParam-class] object used when
+#'   `parallel_glm = TRUE`. Default is [BiocParallel::SerialParam()].
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns an updated S4 object;
+#'   otherwise a `data.table` is returned.
 #'
-#' @return A `data.table` with one row per site containing:
+#' @return If `return_class` resolves to `"data.table"`, a `data.table` with
+#' one row per site containing:
 #'   \itemize{
 #'     \item Metadata columns (`site_id`, `event_type`, `event_id`, `gene_id`, ...)
 #'     \item Sample counts (`n_samples`, `n_control`, `n_case`)
@@ -241,29 +252,23 @@ cutoff_num <- function(n_rows, cooks_cutoff) {
 #' optionally fills AFE/ALE sites with zero counts where necessary,
 #' and then applies site-level GLMs. Parallelization uses
 #' [BiocParallel] back-ends for reproducibility across platforms.
+#' To run in parallel, supply `BPPARAM` (for example
+#' [BiocParallel::MulticoreParam()] on Linux/macOS or
+#' [BiocParallel::SnowParam()] on Windows).
 #'
 #' @seealso [fit_sites_parallel()], [cutoff_num()], [stats::glm()],
 #'   [BiocParallel::bplapply()]
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
 #' head(res)
 #'
 #' @importFrom data.table as.data.table rbindlist setcolorder uniqueN %chin%
 #' @importFrom stats glm anova cooks.distance p.adjust quasibinomial
-#' @importFrom BiocParallel MulticoreParam bplapply
+#' @importFrom BiocParallel bplapply
 #' @export
 get_differential_inclusion <- function(
     DT,
@@ -275,9 +280,20 @@ get_differential_inclusion <- function(
     verbose         = TRUE,
     parallel_glm = TRUE,
     chunk_size_glm = 1000,
-    cores_glm = 1
+    BPPARAM = BiocParallel::SerialParam(),
+    return_class = c("auto", "data.table", "S4")
 ){
-  x <- data.table::as.data.table(DT)
+  .spi_in <- .resolve_splice_input(DT, what = "raw_events")
+  .spi_obj <- .spi_in$obj
+  x <- data.table::as.data.table(.spi_in$dt)
+  return_class <- match.arg(return_class)
+  .msg_wrap <- function(..., width = 88L) {
+    if (!isTRUE(verbose)) return(invisible(NULL))
+    txt <- paste0(...)
+    lines <- strwrap(txt, width = width, simplify = FALSE)[[1]]
+    cat(paste(lines, collapse = "\n"), "\n", sep = "")
+    invisible(NULL)
+  }
   # --- guards ---
   need <- c("event_type","gene_id","chr","inc","inclusion_reads",
             "exclusion_reads","condition","sample")
@@ -299,18 +315,23 @@ get_differential_inclusion <- function(
   # genes = unique(gene_id)
   # events = unique(site_id)
   # event instances = dim(x)[1]
-  if (verbose) print(paste0("[INFO] Input contains ", length(unique(x$gene_id)), " genes, ",
-                            round(length(unique(x$event_id))), " events, and ",
-                            round(dim(x)[1]/2), " event instances"))
+  .msg_wrap(
+    "[INFO] Input contains ", length(unique(x$gene_id)), " genes, ",
+    round(length(unique(x$event_id))), " events, and ",
+    round(dim(x)[1] / 2), " event instances."
+  )
 
   # total / psi
 
   x[, total := inclusion_reads + exclusion_reads]
-  if (verbose) print(paste0("[PROCESSING/INFO] Filtering out low-coverage, removed ", sum(x$total < min_total_reads, na.rm = TRUE), " event instances, ",
-                            sum(x$total >= min_total_reads, na.rm = TRUE), " event instances remain"))
+  .msg_wrap(
+    "[PROCESSING/INFO] Filtering out low-coverage rows removed ",
+    sum(x$total < min_total_reads, na.rm = TRUE), " event instances; ",
+    sum(x$total >= min_total_reads, na.rm = TRUE), " remain."
+  )
   x <- x[total >= min_total_reads]
 
-  if (!nrow(x)) return(x[0])
+  if (!nrow(x)) return(.return_splice_output(x[0], obj = .spi_obj, what = "di_events", return_class = return_class))
 
   x[, psi_raw := psi]
   x[, psi_adj := psi_raw]
@@ -381,18 +402,24 @@ get_differential_inclusion <- function(
     } else {
       fill_strategy
     }
-    if (verbose) print(paste0("[PROCESSING/INFO] Completing AFE/ALE with zeros per sample (total strategy: ", strategy_label,
-                              "), filled in ", postAFE-preAFE, " AFE instances and ",
-                              postALE-preALE, " ALE instances across samples, to a total of ", postAFE, " AFE instances and ", postALE, " ALE instances"))
+    .msg_wrap(
+      "[PROCESSING/INFO] Completing AFE/ALE with zeros per sample (total ",
+      "strategy: ", strategy_label, ") filled ", postAFE - preAFE,
+      " AFE rows and ", postALE - preALE, " ALE rows (totals: AFE=", postAFE,
+      ", ALE=", postALE, ")."
+    )
 
     # ---------- drop genes all-zero within (sample,event_type) ----------
     all0 <- x[, .(all_zero = all((psi_adj %in% 0) | is.na(psi_adj))),
               by = .(gene_id, sample, event_type)]
 
     x <- x[all0[all_zero == FALSE], on=.(gene_id, sample, event_type)]
-    if (verbose) print(paste0("[PROCESSING/INFO] Filtering genes that have no nonzero values in a given sample, removed ",
-                              length(unique(all0[all_zero == TRUE, gene_id])), " genes from specific samples, ",
-                              length(unique(x$gene_id)), " genes remain in total"))
+    .msg_wrap(
+      "[PROCESSING/INFO] Filtering genes with no nonzero values per ",
+      "sample/event_type removed ",
+      length(unique(all0[all_zero == TRUE, gene_id])), " genes from specific ",
+      "sample groups; ", length(unique(x$gene_id)), " genes remain overall."
+    )
     x <- x[, `:=` (
       psi = psi_adj,
       all_zero = NULL,
@@ -415,9 +442,12 @@ get_differential_inclusion <- function(
     unique(event_id)
   ]
   x <- x[!(event_id %chin% bad_pairs)]
-  if (verbose) print(paste0("[PROCESSING/INFO] Filtering events by presence per condition, removed ", length(unique(bad_pairs)), " events, ",
-                            length(unique(x$event_id)), " events remain"))
-  if (!nrow(x)) return(x[0])
+  .msg_wrap(
+    "[PROCESSING/INFO] Filtering by minimum condition presence removed ",
+    length(unique(bad_pairs)), " events; ", length(unique(x$event_id)),
+    " events remain."
+  )
+  if (!nrow(x)) return(.return_splice_output(x[0], obj = .spi_obj, what = "di_events", return_class = return_class))
 
   # ---------- drop non-changing events ----------
   site_multi <- x[, .(multi = uniqueN(psi_adj, na.rm = TRUE) > 1L), by = site_id]
@@ -426,19 +456,32 @@ get_differential_inclusion <- function(
     , .(keep_pair = any(multi)), by = event_id]
   bad_pairs <- pair_rule[keep_pair == FALSE, event_id]
   x <- x[!(event_id %chin% bad_pairs)]
-  print(paste0("[PROCESSING/INFO] Removed ", length(unique(bad_pairs)), " nonchanging events, ",
-               length(unique(x$event_id)), " events remain"))
+  .msg_wrap(
+    "[PROCESSING/INFO] Removed ", length(unique(bad_pairs)),
+    " non-changing events; ", length(unique(x$event_id)),
+    " events remain."
+  )
 
 
 
   # ---------- keep with at least 2 rows and both phenotypes ----------
   two_levels <- x[, uniqueN(condition) > 1, by = .(event_id)]
   x <- x[two_levels[V1 == TRUE], on = .(event_id)]
-  if (verbose) print(paste0("[PROCESSING/INFO] Filtering events not present in both conditions, removed ", length(unique(two_levels[V1 == FALSE, event_id])),
-                            " events, ", length(unique(x$event_id)), " events remain"))
+  .msg_wrap(
+    "[PROCESSING/INFO] Filtering events not represented in both conditions ",
+    "removed ", length(unique(two_levels[V1 == FALSE, event_id])),
+    " events; ", length(unique(x$event_id)), " events remain."
+  )
 
   if (parallel_glm == TRUE) {
-    RES <- fit_sites_parallel(x, cores = cores_glm, chunk_size = chunk_size_glm, progress = verbose, verbose = verbose, cooks_cutoff = cooks_cutoff)
+    RES <- fit_sites_parallel(
+      x,
+      chunk_size = chunk_size_glm,
+      progress = verbose,
+      verbose = verbose,
+      cooks_cutoff = cooks_cutoff,
+      BPPARAM = BPPARAM
+    )
   } else {
     if (verbose) cat("[PROCESSING] Fitting quasi-binomial GLMs per site...\n")
     RES <- x[, {
@@ -525,7 +568,7 @@ get_differential_inclusion <- function(
                                  "mean_psi_ctrl","mean_psi_case","delta_psi",
                                  "p.value","padj","cooks_max", "form"))
   if (verbose) cat("[INFO] Done.\n")
-  out[]
+  return(.return_splice_output(out[], obj = .spi_obj, what = "di_events", return_class = return_class))
 }
 
 #' Filter event pairs by significance and deltaPSI thresholds
@@ -537,29 +580,32 @@ get_differential_inclusion <- function(
 #'   `padj`, and `delta_psi` columns.
 #' @param padj_thr Numeric. Adjusted p-value threshold (default `0.05`).
 #' @param dpsi_thr Numeric. Absolute deltaPSI threshold (default `0.1`).
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
 #'
-#' @return A `data.table` containing all rows from event pairs in which
-#'   at least one row meets the significance criteria.
+#' @return A `data.table` (or updated `SpliceImpactResult` when
+#' `return_class` resolves to S4) containing all rows from event pairs in which
+#' at least one row meets the significance criteria.
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
 #' sig_di <- keep_sig_pairs(res)
+#' print(sig_di)
 #' @importFrom data.table as.data.table %chin%
 #' @export
-keep_sig_pairs <- function(DT, padj_thr = 0.05, dpsi_thr = 0.1) {
-  x <- data.table::as.data.table(DT)
+keep_sig_pairs <- function(
+    DT,
+    padj_thr = 0.05,
+    dpsi_thr = 0.1,
+    return_class = c("auto", "data.table", "S4")
+) {
+  return_class <- match.arg(return_class)
+  .spi_in <- .resolve_splice_input(DT, what = "di_events")
+  .spi_obj <- .spi_in$obj
+  x <- data.table::as.data.table(.spi_in$dt)
 
   # which rows pass?
   x[, pass := is.finite(padj) & is.finite(delta_psi) &
@@ -568,7 +614,8 @@ keep_sig_pairs <- function(DT, padj_thr = 0.05, dpsi_thr = 0.1) {
   # keep all rows from pairs where any row passed
   keep_pairs <- x[, any(pass), by = event_id][V1 == TRUE, event_id]
   out <- x[event_id %chin% keep_pairs][, pass := NULL][]
-  out[!is.na(delta_psi) & !is.na(p.value)]
+  out <- out[!is.na(delta_psi) & !is.na(p.value)]
+  .return_splice_output(out, obj = .spi_obj, what = "res_di", return_class = return_class)
 }
 
 #' Volcano plot for differential inclusion results
@@ -587,17 +634,8 @@ keep_sig_pairs <- function(DT, padj_thr = 0.05, dpsi_thr = 0.1) {
 #' shown in light grey. Dashed and dotted lines indicate deltaPSI and FDR thresholds.
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
 #' plot_di_volcano_dt(res)
@@ -609,7 +647,13 @@ keep_sig_pairs <- function(DT, padj_thr = 0.05, dpsi_thr = 0.1) {
 plot_di_volcano_dt <- function(di,
                                padj_thr = 0.05,
                                dpsi_thr = 0.10) {
-  DT <- data.table::as.data.table(copy(di))
+  if (methods::is(di, "SpliceImpactResult")) {
+    DT <- as_dt_from_s4(di, "res_di")
+    if (!nrow(DT)) DT <- as_dt_from_s4(di, "di_events")
+  } else {
+    DT <- data.table::as.data.table(di)
+  }
+  DT <- data.table::copy(data.table::as.data.table(DT))
 
   # significance flag (data.table style)
   DT[, signif := is.finite(padj) & padj <= padj_thr &
@@ -641,5 +685,3 @@ plot_di_volcano_dt <- function(di,
 
   p
 }
-
-

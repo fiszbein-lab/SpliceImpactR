@@ -42,24 +42,16 @@ If \code{plot = TRUE}, a summary donut chart is printed showing
 the proportion of proximal vs distal usage per event type.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
-annotation_df <- get_annotation(load = "test")
+annotation_df <- load_example_data("annotation_df")$annotation_df
 matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 x_seq <- attach_sequences(matched, annotation_df$sequences)
 pairs <- get_pairs(x_seq, source="multi")
 proximal_output <- get_proximal_shift_from_hits(pairs)
+print(proximal_output)
 }
 \seealso{
 [plot_prox_dist()]

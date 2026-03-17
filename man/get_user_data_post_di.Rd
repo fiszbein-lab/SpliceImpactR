@@ -87,6 +87,8 @@ example_user_data <- data.frame(
 )
 
 # compute psi if missing, just for demo
+
 post_di_user_data <- get_user_data_post_di(example_user_data)
+print(post_di_user_data)
 
 }

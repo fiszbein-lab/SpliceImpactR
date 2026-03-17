@@ -11,5 +11,6 @@ Generation details in inst/scripts
 }
 \examples{
 ppi_int <- get_ppi_interactions()
+print(ppi_int)
 
 }

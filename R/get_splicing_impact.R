@@ -30,7 +30,10 @@
 #' @param adjust_method Passed to [get_differential_inclusion()].
 #' @param parallel_glm Passed to [get_differential_inclusion()].
 #' @param chunk_size_glm Passed to [get_differential_inclusion()].
-#' @param cores_glm Passed to [get_differential_inclusion()].
+#' @param BPPARAM Passed to [get_differential_inclusion()]. Use a
+#'   [BiocParallel::BiocParallelParam-class] object (for example
+#'   [BiocParallel::SerialParam()], [BiocParallel::SnowParam()], or
+#'   [BiocParallel::MulticoreParam()]).
 #' @param chunk_size_match Chunk size for [get_matched_events_chunked()].
 #' @param source_pairs Pairing mode for [get_pairs()] (`"multi"` or `"paired"`).
 #' @param show_protein_domains Passed to [get_domains()].
@@ -65,9 +68,11 @@ get_splicing_impact <- function(
     terminal_fill = "event_max",
     cooks_cutoff = "Inf",
     adjust_method = "fdr",
+    fdr_threshold = 0.05, 
+    delta_psi_threshold = 0.10,
     parallel_glm = TRUE,
     chunk_size_glm = 1000L,
-    cores_glm = 1L,
+    BPPARAM = BiocParallel::SerialParam(),
     chunk_size_match = 2000L,
     source_pairs = c("multi", "paired"),
     show_protein_domains = FALSE,
@@ -79,49 +84,83 @@ get_splicing_impact <- function(
   source_data <- match.arg(source_data)
   source_pairs <- match.arg(source_pairs)
   return_class <- match.arg(return_class)
+  si <- NULL
 
   if (identical(source_data, "rmats_hit")) source_data <- "both"
 
   if (methods::is(data, "SpliceImpactResult")) {
     si <- data
     data <- as_dt_from_s4(si, "raw_events")
-    if (is.null(res)) res <- as_dt_from_s4(si, "di_events")
+    if (is.null(res)) {
+      res <- as_dt_from_s4(si, "di_events")
+      if (!nrow(res)) res <- NULL
+    }
+    if (is.null(sample_frame)) {
+      sf0 <- as_dt_from_s4(si, "sample_frame")
+      if (nrow(sf0)) sample_frame <- sf0
+    }
   }
 
-  if (is.null(data)) {
+  have_data <- !is.null(data) && nrow(data.table::as.data.table(data)) > 0L
+  if (!have_data) {
     if (is.null(sample_frame)) {
       stop("get_splicing_impact: provide either `data` or `sample_frame`.")
+    }
+    if (!is.null(si) && !is.null(sample_frame)) {
+      si <- add_splice_part(si, sample_frame = sample_frame)
     }
 
     if (verbose) message("[STEP] Loading raw event table")
 
     if (identical(source_data, "hitindex")) {
-      data <- get_hitindex(
-        paths_df = sample_frame,
-        keep_annotated_first_last = keep_annotated_first_last
-      )
+      if (!is.null(si)) {
+        si <- get_hitindex(si, keep_annotated_first_last = keep_annotated_first_last)
+        data <- as_dt_from_s4(si, "raw_events")
+      } else {
+        data <- get_hitindex(
+          paths_df = sample_frame,
+          keep_annotated_first_last = keep_annotated_first_last
+        )
+      }
 
     } else if (identical(source_data, "rmats")) {
       rmats_event_types <- intersect(event_types, c("MXE", "SE", "A3SS", "A5SS", "RI"))
       if (!length(rmats_event_types)) {
         stop("get_splicing_impact: `source_data='rmats'` requires at least one rMATS event type in `event_types` (MXE/SE/A3SS/A5SS/RI).")
       }
-      data <- get_rmats(load_rmats(sample_frame, use = use, event_types = rmats_event_types))
+      if (!is.null(si)) {
+        si <- load_rmats(si, use = use, event_types = rmats_event_types)
+        si <- get_rmats(si)
+        data <- as_dt_from_s4(si, "raw_events")
+      } else {
+        data <- get_rmats(load_rmats(sample_frame, use = use, event_types = rmats_event_types))
+      }
 
     } else {
-      data <- get_rmats_hit(
-        sample_frame = sample_frame,
-        event_types = event_types,
-        use = use,
-        keep_annotated_first_last = keep_annotated_first_last
-      )
+      if (!is.null(si)) {
+        si <- get_rmats_hit(
+          sample_frame = si,
+          event_types = event_types,
+          use = use,
+          keep_annotated_first_last = keep_annotated_first_last
+        )
+        data <- as_dt_from_s4(si, "raw_events")
+      } else {
+        data <- get_rmats_hit(
+          sample_frame = sample_frame,
+          event_types = event_types,
+          use = use,
+          keep_annotated_first_last = keep_annotated_first_last
+        )
+      }
     }
 
   } else {
     data <- data.table::as.data.table(data)
   }
 
-  if (is.null(res)) {
+  have_res <- !is.null(res) && nrow(data.table::as.data.table(res)) > 0L
+  if (!have_res) {
     if (verbose) message("[STEP] Differential inclusion")
     res <- get_differential_inclusion(
       DT = data,
@@ -132,20 +171,21 @@ get_splicing_impact <- function(
       adjust_method = adjust_method,
       parallel_glm = parallel_glm,
       chunk_size_glm = chunk_size_glm,
-      cores_glm = cores_glm,
+      BPPARAM = BPPARAM,
       verbose = verbose
     )
   } else {
     res <- data.table::as.data.table(res)
   }
-
+    res_di <- keep_sig_pairs(res, fdr_threshold, delta_psi_threshold)
+  
   if (is.null(annotation_df) || !all(c("annotations", "sequences") %in% names(annotation_df))) {
     stop("get_splicing_impact: `annotation_df` must be provided and contain `annotations` and `sequences`.")
   }
 
   if (verbose) message("[STEP] Match -> sequence attach -> pairing")
   matched <- get_matched_events_chunked(
-    events = res,
+    events = res_di,
     annotations = annotation_df$annotations,
     chunk_size = chunk_size_match
   )
@@ -193,15 +233,37 @@ get_splicing_impact <- function(
         source_pairs = source_pairs,
         has_raw = TRUE,
         has_di = TRUE,
+        has_res_di = TRUE,
+        has_matched = TRUE,
+        has_sample_frame = !is.null(sample_frame),
         has_hits = TRUE
       )
     )
-    return(as_splice_impact_result(data = data, res = res, hits_final = hits_final, metadata = md))
+    if (!is.null(si)) {
+      si <- add_splice_part(si, data = data)
+      si <- add_splice_part(si, res = res)
+      si <- add_splice_part(si, res_di = res_di)
+      si <- add_splice_part(si, matched = matched)
+      if (!is.null(sample_frame)) si <- add_splice_part(si, sample_frame = sample_frame)
+      si <- add_splice_part(si, hits_final = hits_final)
+      si@metadata <- c(si@metadata, md)
+      return(si)
+    } else {
+      return(as_splice_impact_result(
+        data = data,
+        res = res,
+        res_di = res_di,
+        matched = matched,
+        sample_frame = sample_frame,
+        hits_final = hits_final,
+        metadata = md
+      ))
+    }
   }
 
   out <- list(
     data = data,
-    res = res,
+    res = res_di,
     hits_final = hits_final
   )
 

@@ -4,7 +4,7 @@
 \alias{attach_sequences}
 \title{Attach transcript and protein sequences to an event or annotation table}
 \usage{
-attach_sequences(x, sequences)
+attach_sequences(x, sequences, return_class = c("auto", "data.table", "S4"))
 }
 \arguments{
 \item{x}{A data.frame or data.table containing a \code{transcript_id} column.}
@@ -30,20 +30,12 @@ The join is left-sided: all rows from \code{x} are preserved.
   based on protein presence and sequence length.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
-annots <- get_annotation(load = "test")
+annots <- load_example_data("annotation_df")$annotation_df
 matched <- get_matched_events_chunked(res, annots$annotations, chunk_size = 2000)
 x_seq <- attach_sequences(matched, annots$sequences)
+print(x_seq)
 }

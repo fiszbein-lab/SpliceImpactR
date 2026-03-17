@@ -80,22 +80,13 @@ install `ReactomePA`.
 }
 \examples{
 \donttest{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
 
-annotation_df <- get_annotation(load = "test")
-interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+annotation_df <- load_example_data("annotation_df")$annotation_df
+interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 
 exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
@@ -111,5 +102,6 @@ bg <- get_background(source = "hit_index",
                      annotations = annotation_df$annotations,
                      protein_features = protein_feature_total)
 enrichment <- get_enrichment(res$gene_id, bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
+print(enrichment)
 }
 }

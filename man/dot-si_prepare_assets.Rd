@@ -14,7 +14,7 @@
 }
 \arguments{
 \item{base_dir}{Character string giving the base directory where
-downloaded or cached files should be stored.}
+cache data should be stored. If `NULL`, uses package user cache.}
 
 \item{species}{Character string, either `"human"` or `"mouse"`.}
 
@@ -22,8 +22,7 @@ downloaded or cached files should be stored.}
 number (e.g., `45` for human or `"M35"` for mouse).}
 
 \item{mode}{Character string, one of `"download"` or
-`"import_then_cache"`. Determines whether to only download the
-compressed files or to import the GTF into R and cache as RDS.}
+`"import_then_cache"`. The latter may parse/cache the GTF R object.}
 
 \item{use_rds_cache}{Logical; if `TRUE`, loads cached `.rds` GTF file
 if available.}
@@ -31,15 +30,16 @@ if available.}
 \value{
 A list containing:
   \describe{
-    \item{`paths`}{File paths for the downloaded or cached assets.}
+    \item{`paths`}{Local file paths to cached assets.}
     \item{`gtf_df`}{Imported GTF data frame if loaded or created.}
     \item{`meta`}{Metadata list with species, release, and tag.}
+    \item{`bfc`}{`BiocFileCache` instance used for retrieval.}
+    \item{`cache_dir`}{Resolved cache root directory.}
   }
 }
 \description{
-Internal function to download, import, and cache GENCODE annotation
-and sequence files (GTF, transcript FASTA, and protein FASTA) for a
-given species and release. Used internally by higher-level
-SpliceImpactR functions to ensure annotation assets are available.
+Internal function to acquire GENCODE annotation and sequence files
+(GTF, transcript FASTA, protein FASTA) using a package-specific
+`BiocFileCache`.
 }
 \keyword{internal}

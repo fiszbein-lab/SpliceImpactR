@@ -23,14 +23,14 @@ test_that("integrated splicing → match → seq → compare → domains → enr
   # --- Sample frame from extdata ----
   sample_frame <- data.frame(
     path = c(
-      check_extdata_dir('rawData/control_S5/'),
-      check_extdata_dir('rawData/control_S6/'),
-      check_extdata_dir('rawData/control_S7/'),
-      check_extdata_dir('rawData/control_S8/'),
-      check_extdata_dir('rawData/case_S1/'),
-      check_extdata_dir('rawData/case_S2/'),
-      check_extdata_dir('rawData/case_S3/'),
-      check_extdata_dir('rawData/case_S4/')
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S5/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S6/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S7/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S8/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S1/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S2/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S3/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S4/")
     ),
     sample_name  = c("S5","S6","S7","S8","S1","S2","S3","S4"),
     condition    = c("control","control","control","control",
@@ -64,7 +64,7 @@ test_that("integrated splicing → match → seq → compare → domains → enr
   seq_compare <- compare_sequence_frame(pairs, annotation_df$annotations)
   expect_s3_class(seq_compare, "data.table")
   expect_true(all(c("frame_call","summary_classification",
-                    "prot_len_inc","prot_len_exc") %in% colnames(seq_compare)))
+                    "prot_len_case","prot_len_control") %in% colnames(seq_compare)))
 
   alignment_summary <- plot_alignment_summary(seq_compare)
   expect_s3_class(alignment_summary, "ggplot")
@@ -81,7 +81,7 @@ test_that("integrated splicing → match → seq → compare → domains → enr
   # --- Domain annotation ----
   hits_domain <- get_domains(seq_compare, exon_features)
   expect_s3_class(hits_domain, "data.table")
-  expect_true(all(c("inc_only_n","exc_only_n","diff_n") %in% colnames(hits_domain)))
+  expect_true(all(c("case_only_n","control_only_n","diff_n") %in% colnames(hits_domain)))
 
   # --- Hypergeometric enrichment ----
   enriched_domains <- enrich_domains_hypergeo(
@@ -96,12 +96,12 @@ test_that("integrated splicing → match → seq → compare → domains → enr
   ppi <- get_ppi_interactions()             
   hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
   expect_s3_class(ppi, "data.table")
-  expect_true("IA" %in% names(ppi))
-  expect_true("IB" %in% names(ppi))
+  expect_true("geneA" %in% names(ppi))
+  expect_true("geneB" %in% names(ppi))
 
-  hits_final <- get_ppi_switches(hits_domain, ppi)
+  hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
   expect_s3_class(hits_final, "data.table")
-  expect_true("n_inc_ppi" %in% names(hits_final))
+  expect_true("n_case_ppi" %in% names(hits_final))
   expect_true("n_ppi" %in% names(hits_final))
   ppi_plot <- plot_ppi_summary(hits_final)
   expect_s3_class(ppi_plot, "ggplot")

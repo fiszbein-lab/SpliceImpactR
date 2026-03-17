@@ -7,8 +7,9 @@
 get_linear_motifs(
   gtf_df,
   protein_seqs,
-  species = c("hsapiens_gene_ensembl", "mmusculus_gene_ensembl")[1],
-  release = c(109, 115)[1]
+  species = c("hsapiens_gene_ensembl", "mmusculus_gene_ensembl"),
+  release = 109,
+  ensembl_mirror = NULL
 )
 }
 \arguments{
@@ -24,7 +25,8 @@ dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 
 \item{release}{release version from ensemble associated with the gencode
 version provided in the get_annotation (This can be found in gencode, for
-example in humans: \url{"https://www.gencodegenes.org/human/releases.html"})}
+example in humans: \url{"https://www.gencodegenes.org/human/releases.html"})
+ ensembl_mirror Optional Ensembl mirror passed to the BioMart connector.}
 }
 \value{
 A \code{data.table} containing protein feature annotations

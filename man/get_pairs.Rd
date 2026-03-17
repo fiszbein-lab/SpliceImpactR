@@ -4,10 +4,15 @@
 \alias{get_pairs}
 \title{Pair inclusion and exclusion forms of splicing events}
 \usage{
-get_pairs(x, source = c("paired", "multi"))
+get_pairs(
+  x,
+  source = c("paired", "multi"),
+  return_class = c("auto", "data.table", "S4")
+)
 }
 \arguments{
-\item{x}{A data.frame or data.table containing splicing event information.}
+\item{x}{A data.frame, data.table, or `SpliceImpactResult` containing
+splicing event information.}
 
 \item{source}{Character string specifying input structure:
 \describe{
@@ -16,10 +21,14 @@ get_pairs(x, source = c("paired", "multi"))
   \item{\code{"multi"}}{(HITindex-like) pairs all positive and negative
     \code{delta_psi} values within each event.}
 }}
+
+\item{return_class}{Character. Output mode: `"data.table"`, `"S4"`, or
+`"auto"` (default). In `auto`, S4 input returns updated S4 output.}
 }
 \value{
-A \link[data.table]{data.table} where each row represents an
-  inclusion-exclusion pair of the same event.
+A \link[data.table]{data.table} (or updated `SpliceImpactResult`
+when `return_class` resolves to S4) where each row represents an
+inclusion-exclusion pair of the same event.
 }
 \description{
 Builds paired tables of inclusion/exclusion forms for splicing events from
@@ -33,21 +42,13 @@ row are retained. In \code{source="multi"} mode, all positive deltaPSI rows are
 joined with all negative deltaPSI rows (cartesian join) within each event.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
-annots <- get_annotation(load = "test")
+annots <- load_example_data("annotation_df")$annotation_df
 matched <- get_matched_events_chunked(res, annots$annotations, chunk_size = 2000)
 x_seq <- attach_sequences(matched, annots$sequences)
 pairs <- get_pairs(x_seq, source="multi")
+print(pairs)
 }

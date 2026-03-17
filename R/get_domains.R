@@ -164,17 +164,20 @@ collapse_domains <- function(v) {
 #' If `show_protein_domains = TRUE`, additional columns report full domain
 #' sets across the entire inclusion/exclusion proteins.
 #'
-#' @param hits `data.frame` or `data.table` containing transcript pairs with
-#'   at least `transcript_id_case`, `transcript_id_control`, `exons_case`,
-#'   `exons_control`, and `event_type` (or `event_type`).
+#' @param hits `data.frame`, `data.table`, or `SpliceImpactResult` containing
+#'   transcript pairs with at least `transcript_id_case`,
+#'   `transcript_id_control`, `exons_case`, `exons_control`, and `event_type`.
 #' @param exon_features `data.frame` of exon-domain annotations with columns
 #'   `ensembl_transcript_id`, `ensembl_peptide_id`, `exon_id`, `database`,
 #'   `feature_id`, `name`, `overlap_aa_start`, `overlap_aa_end`.
 #' @param show_protein_domains Logical; if `TRUE`, include full protein-level
 #'   domain sets (`domains_protein_case` / `domains_protein_control`).
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
 #'
 #' @return
-#' The input `hits` table with added columns:
+#' The input `hits` table with added columns (or updated
+#' `SpliceImpactResult` when `return_class` resolves to S4):
 #' \itemize{
 #'   \item `domains_exons_case`, `domains_exons_control` domains found on event exons
 #'   \item `case_only_domains`, `control_only_domains` domains unique to each isoform
@@ -184,37 +187,32 @@ collapse_domains <- function(v) {
 #' }
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annotation_df$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annotation_df$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
 #' seq_compare <-compare_sequence_frame(pairs, annotation_df$annotations)
-#' interpro_features <- get_protein_features(c("interpro"), annotations$annotations, timeout = 600, test = TRUE)
+#' interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
 #'
 #' hits_domain <- get_domains(seq_compare, exon_features)
+#' print(hits_domain)
 #'
 #' @export
-get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
+get_domains <- function(hits, exon_features, show_protein_domains = FALSE, return_class = c("auto", "data.table", "S4")) {
+  return_class <- match.arg(return_class)
+  .spi_in <- .resolve_splice_input(hits, what = "paired_hits")
+  .spi_obj <- .spi_in$obj
   LU <- build_domain_lookup(exon_features)
   Dexon <- LU$Dexon; Dtx <- LU$Dtx
 
-  H <- as.data.table(hits)
+  H <- as.data.table(.spi_in$dt)
 
   res <- H[, {
 
@@ -290,7 +288,7 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE) {
     )
   }, by = .I]
 
-  cbind(H, res[])
+  out <- cbind(H, res[])
+  if ("I" %in% names(out)) out[, I := NULL]
+  .return_splice_output(out, obj = .spi_obj, what = "paired_hits", return_class = return_class)
 }
-
-

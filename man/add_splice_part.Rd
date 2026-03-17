@@ -4,7 +4,15 @@
 \alias{add_splice_part}
 \title{Add one part to an existing SpliceImpactResult}
 \usage{
-add_splice_part(obj, data = NULL, res = NULL, hits_final = NULL)
+add_splice_part(
+  obj,
+  data = NULL,
+  res = NULL,
+  res_di = NULL,
+  matched = NULL,
+  sample_frame = NULL,
+  hits_final = NULL
+)
 }
 \arguments{
 \item{obj}{`SpliceImpactResult`}
@@ -12,6 +20,12 @@ add_splice_part(obj, data = NULL, res = NULL, hits_final = NULL)
 \item{data}{Optional raw sample-level table.}
 
 \item{res}{Optional differential result table.}
+
+\item{res_di}{Optional threshold-filtered differential table.}
+
+\item{matched}{Optional annotation-matched table.}
+
+\item{sample_frame}{Optional sample manifest table.}
 
 \item{hits_final}{Optional paired/final hits table.}
 }

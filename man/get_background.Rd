@@ -10,7 +10,8 @@ get_background(
   annotations,
   protein_features,
   keep_annotated_first_last = TRUE,
-  minOverlap = 0.8
+  minOverlap = 0.8,
+  BPPARAM = BiocParallel::bpparam()
 )
 }
 \arguments{
@@ -43,6 +44,10 @@ first/last exons. Defaults to \code{TRUE}.}
 
 \item{minOverlap}{Numeric (0-1); minimum fraction overlap required when
 matching exons between HIT index data and annotations. Defaults to 0.8.}
+
+\item{BPPARAM}{A [BiocParallel::BiocParallelParam-class] object controlling
+parallel execution in domain background calculations. Defaults to
+[BiocParallel::bpparam()].}
 }
 \value{
 A \link[data.table]{data.table} in which each row represents
@@ -61,22 +66,13 @@ of transcript IDs.
 }
 \examples{
 
-annots <- get_annotation(load = "test")
+annots <- load_example_data("annotation_df")$annotation_df
 interpro_features <- get_protein_features(c("interpro"), annots$annotations, timeout = 600, test = TRUE)
 protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 
 # Build background from HIT index paths
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 bg <- get_background(source = "hit_index",
                      input = sample_frame,
                      annotations = annots$annotations,

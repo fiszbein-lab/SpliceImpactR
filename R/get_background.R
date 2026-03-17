@@ -241,6 +241,8 @@ read_background <- function(paths_df, keep_annotated_first_last=FALSE) {
 #'   \code{transcript_id_1} and \code{transcript_id_2}.
 #' @param protein_features A data.frame or data.table of protein domain features,
 #'   typically from \code{get_comprehensive_annotations}
+#' @param BPPARAM A [BiocParallel::BiocParallelParam-class] object used for
+#'   domain-difference parallelization. Defaults to [BiocParallel::bpparam()].
 #'
 #' @return A data.table with domain lists and summary metrics
 #'   per transcript pair, including counts of unique and shared domains.
@@ -249,11 +251,16 @@ read_background <- function(paths_df, keep_annotated_first_last=FALSE) {
 #' @noRd
 #'
 #' @importFrom data.table as.data.table setnames
-#' @importFrom BiocParallel bpparam bplapply
-get_domain_background <- function(background, protein_features) {
+#' @importFrom BiocParallel bplapply
+get_domain_background <- function(background,
+                                  protein_features,
+                                  BPPARAM = BiocParallel::bpparam()) {
+
+  if (!methods::is(BPPARAM, "BiocParallelParam")) {
+    stop("BPPARAM must be a BiocParallelParam object.")
+  }
 
   Pf <- data.table::as.data.table(protein_features)
-  # Pf <- Pf[, domain_id := paste0(database, ";", gsub("[|]", " ", gsub(";", " ", name)))][!is.na(domain_id) & nzchar(domain_id)]
 
   Pf[, domain_id := paste0(
     database, ";",
@@ -270,8 +277,6 @@ get_domain_background <- function(background, protein_features) {
                  )
   ])
 
-
-
   doms <- D[, .(domains = list(unique(domain_id))), by = transcript_id]
 
   bg <- doms[background, on = .(transcript_id = transcript_id_1)]
@@ -283,7 +288,9 @@ get_domain_background <- function(background, protein_features) {
     d1 = lapply(d1, function(x) if (is.null(x)) character() else x),
     d2 = lapply(d2, function(x) if (is.null(x)) character() else x)
   )]
-  bg <- bg[lengths(d1) > 0 & lengths(d2) > 0]
+  # Keep transcript pairs when at least one side has domain annotation.
+  # This avoids discarding biologically plausible one-sided domain presence.
+  bg <- bg[lengths(d1) > 0 | lengths(d2) > 0]
   bg <- bg[vapply(Map(setequal, d1, d2), isFALSE, logical(1))]
   bg[, c("d1_pruned", "d2_pruned") := {
     tmp <- Map(function(x, y) {
@@ -292,18 +299,19 @@ get_domain_background <- function(background, protein_features) {
     }, d1, d2)
     list(lapply(tmp, `[[`, 1), lapply(tmp, `[[`, 2))
   }]
-  bg <- bg[lengths(d1_pruned) > 0 & lengths(d2_pruned) > 0]
+  # After pruning shared domains, retain one-sided differences as valid
+  # background observations; drop only pairs with no remaining differences.
+  bg <- bg[lengths(d1_pruned) > 0 | lengths(d2_pruned) > 0]
 
   bg[, `:=`(
     d1_parsed = lapply(d1_pruned, .parse_domain_coords),
     d2_parsed = lapply(d2_pruned, .parse_domain_coords)
   )]
 
-  param <- BiocParallel::bpparam()
   res <- BiocParallel::bplapply(seq_len(nrow(bg)), function(i) list(
     d1 = .diff_domains(bg$d1_parsed[[i]], bg$d2_parsed[[i]])$domain,
     d2 = .diff_domains(bg$d2_parsed[[i]], bg$d1_parsed[[i]])$domain
-  ), BPPARAM = param)
+  ), BPPARAM = BPPARAM)
   bg[, domains_1 := lapply(res, `[[`, "d1")]
   bg[, domains_2 := lapply(res, `[[`, "d2")]
 
@@ -558,6 +566,9 @@ get_genes_from_transcripts <- function(matched_background, A) {
 #'   first/last exons. Defaults to \code{TRUE}.
 #' @param minOverlap Numeric (0-1); minimum fraction overlap required when
 #'   matching exons between HIT index data and annotations. Defaults to 0.8.
+#' @param BPPARAM A [BiocParallel::BiocParallelParam-class] object controlling
+#'   parallel execution in domain background calculations. Defaults to
+#'   [BiocParallel::bpparam()].
 #'
 #' @return A \link[data.table]{data.table} in which each row represents
 #'   a transcript pair annotated with gene ID, CDS/exon length differences,
@@ -569,22 +580,13 @@ get_genes_from_transcripts <- function(matched_background, A) {
 #'
 #' @examples
 #'
-#' annots <- get_annotation(load = "test")
+#' annots <- load_example_data("annotation_df")$annotation_df
 #' interpro_features <- get_protein_features(c("interpro"), annots$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
 #' # Build background from HIT index paths
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' bg <- get_background(source = "hit_index",
 #'                      input = sample_frame,
 #'                      annotations = annots$annotations,
@@ -604,7 +606,8 @@ get_background <- function(source = c("hit_index", "annotated", "user-given"),
                            annotations,
                            protein_features,
                            keep_annotated_first_last = TRUE,
-                           minOverlap = 0.8) {
+                           minOverlap = 0.8,
+                           BPPARAM = BiocParallel::bpparam()) {
   if (source == "hit_index") {
     background_init <- read_background(paths_df = input, keep_annotated_first_last)
     matched_background <- match_exon_table(exon_df = background_init, annotations = annotations, minOverlap)
@@ -617,6 +620,10 @@ get_background <- function(source = c("hit_index", "annotated", "user-given"),
     matched_background <- get_genes_from_transcripts(data.table(transcript_id = input), annotations)
   }
   matched_paired_background <- make_transcript_pairs_with_lengths(matched_background, annotations)
-  background_domains <- get_domain_background(matched_paired_background, protein_features)
+  background_domains <- get_domain_background(
+    matched_paired_background,
+    protein_features,
+    BPPARAM = BPPARAM
+  )
   return(background_domains)
 }

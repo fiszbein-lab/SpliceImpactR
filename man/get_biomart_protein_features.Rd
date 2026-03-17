@@ -9,7 +9,8 @@ get_biomart_protein_features(
   gtf_df,
   max_accession_size = 3500,
   species_dataset = "hsapiens_gene_ensembl",
-  release = 109
+  release = 109,
+  ensembl_mirror = NULL
 )
 }
 \arguments{

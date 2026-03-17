@@ -33,84 +33,223 @@
   )
 }
 
+#' Resolve persistent cache root for SpliceImpactR (internal)
+#'
+#' @param base_dir Optional directory root for cache data. If `NULL`,
+#'   defaults to `tools::R_user_dir("SpliceImpactR", "cache")`.
+#' @param pkg Package name used by `tools::R_user_dir()`.
+#' @return Normalized cache root directory path.
+#' @keywords internal
+.si_cache_root <- function(base_dir = NULL, pkg = "SpliceImpactR") {
+  root <- if (is.null(base_dir)) tools::R_user_dir(pkg, "cache") else base_dir
+  dir.create(root, showWarnings = FALSE, recursive = TRUE)
+  normalizePath(root, winslash = "/", mustWork = TRUE)
+}
+
+#' Initialize BiocFileCache backend (internal)
+#'
+#' @param base_dir Optional cache root passed to [.si_cache_root()].
+#' @param pkg Package name used for default user cache root.
+#' @return A `BiocFileCache` object.
+#' @keywords internal
+.si_bfc <- function(base_dir = NULL, pkg = "SpliceImpactR") {
+  cache_root <- .si_cache_root(base_dir = base_dir, pkg = pkg)
+  bfc_dir <- file.path(cache_root, "BiocFileCache")
+  dir.create(bfc_dir, showWarnings = FALSE, recursive = TRUE)
+  BiocFileCache::BiocFileCache(cache = bfc_dir, ask = FALSE)
+}
+
+#' Fetch a web resource through BiocFileCache (internal)
+#'
+#' @param bfc A `BiocFileCache` object.
+#' @param rname Cache key name.
+#' @param url URL to fetch.
+#' @param progress Logical passed to BiocFileCache download methods.
+#' @return Local cached file path.
+#' @keywords internal
+.si_bfc_get_web <- function(bfc, rname, url, progress = TRUE) {
+  hit <- BiocFileCache::bfcquery(bfc, query = rname, field = "rname", exact = TRUE)
+  if (nrow(hit) == 0L) {
+    out <- BiocFileCache::bfcadd(
+      bfc,
+      rname = rname,
+      fpath = url,
+      rtype = "web",
+      progress = progress
+    )
+    rid <- names(out)[1]
+    return(unname(out[[1]]))
+  }
+
+  rid <- hit$rid[1]
+  path <- unname(BiocFileCache::bfcpath(bfc, rid))
+  if (!file.exists(path)) {
+    BiocFileCache::bfcdownload(bfc, rid, progress = progress, ask = FALSE)
+    path <- unname(BiocFileCache::bfcpath(bfc, rid))
+  }
+  path
+}
+
+#' Store R object in BiocFileCache as local RDS (internal)
+#'
+#' @param bfc A `BiocFileCache` object.
+#' @param rname Cache key name.
+#' @param obj R object to serialize.
+#' @return Invisible cached file path.
+#' @keywords internal
+.si_bfc_put_rds <- function(bfc, rname, obj) {
+  hit <- BiocFileCache::bfcquery(bfc, query = rname, field = "rname", exact = TRUE)
+  if (nrow(hit) == 0L) {
+    out <- BiocFileCache::bfcnew(
+      bfc,
+      rname = rname,
+      rtype = "local",
+      ext = ".rds",
+      fname = "exact"
+    )
+    rid <- names(out)[1]
+  } else {
+    rid <- hit$rid[1]
+  }
+
+  path <- unname(BiocFileCache::bfcpath(bfc, rid))
+  saveRDS(obj, path)
+  invisible(path)
+}
+
+#' Load cached local RDS from BiocFileCache (internal)
+#'
+#' @param bfc A `BiocFileCache` object.
+#' @param rname Cache key name.
+#' @return Cached R object or `NULL` if not present.
+#' @keywords internal
+.si_bfc_get_rds <- function(bfc, rname) {
+  hit <- BiocFileCache::bfcquery(bfc, query = rname, field = "rname", exact = TRUE)
+  if (nrow(hit) == 0L) return(NULL)
+
+  rid <- hit$rid[1]
+  path <- unname(BiocFileCache::bfcpath(bfc, rid))
+  if (!file.exists(path)) return(NULL)
+  readRDS(path)
+}
+
+#' Resolve optional link-mode asset override (internal)
+#'
+#' @param bfc A `BiocFileCache` object.
+#' @param provided User-supplied override value.
+#' @param fallback_path Default downloaded asset path.
+#' @param role Label used in warnings and cache key names.
+#' @return A valid local file path.
+#' @keywords internal
+.si_link_asset_path <- function(bfc, provided, fallback_path, role) {
+  if (is.null(provided) || !nzchar(provided)) return(fallback_path)
+
+  if (file.exists(provided)) {
+    return(normalizePath(provided, winslash = "/", mustWork = TRUE))
+  }
+
+  if (grepl("^https?://", provided)) {
+    key <- gsub("[^A-Za-z0-9._-]+", "_", provided)
+    return(.si_bfc_get_web(
+      bfc = bfc,
+      rname = sprintf("user-url/%s/%s", role, key),
+      url = provided
+    ))
+  }
+
+  if (identical(basename(provided), basename(fallback_path))) {
+    return(fallback_path)
+  }
+
+  warning(
+    sprintf(
+      "Ignoring %s='%s' for load='link' because the file does not exist; using downloaded asset.",
+      role, provided
+    ),
+    call. = FALSE
+  )
+  fallback_path
+}
+
 #' Prepare GENCODE annotation and sequence assets (internal helper)
 #'
-#' Internal function to download, import, and cache GENCODE annotation
-#' and sequence files (GTF, transcript FASTA, and protein FASTA) for a
-#' given species and release. Used internally by higher-level
-#' SpliceImpactR functions to ensure annotation assets are available.
+#' Internal function to acquire GENCODE annotation and sequence files
+#' (GTF, transcript FASTA, protein FASTA) using a package-specific
+#' `BiocFileCache`.
 #'
 #' @param base_dir Character string giving the base directory where
-#'   downloaded or cached files should be stored.
+#'   cache data should be stored. If `NULL`, uses package user cache.
 #' @param species Character string, either `"human"` or `"mouse"`.
 #' @param release Integer or string specifying the GENCODE release
 #'   number (e.g., `45` for human or `"M35"` for mouse).
 #' @param mode Character string, one of `"download"` or
-#'   `"import_then_cache"`. Determines whether to only download the
-#'   compressed files or to import the GTF into R and cache as RDS.
+#'   `"import_then_cache"`. The latter may parse/cache the GTF R object.
 #' @param use_rds_cache Logical; if `TRUE`, loads cached `.rds` GTF file
 #'   if available.
 #'
 #' @return A list containing:
 #'   \describe{
-#'     \item{`paths`}{File paths for the downloaded or cached assets.}
+#'     \item{`paths`}{Local file paths to cached assets.}
 #'     \item{`gtf_df`}{Imported GTF data frame if loaded or created.}
 #'     \item{`meta`}{Metadata list with species, release, and tag.}
+#'     \item{`bfc`}{`BiocFileCache` instance used for retrieval.}
+#'     \item{`cache_dir`}{Resolved cache root directory.}
 #'   }
 #'
-#' @importFrom utils download.file
 #' @keywords internal
 .si_prepare_assets <- function(base_dir,
                               species = c("human","mouse"),
                               release,
                               mode = c("download","import_then_cache"),
                               use_rds_cache = TRUE) {
-  if (is.null(base_dir)) {
-    # follow Bioconductor convention: user cache for persistent assets
-    base_dir <- tools::R_user_dir("SpliceImpactR", "cache")
-    message("[INFO] Using default cache directory: ", base_dir)
-  }
-
-  species <- match.arg(species); mode <- match.arg(mode)
+  species <- match.arg(species)
+  mode <- match.arg(mode)
   urls <- .si_gencode_urls(species, release)
   tag  <- urls$tag
+  cache_dir <- .si_cache_root(base_dir = base_dir)
+  bfc <- .si_bfc(base_dir = cache_dir)
+  prefix <- sprintf("gencode/%s/%s", species, tag)
 
-  dir.create(base_dir, showWarnings = FALSE, recursive = TRUE)
   paths <- list(
-    gtf_gz  = file.path(base_dir, sprintf("gencode.%s.annotation.gtf.gz",     tag)),
-    gtf_rds = file.path(base_dir, sprintf("gencode.%s.annotation.gtf.rds",    tag)),
-    txfa_gz = file.path(base_dir, sprintf("gencode.%s.pc_transcripts.fa.gz",  tag)),
-    aafa_gz = file.path(base_dir, sprintf("gencode.%s.pc_translations.fa.gz", tag))
+    gtf_gz  = .si_bfc_get_web(bfc, paste0(prefix, "/annotation.gtf.gz"), urls$gtf),
+    txfa_gz = .si_bfc_get_web(bfc, paste0(prefix, "/pc_transcripts.fa.gz"), urls$txfa),
+    aafa_gz = .si_bfc_get_web(bfc, paste0(prefix, "/pc_translations.fa.gz"), urls$aafa)
   )
 
-  .dl <- function(url, dest) {
-    dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
-    if (nzchar(Sys.which("wget")))      system2("wget", c("-q","-c","-O", shQuote(dest), shQuote(url)))
-    else if (nzchar(Sys.which("curl"))) system2("curl", c("-L","-C","-","-o", shQuote(dest), shQuote(url)))
-    else                                utils::download.file(url, destfile = dest, mode = "wb", quiet = TRUE)
-    dest
-  }
-
-  # GTF: load RDS if present; otherwise download or import+cache
   gtf_df <- NULL
-  if (use_rds_cache && file.exists(paths$gtf_rds)) {
-    gtf_df <- readRDS(paths$gtf_rds)
-  } else if (!file.exists(paths$gtf_gz)) {
-    if (mode == "download") {
-      .dl(urls$gtf, paths$gtf_gz)
-    } else {
-      message("Importing GTF from URL via rtracklayer (first run)")
-      gtf_df <- rtracklayer::readGFF(urls$gtf)
-      saveRDS(gtf_df, paths$gtf_rds)
-      .dl(urls$gtf, paths$gtf_gz)
+  gtf_rds_key <- paste0(prefix, "/annotation.gtf.rds")
+
+  if (identical(mode, "import_then_cache")) {
+    if (isTRUE(use_rds_cache)) {
+      gtf_df <- .si_bfc_get_rds(bfc, gtf_rds_key)
+    }
+    if (is.null(gtf_df)) {
+      message("Importing GTF and caching parsed object in BiocFileCache")
+      gtf_df <- rtracklayer::readGFF(paths$gtf_gz)
+      .si_bfc_put_rds(bfc, gtf_rds_key, gtf_df)
     }
   }
 
-  if (!file.exists(paths$aafa_gz)) .dl(urls$aafa, paths$aafa_gz)
-  if (!file.exists(paths$txfa_gz)) .dl(urls$txfa, paths$txfa_gz)
-
-  list(paths = paths, gtf_df = gtf_df,
+  list(paths = paths, gtf_df = gtf_df, bfc = bfc, cache_dir = cache_dir,
        meta = list(species = species, release = release, tag = tag))
+}
+
+#' Build short get_annotation mode/use-case guide (internal)
+#'
+#' @return Character scalar suitable for appending to error messages.
+#' @keywords internal
+.si_get_annotation_mode_guide <- function() {
+  paste(
+    c(
+      "get_annotation() load modes:",
+      "- load='test': bundled toy data (offline, fastest).",
+      "- load='link': download GENCODE assets (or use valid local/URL overrides), then cache processed objects.",
+      "- load='path': use your local GTF + transcript FASTA + protein FASTA files, then cache processed objects.",
+      "- load='cached': reuse processed cached objects from prior 'link' or 'path' runs.",
+      "Typical use: run 'link' or 'path' once, then use 'cached' for subsequent sessions."
+    ),
+    collapse = "\n"
+  )
 }
 
 #' Null-coalescing operator (internal)
@@ -887,50 +1026,6 @@ identify_hybrid_exons_split <- function(gtf_df) {
 
 
 
-#' Resolve and create an output directory
-#'
-#' Determines where to write package output files, supporting both
-#' session-temporary and persistent cache locations. By default,
-#' temporary directories are created under [tempdir()], while persistent
-#' ones follow Bioconductors cache convention via
-#' [tools::R_user_dir()].
-#'
-#' @param dir Optional user-supplied path. If provided, this path is
-#'   created (recursively) if necessary and returned as an absolute,
-#'   normalized directory path.
-#' @param persist One of \code{"temp"} or \code{"cache"}. When
-#'   \code{"temp"}, a session-temporary directory under [tempdir()] is
-#'   used; when \code{"cache"}, a persistent user cache directory
-#'   following [tools::R_user_dir()] is used.
-#' @param pkg Package name used to determine the cache location when
-#'   \code{persist = "cache"}. Defaults to \code{"SpliceImpactR"}.
-#'
-#' @return A character scalar giving an absolute, writable directory path.
-#'   The directory is created if it does not exist.
-#'
-#'   @importFrom tools R_user_dir
-#' @keywords internal
-resolve_output_dir <- function(dir = NULL,
-                               persist = c("temp","cache")[1],
-                               pkg = "SpliceImpactR") {
-  persist <- match.arg(persist)
-
-  if (!is.null(dir)) {
-    dir.create(dir, showWarnings = FALSE, recursive = TRUE)
-    if (!dir.exists(dir)) stop("Could not create dir: ", dir)
-    return(normalizePath(dir, winslash = "/", mustWork = TRUE))
-  }
-
-  if (persist == "temp") {
-    d <- tempfile(pattern = paste0(pkg, "_"), tmpdir = tempdir())
-  } else { # persist == "cache"
-    d <- tools::R_user_dir(pkg, "cache")
-  }
-
-  dir.create(d, showWarnings = FALSE, recursive = TRUE)
-  normalizePath(d, winslash = "/", mustWork = TRUE)
-}
-
 #' Retrieve transcript and protein sequences (internal)
 #'
 #' Internal helper that calls [load_seq_map()] to obtain transcript
@@ -996,22 +1091,25 @@ add_exon_frames <- function(gtf_df) {
 #' Four loading modes are supported:
 #' \describe{
 #'   \item{`test`}{Load small internal test data shipped with the package.}
-#'   \item{`cached`}{Load previously cached GTF, transcript sequences, protein sequences, and hybrid tables from `base_dir`.}
-#'   \item{`path`}{Read local GTF and FASTA files, process, then cache results in `base_dir`.}
-#'   \item{`link`}{Download GENCODE files from URLs, process, then cache results in `base_dir`.}
+#'   \item{`cached`}{Load previously processed objects from package `BiocFileCache`.}
+#'   \item{`path`}{Read local GTF and FASTA files, process, then cache processed objects in package `BiocFileCache`.}
+#'   \item{`link`}{Download GENCODE files from URLs, process, then cache processed objects in package `BiocFileCache`.
+#'   Optional `gtf_path`, `transcript_path`, and `translation_path` are only used as overrides
+#'   when they are existing local files or valid URLs; otherwise downloaded GENCODE assets are used.}
 #' }
 #'
-#' Cached files created in `base_dir`:
+#' Processed objects are cached in package `BiocFileCache` entries:
 #' \preformatted{
-#' {species}_gencode_v{release}.gtf.rds
-#' {species}_gencode_v{release}_transcripts.rds
-#' {species}_gencode_v{release}_proteins.rds
-#' {species}_gencode_v{release}_hybrids.rds
+#' annotation/{species}/v{release}/tsl-{...}/annotations.rds
+#' annotation/{species}/v{release}/tsl-{...}/sequences.rds
+#' annotation/{species}/v{release}/tsl-{...}/hybrids.rds
 #' }
 #'
 #' @param load Character string specifying load mode:
 #'   one of `"link"`, `"path"`, `"cached"`, `"test"`.
-#' @param base_dir Directory to cache/load processed objects.
+#' @param base_dir Optional cache root. If `NULL` (default), uses a
+#'   persistent package cache under `tools::R_user_dir("SpliceImpactR", "cache")`.
+#'   A package-specific `BiocFileCache` is created under this root.
 #' @param species Species label used in filenames (default `"human"`).
 #' @param release GENCODE release version (default `45`).
 #' @param gtf_path Path to a GTF file when `load = "path"`.
@@ -1026,55 +1124,54 @@ add_exon_frames <- function(gtf_df) {
 #'   \item{`sequences`}{List with elements `transcripts` and `proteins` (or `NULL` if not loaded)}
 #'   \item{`hybrids`}{Hybrid exon annotation list}
 #' }
-#'
-#'
 #' @examples
 #' # Load bundled test data
-#' ann <- get_annotation(load = "test")
+#' ann <- load_example_data("annotation_df")$annotation_df
+#' print(ann)
 #'
-#' #
-#' #  # Load from local files and cache results
-#' #  ann <- get_annotation(
-#' #    load = "path",
-#' #    base_dir = "/project/annotation_cache/",
-#' #    gtf_path = "gencode.v45.annotation.gtf.gz",
-#' #    transcript_path = "gencode.v45.pc_transcripts.fa.gz",
-#' #    translation_path = "gencode.v45.pc_translations.fa.gz"
-#' #  )
+#' # Load from local files and cache processed objects
+#' # ann <- get_annotation(
+#' #   load = "path",
+#' #   gtf_path = "/downloaded_gtf_directory/gencode.v45.annotation.gtf.gz",
+#' #   transcript_path = "/downloaded_gtf_directory/gencode.v45.pc_transcripts.fa.gz",
+#' #   translation_path = "/downloaded_gtf_directory/gencode.v45.pc_translations.fa.gz"
+#' # )
 #'
-#' #  # Download files, process, and cache
-#' #  ann <- get_annotation(
-#' #    load = "link",
-#' #    base_dir = "/project/annotation_cache/"
-#' #  )
+#' # Download files, process, and cache to a custom cache root
+#' # ann <- get_annotation(
+#' #   load = "link",
+#' #   base_dir = "/project/annotation_cache/"
+#' # )
 #'
 #' # Load from cached RDS (fast)
-#' #  ann <- get_annotation(
-#' #    load = "cached",
-#' #    base_dir = "/project/annotation_cache/"
-#' #  )
+#' # ann <- get_annotation(
+#' #   load = "cached",
+#' #   base_dir = "/project/annotation_cache/"
+#' # )
 #'
 #' @importFrom magrittr %>%
 #' @export
 get_annotation <- function(
     load = c("link", "path", "cached", "test"),
     base_dir = NULL,
-    species = c("human", 'mouse')[1],
+    species = c("human", "mouse"),
     release = 45,
     gtf_path = NULL,
     transcript_path = NULL,
     translation_path = NULL,
-    filter_tsl = c('1','2','3', '4', '5')[c(1, 2, 3)]
+    filter_tsl = c("1", "2", "3")
 ) {
   load <- match.arg(load)
-  base_dir <- resolve_output_dir(base_dir)
-
-  ### ---- Define cache files ----
-  rds_gtf  <- file.path(base_dir, sprintf("%s_gencode_v%s.gtf.rds", species, release))
-  rds_seq   <- file.path(base_dir, sprintf("%s_gencode_v%s_sequences.rds", species, release))
-  rds_hyb  <- file.path(base_dir, sprintf("%s_gencode_v%s_hybrids.rds", species, release))
-
-  message("[INFO] get_annotation mode: ", load)
+  species <- match.arg(species)
+  filter_tsl <- as.character(filter_tsl)
+  if (!length(filter_tsl)) {
+    filter_tsl <- c("1", "2", "3")
+  }
+  filter_tsl <- match.arg(
+    filter_tsl,
+    choices = as.character(1:5),
+    several.ok = TRUE
+  )
 
   ### ---- TEST MODE ----
   if (load == "test") {
@@ -1088,98 +1185,145 @@ get_annotation <- function(
       )
     ))
   }
+  
+  cache_dir <- .si_cache_root(base_dir = base_dir)
+  bfc <- .si_bfc(base_dir = cache_dir)
+  mode_guide <- .si_get_annotation_mode_guide()
+  .fail <- function(msg) {
+    stop(paste0(msg, "\n\n", mode_guide), call. = FALSE)
+  }
 
-  ### ---- CACHED MODE ----
-  if (load == "cached") {
-    message("[FAST] Loading cached annotation objects from: ", base_dir)
+  tryCatch({
+    ### ---- Define processed cache keys ----
+    tsl_tag <- if (length(filter_tsl)) paste(filter_tsl, collapse = "-") else "none"
+    cache_prefix <- sprintf("annotation/%s/v%s/tsl-%s", species, release, tsl_tag)
+    rds_gtf_key <- paste0(cache_prefix, "/annotations.rds")
+    rds_seq_key <- paste0(cache_prefix, "/sequences.rds")
+    rds_hyb_key <- paste0(cache_prefix, "/hybrids.rds")
 
-    req <- c(rds_gtf, rds_seq, rds_hyb)
-    if (!all(file.exists(req))) {
-      missing <- req[!file.exists(req)]
-      msg <- paste0(
-        "Missing cached file(s):\n",
-        paste(missing, collapse = "\n"),
-        "\nRun with load='path' or load='link' first to generate caches."
-      )
-      stop(msg, call. = FALSE)
+    message("[INFO] get_annotation mode: ", load)
+    message("[INFO] Using BiocFileCache root: ", cache_dir)
+
+    
+
+    ### ---- CACHED MODE ----
+    if (load == "cached") {
+      message("[FAST] Loading cached annotation objects from BiocFileCache")
+
+      ann_cached <- .si_bfc_get_rds(bfc, rds_gtf_key)
+      seq_cached <- .si_bfc_get_rds(bfc, rds_seq_key)
+      hyb_cached <- .si_bfc_get_rds(bfc, rds_hyb_key)
+      if (is.null(ann_cached) || is.null(seq_cached) || is.null(hyb_cached)) {
+        missing <- c(
+          if (is.null(ann_cached)) rds_gtf_key else NULL,
+          if (is.null(seq_cached)) rds_seq_key else NULL,
+          if (is.null(hyb_cached)) rds_hyb_key else NULL
+        )
+        msg <- paste0(
+          "Missing cached BiocFileCache object(s):\n",
+          paste(missing, collapse = "\n"),
+          "\nRun with load='path' or load='link' first to generate caches."
+        )
+        .fail(msg)
+      }
+
+      return(list(
+        annotations = ann_cached,
+        sequences = seq_cached,
+        hybrids = hyb_cached
+      ))
     }
 
-    return(list(
-      annotations = readRDS(rds_gtf),
-      sequences = readRDS(rds_seq),
-      hybrids = readRDS(rds_hyb)
-    ))
-  }
+    ### ---- LINK / PATH: Acquire GTF/FASTA paths ----
+    if (load == "link") {
+      message("[STEP] Downloading GENCODE assets (first run only)")
+      assets <- .si_prepare_assets(cache_dir, species, release, mode = "download")
+      bfc <- assets$bfc
+      gtf_file <- .si_link_asset_path(bfc, gtf_path, assets$paths$gtf_gz, "gtf_path")
+      tx_fa <- .si_link_asset_path(
+        bfc, transcript_path, assets$paths$txfa_gz, "transcript_path"
+      )
+      aa_fa <- .si_link_asset_path(
+        bfc, translation_path, assets$paths$aafa_gz, "translation_path"
+      )
+    } else if (load == "path") {
+      if (is.null(gtf_path))
+        .fail("load='path' requires gtf_path=")
+      if (is.null(transcript_path))
+        .fail("load='path' requires transcript_path=")
+      if (is.null(translation_path))
+        .fail("load='path' requires translation_path=")
 
-  ### ---- LINK / PATH: Acquire GTF/FASTA paths ----
-  if (load == "link") {
-    message("[STEP] Downloading GENCODE assets (first run only)")
-    assets <- .si_prepare_assets(base_dir, species, release, mode = "download")
-    gtf_file  <- assets$paths$gtf_gz
-    tx_fa     <- transcript_path  %||% assets$paths$txfa_gz
-    aa_fa     <- translation_path %||% assets$paths$aafa_gz
-  } else if (load == "path") {
-    if (is.null(gtf_path))
-      stop("load='path' requires gtf_path=")
+      gtf_file <- gtf_path
+      tx_fa <- transcript_path
+      aa_fa <- translation_path
 
-    gtf_file <- gtf_path
-    tx_fa <- transcript_path
-    aa_fa <- translation_path
+    }
 
-  }
+    if (!is.character(gtf_file) || length(gtf_file) != 1L || !nzchar(gtf_file)) {
+      .fail("Resolved GTF path is invalid.")
+    }
+    message("[STEP] Reading GTF: ", gtf_file)
+    gtf_dt <- load_gtf_long(gtf_file)
 
-  message("[STEP] Reading GTF: ", gtf_file)
-  gtf_dt <- load_gtf_long(gtf_file)
+    ### ---- Annotation pipeline ----
+    message("[STEP] Annotating GTF")
+    gtf_df <- gtf_dt %>%
+      restrict_gtf_genetype %>%
+      add_exon_coding_information %>%
+      add_exon_order_information %>%
+      restrict_gtf_rowtype %>%
+      add_exon_frames %>%
+      add_feature_length
 
-  ### ---- Annotation pipeline ----
-  message("[STEP] Annotating GTF")
-  gtf_df <- gtf_dt %>%
-    restrict_gtf_genetype %>%
-    add_exon_coding_information %>%
-    add_exon_order_information %>%
-    restrict_gtf_rowtype %>%
-    add_exon_frames %>%
-    add_feature_length
+    gtf_df <- gtf_df[
+      transcript_support_level %in% filter_tsl | type == 'gene'
+    ][
+      !(tag %in% c("cds_start_NF", "cds_end_NF")) | type == 'gene'
+    ]
 
-  gtf_df <- gtf_df[
-    transcript_support_level %in% filter_tsl | type == 'gene'
-  ][
-    !(tag %in% c("cds_start_NF", "cds_end_NF")) | type == 'gene'
-  ]
+    ### ---- Hybrid exons ----
+    message("[STEP] Identifying hybrid exons")
+    hybrids <- identify_hybrid_exons_split(gtf_df)
 
-  ### ---- Hybrid exons ----
-  message("[STEP] Identifying hybrid exons")
-  hybrids <- identify_hybrid_exons_split(gtf_df)
+    ### ---- Sequence loading ----
+    message("[STEP] Loading transcript + protein sequences")
+    tx_local <- tx_fa
+    aa_local <- aa_fa
 
-  ### ---- Sequence loading ----
-  message("[STEP] Loading transcript + protein sequences")
-  # tx_local <- if (grepl("^https?://", tx_fa)) cached_resource(tx_fa) else tx_fa
-  # aa_local <- if (grepl("^https?://", aa_fa)) cached_resource(aa_fa) else aa_fa
-  tx_local <- tx_fa
-  aa_local <- aa_fa
+    if (!is.character(tx_local) || length(tx_local) != 1L || !nzchar(tx_local) || !file.exists(tx_local)) {
+      .fail(paste0("Transcript FASTA missing: ", tx_local))
+    }
+    if (!is.character(aa_local) || length(aa_local) != 1L || !nzchar(aa_local) || !file.exists(aa_local)) {
+      .fail(paste0("Protein FASTA missing: ", aa_local))
+    }
 
-  if (!file.exists(tx_local)) stop("Transcript FASTA missing: ", tx_local)
-  if (!file.exists(aa_local)) stop("Protein FASTA missing: ", aa_local)
-
-  seq_map <- get_sequences(
-    gtf_df,
-    transcript_path = tx_local,
-    translation_path = aa_local
-  )
+    seq_map <- get_sequences(
+      gtf_df,
+      transcript_path = tx_local,
+      translation_path = aa_local
+    )
 
 
-  ### ---- Save cache ----
-  message("[CACHE] Saving cleaned annotations and sequences ->", base_dir)
-  saveRDS(gtf_df,  rds_gtf)
-  saveRDS(seq_map, rds_seq)
-  saveRDS(hybrids,    rds_hyb)
+    ### ---- Save cache ----
+    message("[CACHE] Saving cleaned annotations and sequences in BiocFileCache")
+    .si_bfc_put_rds(bfc, rds_gtf_key, gtf_df)
+    .si_bfc_put_rds(bfc, rds_seq_key, seq_map)
+    .si_bfc_put_rds(bfc, rds_hyb_key, hybrids)
 
-  ### ---- Return ----
-  list(
-    annotations = gtf_df,
-    sequences = seq_map,
-    hybrids = hybrids
-  )
+    ### ---- Return ----
+    list(
+      annotations = gtf_df,
+      sequences = seq_map,
+      hybrids = hybrids
+    )
+  }, error = function(e) {
+    msg <- conditionMessage(e)
+    if (!grepl("get_annotation\\(\\) load modes:", msg, fixed = FALSE)) {
+      msg <- paste0(msg, "\n\n", mode_guide)
+    }
+    stop(msg, call. = FALSE)
+  })
 }
 
 #' Helper to fetch test files for vignettes / tests
@@ -1197,47 +1341,3 @@ get_example_data <- function(filename) {
 
   return(fpath)
 }
-
-
-#' Helper to fetch test dirs for vignettes / tests
-#' @keywords internal
-#' @param dir_name Name (or relative path) of the directory inside `inst/extdata/`.
-#' @param package Package name (defaults to `"SpliceImpactR"`).
-#' @param error Logical; if TRUE (default), stops with an informative message
-#' @examples
-#' check_extdata_dir("rawData")
-#'
-#' @return proper directory for data
-#'
-#' @export
-check_extdata_dir <- function(dir_name,
-                               package = "SpliceImpactR",
-                               error = TRUE) {
-  base_dir <- system.file("extdata", package = package)
-  if (base_dir == "") {
-    msg <- sprintf("No extdata folder found for package '%s'.", package)
-    if (error) stop(msg, call. = FALSE) else return(FALSE)
-  }
-
-  full_dir <- file.path(base_dir, dir_name)
-  if (!dir.exists(full_dir)) {
-    msg <- sprintf("Directory not found in extdata: %s", dir_name)
-    if (error) stop(msg, call. = FALSE) else return(FALSE)
-  }
-
-  return(invisible(full_dir))
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-

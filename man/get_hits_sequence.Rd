@@ -15,7 +15,8 @@ are absent. If `FALSE`, errors on missing columns.}
 \item{keep_internal_keys}{Passed through when `x` is S4. Default `FALSE`.}
 }
 \value{
-`data.table` with the `sequence` subset.
+`data.table` with the `sequence` subset. Works for both S4 and
+paired-hits `data.table` input.
 }
 \description{
 Convenience accessor for sequence/frame-focused paired-hit columns

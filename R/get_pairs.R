@@ -5,7 +5,8 @@
 #' both INC and EXC forms exist for a given event ID. In HITindex mode, all
 #' positive and negative deltaPSI rows within each event are cross-joined.
 #'
-#' @param x A data.frame or data.table containing splicing event information.
+#' @param x A data.frame, data.table, or `SpliceImpactResult` containing
+#'   splicing event information.
 #' @param source Character string specifying input structure:
 #'   \describe{
 #'     \item{\code{"paired"}}{(rMATS-like) requires exactly one INC and one EXC
@@ -13,9 +14,12 @@
 #'     \item{\code{"multi"}}{(HITindex-like) pairs all positive and negative
 #'       \code{delta_psi} values within each event.}
 #'   }
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
 #'
-#' @return A \link[data.table]{data.table} where each row represents an
-#'   inclusion-exclusion pair of the same event.
+#' @return A \link[data.table]{data.table} (or updated `SpliceImpactResult`
+#' when `return_class` resolves to S4) where each row represents an
+#' inclusion-exclusion pair of the same event.
 #' @details
 #' In \code{source="paired"} mode, only events with exactly one INC and one EXC
 #' row are retained. In \code{source="multi"} mode, all positive deltaPSI rows are
@@ -25,28 +29,31 @@
 #' @export
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annots <- get_annotation(load = "test")
+#' annots <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annots$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annots$sequences)
 #' pairs <- get_pairs(x_seq, source="multi")
+#' print(pairs)
 get_pairs <- function(x,
-                      source = c("paired","multi")) {
+                      source = c("paired","multi"),
+                      return_class = c("auto", "data.table", "S4")) {
 
   source  <- match.arg(source)
-  DT      <- as.data.table(x)
+  return_class <- match.arg(return_class)
+  if (methods::is(x, "SpliceImpactResult")) {
+    .spi_obj <- x
+    DT <- as.data.table(as_dt_from_s4(x, "matched"))
+    if (!nrow(DT)) DT <- as.data.table(as_dt_from_s4(x, "res_di"))
+    if (!nrow(DT)) DT <- as.data.table(as_dt_from_s4(x, "di_events"))
+  } else {
+    .spi_in <- .resolve_splice_input(x, what = "di_events")
+    .spi_obj <- .spi_in$obj
+    DT <- as.data.table(.spi_in$dt)
+  }
 
   # --- guards ---
   miss <- setdiff("event_id", names(DT))
@@ -54,11 +61,18 @@ get_pairs <- function(x,
 
   setkeyv(DT, "event_id")
 
-  if (source == "rmats") {
+  if (source == "paired") {
+    need_paired <- c("event_id", "form")
+    miss_paired <- setdiff(need_paired, names(DT))
+    if (length(miss_paired)) {
+      stop("get_pairs(source='paired') missing required columns: ",
+           paste(miss_paired, collapse = ", "))
+    }
+
     # keep keys that appear **exactly twice** (one INC + one EXC)
     cnt <- DT[, .N, by = "event_id"]
     keep_keys <- cnt[N == 2L, "event_id"]
-    if (!nrow(keep_keys)) return(DT[0])
+    if (!nrow(keep_keys)) return(.return_splice_output(DT[0], obj = .spi_obj, what = "paired_hits", return_class = return_class))
 
     DT2 <- DT[keep_keys, on = event_id]
 
@@ -70,7 +84,7 @@ get_pairs <- function(x,
       do.call(paste, c(INC[, "event_id"], sep = "\r")),
       do.call(paste, c(EXC[, "event_id"], sep = "\r"))
     )
-    if (!length(common_keys)) return(DT[0])
+    if (!length(common_keys)) return(.return_splice_output(DT[0], obj = .spi_obj, what = "paired_hits", return_class = return_class))
 
     INC <- INC[do.call(paste, c(.SD, sep="\r")) %chin% common_keys, .SDcols = event_id]
     EXC <- EXC[do.call(paste, c(.SD, sep="\r")) %chin% common_keys, .SDcols = event_id]
@@ -89,15 +103,28 @@ get_pairs <- function(x,
     setkeyv(EXC, "event_id")
     out <- EXC[INC, on = event_id, nomatch = 0L]
     data.table::setorderv(out, event_id)
-    return(out[])
+    return(.return_splice_output(out[], obj = .spi_obj, what = "paired_hits", return_class = return_class))
   }
 
   # ---------- HITindex mode: pair ALL positive with ALL negative within each key ----------
+  need_multi <- c(
+    "event_id", "gene_id", "transcript_id", "chr", "strand", "event_type",
+    "form", "exons", "protein_id", "inc", "exc", "delta_psi",
+    "p.value", "padj", "n_samples", "n_control", "n_case",
+    "transcript_seq", "protein_seq"
+  )
+  miss_multi <- setdiff(need_multi, names(DT))
+  if (length(miss_multi)) {
+    stop("get_pairs(source='multi') missing required columns: ",
+         paste(miss_multi, collapse = ", "),
+         ". Run annotation matching + sequence attachment before pairing.")
+  }
+
   # keep only keys that have at least one + and one – deltaPSI
   sign_tbl   <- DT[, .(has_pos = any(delta_psi > 0, na.rm=TRUE),
                        has_neg = any(delta_psi < 0, na.rm=TRUE)), by = "event_id"]
   valid_keys <- sign_tbl[has_pos & has_neg, "event_id"]
-  if (!nrow(valid_keys)) return(DT[0])
+  if (!nrow(valid_keys)) return(.return_splice_output(DT[0], obj = .spi_obj, what = "paired_hits", return_class = return_class))
 
   DT2 <- DT[valid_keys, on = 'event_id']
 
@@ -133,5 +160,5 @@ get_pairs <- function(x,
   data.table::setcolorder(out, cols_old)
   out <- out[, ..cols_old]
   data.table::setnames(out, old = cols_old, new = cols_new)
-  out[]
+  .return_splice_output(out[], obj = .spi_obj, what = "paired_hits", return_class = return_class)
 }

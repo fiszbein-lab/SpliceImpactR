@@ -6,7 +6,7 @@ utils::globalVariables(c(
   "IJC_SAMPLE_1", "IPR", "IncLevel1", "M", "N", "N_adj", "OR", "SJC_SAMPLE_1", "V1",
   "a", "aa_end", "aa_start", "abs_start", "abs_stop", "absolute_exon_class",
   "absolute_exon_position", "ac", "all_zero", "alt_name", "any_dom_flag", "any_ppi",
-  "b", "bg_prop", "cached_resource", "cds_bp", "cds_bp_1", "cds_bp_2", "cds_end",
+  "b", "bg_prop", "cds_bp", "cds_bp_1", "cds_bp_2", "cds_end",
   "cds_gen_start", "cds_gen_stop", "cds_has", "cds_len", "cds_rel_start",
   "cds_rel_stop", "cds_start", "chr", "class_match", "class_pref_hit", "class_raw",
   "classification", "code_ord", "coding_exon_class", "coding_exon_position",

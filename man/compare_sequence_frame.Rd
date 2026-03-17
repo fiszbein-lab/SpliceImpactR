@@ -4,18 +4,27 @@
 \alias{compare_sequence_frame}
 \title{Compare frame states after sequence alignment}
 \usage{
-compare_sequence_frame(complete_hits, ann)
+compare_sequence_frame(
+  complete_hits,
+  ann,
+  return_class = c("auto", "data.table", "S4")
+)
 }
 \arguments{
-\item{complete_hits}{`data.frame` or `data.table` containing complete event
-information for inclusion/exclusion transcript pairs, typically from
-[get_pairs()] or similar.}
+\item{complete_hits}{`data.frame`, `data.table`, or `SpliceImpactResult`
+containing complete event information for inclusion/exclusion transcript
+pairs, typically from [get_pairs()] or similar.}
 
 \item{ann}{Annotation object (output of [get_annotation()]) used for both
 sequence alignment and coding index construction.}
+
+\item{return_class}{Character. Output mode: `"data.table"`, `"S4"`, or
+`"auto"` (default). In `auto`, S4 input returns updated S4 output.}
 }
 \value{
-A `data.table` containing all columns from `complete_hits`, plus:
+A `data.table` (or updated `SpliceImpactResult` when
+`return_class` resolves to S4) containing all columns from
+`complete_hits`, plus:
 \describe{
   \item{frame_call}{Result from [compare_frames()].}
   \item{rescue}{Rescue classification.}
@@ -41,24 +50,16 @@ The summary label `summary_classification` follows this precedence:
 4. Otherwise, inherited from `pc_class`.
 }
 \examples{
-sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                    check_extdata_dir('rawData/control_S6/'),
-                                    check_extdata_dir('rawData/control_S7/'),
-                                    check_extdata_dir('rawData/control_S8/'),
-                                    check_extdata_dir('rawData/case_S1/'),
-                                    check_extdata_dir('rawData/case_S2/'),
-                                    check_extdata_dir('rawData/case_S3/'),
-                                    check_extdata_dir('rawData/case_S4/')),
-                           sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-                           condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-                           stringsAsFactors = FALSE)
+ex <- load_example_data("sample_frame")
+sample_frame <- ex$sample_frame
 hit_index <- get_hitindex(sample_frame)
 res <- get_differential_inclusion(hit_index)
-annots <- get_annotation(load = "test")
+annots <- load_example_data("annotation_df")$annotation_df
 matched <- get_matched_events_chunked(res, annots$annotations, chunk_size = 2000)
 x_seq <- attach_sequences(matched, annots$sequences)
 pairs <- get_pairs(x_seq, source="multi")
 seq_compare <-compare_sequence_frame(pairs, annots$annotations)
+print(seq_compare)
 }
 \seealso{
 [compare_frames()], [compare_sequences_alignment()]

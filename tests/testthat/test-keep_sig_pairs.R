@@ -1,14 +1,14 @@
 test_that("keep_sig_pairs selects significant DI events", {
   skip_on_cran()
 
-  sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-                                      check_extdata_dir('rawData/control_S6/'),
-                                      check_extdata_dir('rawData/control_S7/'),
-                                      check_extdata_dir('rawData/control_S8/'),
-                                      check_extdata_dir('rawData/case_S1/'),
-                                      check_extdata_dir('rawData/case_S2/'),
-                                      check_extdata_dir('rawData/case_S3/'),
-                                      check_extdata_dir('rawData/case_S4/')),
+  sample_frame <- data.frame(path = c(file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S5/"),
+                                      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S6/"),
+                                      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S7/"),
+                                      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S8/"),
+                                      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S1/"),
+                                      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S2/"),
+                                      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S3/"),
+                                      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S4/")),
                              sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
                              condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
                              stringsAsFactors = FALSE)

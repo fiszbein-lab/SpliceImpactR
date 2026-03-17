@@ -35,7 +35,7 @@ Converts a manual feature table into the standardized long format
 and optionally merges it with biomaRt-derived features.
 }
 \examples{
-annotation_df <- get_annotation(load = "test")
+annotation_df <- load_example_data("annotation_df")$annotation_df
 user_df <- data.frame(
   ensembl_transcript_id = c(
     "ENST00000511072","ENST00000374900","ENST00000373020","ENST00000456328",
@@ -58,7 +58,8 @@ user_df <- data.frame(
   alt_name   = c(NA,"TMhelix",NA,"SignalP-noTM", "TMhelix", NA, NA, "TMhelix", "SignalP-TAT", NA),
   feature_id = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
 )
-user_features <- get_manual_features(user_df, annotation_df$annotation)
+user_features <- get_manual_features(user_df, annotation_df$annotations)
+print(user_features)
 
 }
 \seealso{

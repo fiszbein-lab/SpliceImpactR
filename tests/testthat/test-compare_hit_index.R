@@ -1,8 +1,8 @@
 test_that("compare_hit_index works on test extdata", {
   sf <- data.frame(
     path = c(
-      check_extdata_dir('rawData/control_S5/'),
-      check_extdata_dir('rawData/case_S1/')
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/control_S5/"),
+      file.path(system.file("extdata", package = "SpliceImpactR"), "rawData/case_S1/")
     ),
     sample_name = c("S5","S1"),
     condition   = c("control","case"),

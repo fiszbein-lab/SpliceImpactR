@@ -26,7 +26,9 @@ are absent. If `FALSE`, errors on missing columns.}
 \item{keep_internal_keys}{Passed through when `x` is S4. Default `FALSE`.}
 }
 \value{
-A `data.table` containing the selected columns.
+A `data.table` containing the selected columns. Row count and row
+order are preserved from the input (`SpliceImpactResult@paired_hits` or
+provided `data.table`).
 }
 \description{
 Extracts `paired_hits` columns from a [SpliceImpactResult] (or a paired-hits

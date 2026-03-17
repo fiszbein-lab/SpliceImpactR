@@ -66,6 +66,7 @@
 #' )
 #' example_df$psi < example_df$inclusion_reads / example_df$exclusion_reads
 #' user_data <- get_user_data(example_df)
+#' print(user_data)
 #'
 #' @export
 get_user_data <- function(df) {
@@ -200,16 +201,17 @@ get_user_data <- function(df) {
 #' )
 #'
 #' # compute psi if missing, just for demo
-
+#'
 #' post_di_user_data <- get_user_data_post_di(example_user_data)
-
+#' print(post_di_user_data)
 #'
 #' @return A data.table formatted like SpliceImpactR DI output
 #' (get_differential_inclusion)
 #' @importFrom data.table copy as.data.table
 #' @export
 get_user_data_post_di <- function(df) {
-  dt <- data.table::as.data.table(df)
+  .spi_in <- .resolve_splice_input(df, what = "raw_events")
+  dt <- data.table::as.data.table(.spi_in$dt)
 
   required_cols <- c("gene_id","chr","strand","inc","exc","form")
   missing <- setdiff(required_cols, names(dt))
@@ -292,12 +294,13 @@ get_user_data_post_di <- function(df) {
 #' @param annotations flattened GTF-style data.frame or data.table (from get_annotation)
 #'
 #' @examples
-#' annotation_df <- get_annotation(load = "test")
+#' annotation_df <- load_example_data("annotation_df")$annotation_df
 #' pairs <- data.frame(
 #'     transcript1 = c("ENST00000337907", "ENST00000426559"),
 #'     transcript2 = c("ENST00000400908", "ENST00000399728")
 #' )
 #' matched <- compare_transcript_pairs(pairs, annotation_df$annotations)
+#' print(matched)
 #'
 #' @return data.table mimicking `matched` structure, ready for downstream comparison.
 #' @export
@@ -305,26 +308,77 @@ compare_transcript_pairs <- function(transcript_pairs, annotations) {
   ann <- build_from_annotations(annotations)
   EX  <- ann$exons
   TX  <- ann$transcripts
+  matched_cols <- c(
+    "event_id", "event_type", "form", "gene_id", "chr", "strand",
+    "inc", "exc", "delta_psi", "p.value", "padj",
+    "n_samples", "n_control", "n_case", "transcript_id", "exons"
+  )
+  empty_matched <- function() {
+    data.table::data.table(
+      event_id = character(),
+      event_type = character(),
+      form = character(),
+      gene_id = character(),
+      chr = character(),
+      strand = character(),
+      inc = character(),
+      exc = character(),
+      delta_psi = numeric(),
+      p.value = numeric(),
+      padj = numeric(),
+      n_samples = integer(),
+      n_control = integer(),
+      n_case = integer(),
+      transcript_id = character(),
+      exons = character()
+    )
+  }
 
-  pairs <- as.data.table(transcript_pairs)
+  if (methods::is(transcript_pairs, "SpliceImpactResult")) {
+    .spi_in <- .resolve_splice_input(transcript_pairs, what = "paired_hits")
+    ph <- data.table::as.data.table(.spi_in$dt)
+    need_tx <- c("transcript_id_control", "transcript_id_case")
+    miss_tx <- setdiff(need_tx, names(ph))
+    if (length(miss_tx)) {
+      stop("compare_transcript_pairs: SpliceImpactResult paired_hits missing required columns: ", paste(miss_tx, collapse = ", "))
+    }
+    pairs <- unique(ph[, .(transcript1 = transcript_id_control, transcript2 = transcript_id_case)])
+  } else {
+    pairs <- as.data.table(transcript_pairs)
+  }
   stopifnot(all(c("transcript1", "transcript2") %in% names(pairs)))
+  pairs[, transcript1 := trimws(as.character(transcript1))]
+  pairs[, transcript2 := trimws(as.character(transcript2))]
+  pairs <- unique(
+    pairs[
+      !is.na(transcript1) & !is.na(transcript2) &
+        nzchar(transcript1) & nzchar(transcript2)
+    ]
+  )
+  if (!nrow(pairs)) return(empty_matched())
 
-  keepers <- pairs$transcript1 %in% ann$transcripts$transcript_id &
-    pairs$transcript2 %in% ann$transcripts$transcript_id
+  keepers <- pairs$transcript1 %in% TX$transcript_id &
+    pairs$transcript2 %in% TX$transcript_id
   outMessage <- paste0(sum(keepers), " out of ", nrow(pairs), " transcript pairs",
          " contained within annotations")
   message(outMessage)
-  if (sum(keepers) == 0) return(NA)
+  if (sum(keepers) == 0) return(empty_matched())
+  pairs <- pairs[keepers]
 
   # subset exon + tx info
-  tx_info <- TX[, .(transcript_id, gene_id, chr, strand)]
+  tx_info <- TX[, .(
+    transcript_id = as.character(transcript_id),
+    gene_id = as.character(gene_id),
+    chr = as.character(chr),
+    strand = as.character(strand)
+  )]
   setkey(EX, transcript_id)
   setkey(tx_info, transcript_id)
 
   get_exon_info <- function(txid) {
     ex_sub <- EX[transcript_id == txid]
     if (!nrow(ex_sub))
-      return(list(coords = NA_character_, exons = NA_character_))
+      return(list(coords = "", exons = ""))
     ex_sub <- ex_sub[order(start)]
     coords_str <- paste(sprintf("%d-%d", ex_sub$start, ex_sub$stop), collapse = ";")
     exons_str  <- paste(ex_sub$exon_id, collapse = ";")
@@ -343,20 +397,29 @@ compare_transcript_pairs <- function(transcript_pairs, annotations) {
     list(vapply(tmp, `[[`, character(1), "coords"),
          vapply(tmp, `[[`, character(1), "exons"))
   }]
-  # add gene/chr/strand (use transcript1’s)
-  pairs <- merge(pairs, tx_info, by.x = "transcript1", by.y = "transcript_id", all.x = TRUE)
+
+  # add gene/chr/strand from both sides; prefer transcript1 metadata
+  tx1 <- copy(tx_info)
+  setnames(tx1, c("transcript_id", "gene_id", "chr", "strand"),
+           c("transcript1", "gene_id_1", "chr_1", "strand_1"))
+  tx2 <- copy(tx_info)
+  setnames(tx2, c("transcript_id", "gene_id", "chr", "strand"),
+           c("transcript2", "gene_id_2", "chr_2", "strand_2"))
+  pairs <- merge(pairs, tx1, by = "transcript1", all.x = TRUE)
+  pairs <- merge(pairs, tx2, by = "transcript2", all.x = TRUE)
+  pairs[, gene_id := ifelse(!is.na(gene_id_1) & nzchar(gene_id_1), gene_id_1, gene_id_2)]
+  pairs[, chr := ifelse(!is.na(chr_1) & nzchar(chr_1), chr_1, chr_2)]
+  pairs[, strand := ifelse(!is.na(strand_1) & nzchar(strand_1), strand_1, strand_2)]
+  pairs[, c("gene_id_1", "chr_1", "strand_1", "gene_id_2", "chr_2", "strand_2") := NULL]
 
   # assign synthetic IDs
   pairs[, event_id := paste0("TXCMP:", seq_len(.N))]
   pairs[, event_type := "TXCMP"]
   inc_dt <- pairs[, .(
-    event_row       = .I * 2 - 1L,
-    inc_rows_by_idx = NA_character_,
-    inc_exons_by_idx = NA_character_,
     event_id, event_type,
     form = "INC",
     gene_id, chr, strand,
-    inc, exc = "",
+    inc, exc,
     delta_psi = 1, p.value = 0, padj = 0,
     n_samples = 0, n_control = 0, n_case = 0,
     transcript_id = transcript1,
@@ -364,9 +427,6 @@ compare_transcript_pairs <- function(transcript_pairs, annotations) {
   )]
 
   exc_dt <- pairs[, .(
-    event_row       = .I * 2L,
-    inc_rows_by_idx = NA_character_,
-    inc_exons_by_idx = NA_character_,
     event_id, event_type,
     form = "EXC",
     gene_id, chr, strand,
@@ -378,14 +438,23 @@ compare_transcript_pairs <- function(transcript_pairs, annotations) {
     exons = exc_exons
   )]
 
-  matched_like <- rbindlist(list(inc_dt, exc_dt), use.names = TRUE)
-  setorder(matched_like, event_id, event_row)
+  matched_like <- rbindlist(list(inc_dt, exc_dt), use.names = TRUE, fill = TRUE)
+  matched_like <- matched_like[, ..matched_cols]
+  setorder(matched_like, event_id, form)
+
+  # Keep only complete, non-empty event pairs.
+  bad <- matched_like[
+    is.na(gene_id) | !nzchar(gene_id) |
+      is.na(transcript_id) | !nzchar(transcript_id),
+    unique(event_id)
+  ]
+  if (length(bad)) {
+    matched_like <- matched_like[!event_id %chin% bad]
+  }
+  if (!nrow(matched_like)) return(empty_matched())
 
   return(matched_like)
 }
-
-
-
 
 
 

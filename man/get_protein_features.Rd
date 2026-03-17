@@ -11,9 +11,13 @@ get_protein_features(
   sequences = NULL,
   load_path = NULL,
   save_path = NULL,
+  base_dir = NULL,
+  use_cache = TRUE,
+  force_refresh = FALSE,
   timeout = 600,
-  species = c("human", "mouse")[1],
-  release = c(109, 115)[1],
+  ensembl_mirror = NULL,
+  species = c("human", "mouse"),
+  release = 109,
   test = FALSE,
   combine_overlaps = FALSE
 )
@@ -31,7 +35,21 @@ to interpro, mobidblite, seg, ncoils, tmhmm, signalp}
 
 \item{save_path}{path to save prior protein features from}
 
+\item{base_dir}{Optional cache root. If `NULL` (default), uses
+package cache under `tools::R_user_dir("SpliceImpactR", "cache")`.}
+
+\item{use_cache}{Logical; if `TRUE` (default), cache and reuse final
+`get_protein_features()` outputs through BiocFileCache.}
+
+\item{force_refresh}{Logical; if `TRUE`, recompute and overwrite any
+existing BiocFileCache entry for this parameter/input signature.}
+
 \item{timeout}{ability to extend timeout if biomaRt is not cooperating}
+
+\item{ensembl_mirror}{Optional Ensembl mirror to try first for BioMart
+connections; one of `"useast"`, `"www"`, or `"asia"`. If `NULL`,
+mirrors are tried in fallback order when `release = NULL`. If a
+specific `release` is provided, biomaRt ignores mirror selection.}
 
 \item{species}{Character string giving the Ensembl BioMart
 dataset (default \code{"human"}). For mouse, use
@@ -42,9 +60,9 @@ version provided in the get_annotation (This can be found in gencode, for
 example in human: \url{"https://www.gencodegenes.org/human/releases.html"})
 example in mouse: \url{"https://www.gencodegenes.org/mouse/releases.html"})}
 
-\item{test}{Logical; bool for whether to load from reduced test set}
+\item{test}{Logical; bool for whether to load from reduced test set.}
 
-\item{combine_overlap}{simplifies protein feature output an combines 
+\item{combine_overlaps}{simplifies protein feature output and combines
 protein features with the same ID and overlapping coords. Sometimes not 
 desireable}
 }
@@ -59,6 +77,7 @@ of the same domain being called as the same in domain identification and
 enrichment.
 }
 \examples{
-annotation_df <- get_annotation(load = "test")
+annotation_df <- load_example_data("annotation_df")$annotation_df
 interpro_features <- get_protein_features(c("interpro"), annotation_df$annotations, annotation_df$sequences, timeout = 600, test = TRUE)
+print(interpro_features)
 }

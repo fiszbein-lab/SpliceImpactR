@@ -444,36 +444,50 @@ match_events_to_annotations_vec <- function(events,
 #' limits. It can later be parallelized using \pkg{future.apply} or similar.
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
-
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
+#' print(sample_frame)
+#'
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annots <- get_annotation(load = "test")
+#' annots <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annots$annotations, chunk_size = 2000)
+#' print(matched)
 #'
 #' @importFrom data.table as.data.table rbindlist setorder %chin% data.table
 #' @export
 get_matched_events_chunked <- function(events,
                                  annotations,
                                  chunk_size = 50000,
-                                 minOverlap = 0.05
+                                 minOverlap = 0.05,
+                                 return_class = c("auto", "data.table", "S4")
 ) {
-  ev <- data.table::as.data.table(events)
+  return_class <- match.arg(return_class)
+  .spi_obj <- NULL
+  if (methods::is(events, "SpliceImpactResult")) {
+    .spi_obj <- events
+    ev <- as_dt_from_s4(events, "res_di")
+    if (!nrow(ev)) ev <- as_dt_from_s4(events, "di_events")
+  } else {
+    ev <- data.table::as.data.table(events)
+  }
+
+  .muffle_empty_key_warning <- function(expr) {
+    withCallingHandlers(
+      expr,
+      warning = function(w) {
+        if (grepl("cols is a character vector of zero length", conditionMessage(w), fixed = TRUE)) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    )
+  }
+
   if (!(".__row__" %chin% names(ev))) ev[, .__row__ := .I]
 
   # indices per chunk
   n <- nrow(ev)
-  if (n == 0L) return(data.table::data.table())
+  if (n == 0L) return(.return_splice_output(data.table::data.table(), obj = .spi_obj, what = "matched", return_class = return_class))
   chunk_id <- ceiling(seq_len(n) / chunk_size)
   idx_list <- split(seq_len(n), chunk_id)
 
@@ -482,19 +496,27 @@ get_matched_events_chunked <- function(events,
   for (k in seq_along(idx_list)) {
     ii <- idx_list[[k]]
     cat(sprintf("Chunk %d/%d: rows %d..%d\n", k, length(idx_list), min(ii), max(ii)))
-    out_list[[k]] <- match_events_to_annotations_vec(
-      events      = ev[ii],
-      annotations = annotations,
-      minOverlap = minOverlap
+    out_list[[k]] <- .muffle_empty_key_warning(
+      match_events_to_annotations_vec(
+        events      = ev[ii],
+        annotations = annotations,
+        minOverlap = minOverlap
+      )
     )
   }
 
   # stitch and restore event order
-  ans <- data.table::rbindlist(out_list, fill = TRUE)
-  if ("event_row" %chin% names(ans)) data.table::setorder(ans, event_row)
-  ans[, c("event_row", "inc_rows_by_idx") := NULL][, 
-                                                   "exons" := inc_exons_by_idx
-                                                   ][, "inc_exons_by_idx" := NULL]
+  ans <- .muffle_empty_key_warning(data.table::rbindlist(out_list, fill = TRUE))
+  # Drop any inherited key metadata from chunk outputs to avoid empty-key warnings
+  # during subsequent column/order operations.
+  data.table::setattr(ans, "sorted", NULL)
+  if ("event_row" %chin% names(ans)) ans <- ans[order(event_row)]
+  ans <- .muffle_empty_key_warning(
+    ans[, c("event_row", "inc_rows_by_idx") := NULL][,
+      "exons" := inc_exons_by_idx
+    ][, "inc_exons_by_idx" := NULL]
+  )
+  .return_splice_output(ans, obj = .spi_obj, what = "matched", return_class = return_class)
 }
 
 
@@ -521,24 +543,19 @@ get_matched_events_chunked <- function(events,
 #' @export
 #'
 #' @examples
-#' sample_frame <- data.frame(path = c(check_extdata_dir('rawData/control_S5/'),
-#'                                     check_extdata_dir('rawData/control_S6/'),
-#'                                     check_extdata_dir('rawData/control_S7/'),
-#'                                     check_extdata_dir('rawData/control_S8/'),
-#'                                     check_extdata_dir('rawData/case_S1/'),
-#'                                     check_extdata_dir('rawData/case_S2/'),
-#'                                     check_extdata_dir('rawData/case_S3/'),
-#'                                     check_extdata_dir('rawData/case_S4/')),
-#'                            sample_name  = c("S5", "S6", "S7", "S8", "S1", "S2", "S3", "S4"),
-#'                            condition    = c("control", "control", "control", "control", "case",  "case",  "case",  "case"),
-#'                            stringsAsFactors = FALSE)
+#' ex <- load_example_data("sample_frame")
+#' sample_frame <- ex$sample_frame
 #' hit_index <- get_hitindex(sample_frame)
 #' res <- get_differential_inclusion(hit_index)
-#' annots <- get_annotation(load = "test")
+#' annots <- load_example_data("annotation_df")$annotation_df
 #' matched <- get_matched_events_chunked(res, annots$annotations, chunk_size = 2000)
 #' x_seq <- attach_sequences(matched, annots$sequences)
-attach_sequences <- function(x, sequences) {
-  x  <- data.table::as.data.table(x)
+#' print(x_seq)
+attach_sequences <- function(x, sequences, return_class = c("auto", "data.table", "S4")) {
+  return_class <- match.arg(return_class)
+  .spi_in <- .resolve_splice_input(x, what = "matched")
+  .spi_obj <- .spi_in$obj
+  x  <- data.table::as.data.table(.spi_in$dt)
   seq <- data.table::as.data.table(sequences)
 
   # Keep only what we need and normalize types
@@ -565,9 +582,5 @@ attach_sequences <- function(x, sequences) {
 
   out <- seq[x, on = "transcript_id"]   # left join; preserves x’s row order
   data.table::setcolorder(out, c(names(x), setdiff(names(out), names(x))))
-  out[]
+  .return_splice_output(out[], obj = .spi_obj, what = "matched", return_class = return_class)
 }
-
-
-
-
