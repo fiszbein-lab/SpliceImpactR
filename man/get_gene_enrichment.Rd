@@ -60,6 +60,22 @@ get_gene_enrichment(mode = "di", res = res)
 get_gene_enrichment(mode = "ppi", hits = hits)
 get_gene_enrichment(mode = "domain", hits = hits)
 
-obj <- as_splice_impact_result(res = res, hits_final = hits)
+hits_s4 <- data.table::data.table(
+  event_id = c("E1", "E2", "E3"),
+  event_type = c("SE", "A3SS", "MXE"),
+  gene_id = c("ENSG000001", "ENSG000002", "ENSG000003"),
+  chr = c("chr1", "chr1", "chr2"),
+  strand = c("+", "+", "-"),
+  transcript_id_control = c("TX1", "TX3", "TX5"),
+  transcript_id_case = c("TX2", "TX4", "TX6"),
+  inc_control = c("100-110", "200-210", "300-310"),
+  inc_case = c("100-115", "205-215", "305-315"),
+  exc_control = c("120-130", "220-230", "320-330"),
+  exc_case = c("121-130", "225-235", "325-335"),
+  n_ppi = c(1L, 0L, 2L),
+  diff_n = c(0L, 1L, 2L)
+)
+obj <- as_splice_impact_result(hits_final = hits_s4)
 get_gene_enrichment(mode = "ppi", x = obj)
+get_gene_enrichment(mode = "domain", x = obj)
 }
