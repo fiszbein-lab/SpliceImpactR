@@ -1,3 +1,7 @@
+# SpliceImpactR 0.99.3
+
+* Version bump for Bioconductor
+
 # SpliceImpactR 0.99.2
 
 # SpliceImpactR 0.99.1
