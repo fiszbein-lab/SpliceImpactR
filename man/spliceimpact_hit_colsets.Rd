@@ -12,3 +12,4 @@ Named list of predefined column vectors for paired-hit accessors.
 \description{
 List predefined paired-hit column subsets
 }
+\keyword{internal}

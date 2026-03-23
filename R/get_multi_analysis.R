@@ -2184,6 +2184,23 @@ get_di_gene_enrichment <- function(hits, padj_threshold, delta_psi_threshold) {
 #'   `mode="di"`.
 #'
 #' @return Character vector of unique gene IDs.
+#' @examples
+#' res <- data.table::data.table(
+#'   gene_id = c("ENSG000001", "ENSG000001", "ENSG000002"),
+#'   padj = c(0.01, 0.20, 0.03),
+#'   delta_psi = c(0.25, 0.05, -0.30)
+#' )
+#' hits <- data.table::data.table(
+#'   gene_id = c("ENSG000001", "ENSG000002", "ENSG000003"),
+#'   n_ppi = c(1L, 0L, 2L),
+#'   diff_n = c(0L, 1L, 2L)
+#' )
+#' get_gene_enrichment(mode = "di", res = res)
+#' get_gene_enrichment(mode = "ppi", hits = hits)
+#' get_gene_enrichment(mode = "domain", hits = hits)
+#'
+#' obj <- as_splice_impact_result(res = res, hits_final = hits)
+#' get_gene_enrichment(mode = "ppi", x = obj)
 #' @export
 get_gene_enrichment <- function(
     mode = c("di", "ppi", "domain"),

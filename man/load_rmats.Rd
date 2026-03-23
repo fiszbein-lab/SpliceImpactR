@@ -34,7 +34,7 @@ and returns unified event tables ready for downstream inclusion/exclusion proces
 \examples{
 ex <- load_example_data("sample_frame")
 sample_frame <- ex$sample_frame
-rmats <- load_rmats(sample_frame, event_types = c("MXE", "SE", "A3SS", "A5SS", "RI"))
+rmats <- load_rmats(sample_frame, use = "JCEC", event_types = c("MXE", "SE", "A3SS", "A5SS", "RI"))
 print(rmats)
 
 }

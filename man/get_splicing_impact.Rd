@@ -76,6 +76,11 @@ Use both terminal and non-terminal types for `source_data = "both"`.}
 
 \item{adjust_method}{Passed to [get_differential_inclusion()].}
 
+\item{fdr_threshold}{Passed to [keep_sig_pairs()] as the adjusted p-value cutoff.}
+
+\item{delta_psi_threshold}{Passed to [keep_sig_pairs()] as the absolute
+delta-psi cutoff.}
+
 \item{parallel_glm}{Passed to [get_differential_inclusion()].}
 
 \item{chunk_size_glm}{Passed to [get_differential_inclusion()].}
@@ -111,4 +116,23 @@ If `return_class = "S4"`, returns a [SpliceImpactResult] containing
 Runs the core SpliceImpactR pipeline from raw event table (or sample paths)
 through paired domain/PPI calls, then returns either a compact `data.table`
 bundle (`data`, `res`, `hits_final`) or an S4 [SpliceImpactResult].
+}
+\examples{
+ex <- load_example_data(
+  c("sample_frame", "annotation_df", "protein_feature_total", "ppi")
+)
+out <- get_splicing_impact(
+  sample_frame = ex$sample_frame,
+  annotation_df = ex$annotation_df,
+  protein_feature_total = ex$protein_feature_total,
+  ppi = ex$ppi,
+  source_data = "rmats",
+  event_types = c("SE"),
+  use = "JCEC",
+  parallel_glm = FALSE,
+  BPPARAM = BiocParallel::SerialParam(),
+  verbose = FALSE
+)
+print(names(out))
+
 }

@@ -16,3 +16,7 @@ Invisible character guide text (or visible text if `as_markdown = TRUE`).
 Prints practical guidance on slots, assays, key columns, and common access
 patterns for conversion between S4 and `data.table`.
 }
+\examples{
+guide_txt <- spliceimpact_s4_guide(as_markdown = TRUE)
+cat(substr(guide_txt, 1, 80), "\n")
+}

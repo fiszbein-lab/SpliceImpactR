@@ -35,3 +35,34 @@ Extracts `paired_hits` columns from a [SpliceImpactResult] (or a paired-hits
 `data.table`) using predefined subset groups such as `core`, `domain`, `ppi`,
 and `sequence`.
 }
+\examples{
+hits <- data.table::data.table(
+  event_id = c("E1", "E2"),
+  event_type = c("SE", "A3SS"),
+  gene_id = c("ENSG000001", "ENSG000002"),
+  chr = c("chr1", "chr2"),
+  strand = c("+", "-"),
+  transcript_id_control = c("TX1", "TX3"),
+  transcript_id_case = c("TX2", "TX4"),
+  protein_id_control = c("P1", "P3"),
+  protein_id_case = c("P2", "P4"),
+  inc_control = c("100-110", "200-210"),
+  inc_case = c("100-115", "205-215"),
+  exc_control = c("120-130", "220-230"),
+  exc_case = c("121-130", "225-235"),
+  case_only_domains = c("IPR0001", ""),
+  control_only_domains = c("", "IPR0002"),
+  case_only_n = c(1L, 0L),
+  control_only_n = c(0L, 1L),
+  diff_n = c(1L, 1L),
+  case_ppi = c("A;B", "C"),
+  control_ppi = c("A", "C;D"),
+  n_case_ppi = c(2L, 1L),
+  n_control_ppi = c(1L, 2L),
+  n_ppi = c(1L, 1L),
+  dna_pid = c(0.95, 0.90),
+  prot_pid = c(0.90, 0.85),
+  frame_call = c("Match", "Frameshift")
+)
+print(get_hits_final_view(hits, col_subset = c("core", "ppi")))
+}

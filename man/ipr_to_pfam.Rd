@@ -2,22 +2,17 @@
 % Please edit documentation in R/get_ppi.R
 \name{ipr_to_pfam}
 \alias{ipr_to_pfam}
-\title{Convert InterPro back to PFAM}
+\title{Convert InterPro IDs to PFAM IDs}
 \usage{
 ipr_to_pfam(ipr_ids)
 }
 \arguments{
-\item{hits_domain}{`data.table`, `data.frame`, or `SpliceImpactResult` with
-`gene_id` and list-cols `case_only_domains_list` / `control_only_domains_list`.}
-
-\item{ppi}{wide interaction table from saved data (get_ppi)}
-
-\item{protein_feature_total}{table with database/clean_name/feature_id for interpro mapping}
+\item{ipr_ids}{Character vector of InterPro IDs (for example, `"IPR000719"`).}
 }
 \value{
-hits_domain with added columns
+Character vector of PFAM IDs mapped from `ipr_ids`.
 }
 \description{
-Convert InterPro back to PFAM
+Convert InterPro IDs to PFAM IDs
 }
 \keyword{internal}

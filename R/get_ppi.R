@@ -1,6 +1,7 @@
 #' Pull PPI from SpliceImpactR's data
 #' 
 #' Generation details in inst/scripts
+#' @return A `data.table` of interaction edges used by PPI switching utilities.
 #' @examples
 #' ppi_int <- get_ppi_interactions()
 #' print(ppi_int)
@@ -19,13 +20,10 @@ get_ppi_interactions <- function() {
 
 
 
-#' Convert InterPro back to PFAM
+#' Convert InterPro IDs to PFAM IDs
 #'
-#' @param hits_domain `data.table`, `data.frame`, or `SpliceImpactResult` with
-#'   `gene_id` and list-cols `case_only_domains_list` / `control_only_domains_list`.
-#' @param ppi wide interaction table from saved data (get_ppi)
-#' @param protein_feature_total table with database/clean_name/feature_id for interpro mapping
-#' @return hits_domain with added columns
+#' @param ipr_ids Character vector of InterPro IDs (for example, `"IPR000719"`).
+#' @return Character vector of PFAM IDs mapped from `ipr_ids`.
 #' 
 #' @keywords internal
 ipr_to_pfam <- function(ipr_ids) {
@@ -135,10 +133,8 @@ mark_changing_partners_split <- function(ppi,
 #' ppi <- get_ppi_interactions()             
 #' hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 #' print(hits_ppi)
-#' @examples
-#' 
-#' hits_domain[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
-#' 
+#' hits_ppi[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
+#'
 #' @export
 get_ppi_switches <- function(hits_domain, ppi, protein_feature_total, return_class = c("auto", "data.table", "S4")) {
   return_class <- match.arg(return_class)
@@ -293,7 +289,7 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total, return_cla
 #' @import data.table
 #' @importFrom ggplot2 ggplot aes geom_col geom_text geom_histogram facet_wrap
 #'   scale_fill_manual scale_x_discrete labs theme_classic theme_bw theme element_blank
-#'   element_text expand_limits
+#'   element_text expand_limits geom_blank
 #' @importFrom patchwork plot_layout
 #' @importFrom scales percent
 #' @importFrom ggplot2 margin

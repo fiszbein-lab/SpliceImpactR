@@ -36,3 +36,45 @@ as_splice_impact_result(
 Accepts any subset of `data`, `res`, and `hits_final`. Missing pieces are
 stored as empty valid slots and can be added later with [add_splice_part()].
 }
+\examples{
+raw <- data.table::data.table(
+  event_id = c("E1", "E1"),
+  form = c("inc", "exc"),
+  sample = c("S1", "S1"),
+  chr = c("chr1", "chr1"),
+  strand = c("+", "+"),
+  inc = c("100-110", "120-130"),
+  exc = c("120-130", "100-110"),
+  psi = c(0.70, 0.30),
+  inclusion_reads = c(70, 30),
+  exclusion_reads = c(30, 70)
+)
+res <- data.table::data.table(
+  event_id = c("E1", "E1"),
+  form = c("inc", "exc"),
+  inc = c("100-110", "120-130"),
+  exc = c("120-130", "100-110"),
+  chr = c("chr1", "chr1"),
+  strand = c("+", "+"),
+  gene_id = c("ENSG000001", "ENSG000001"),
+  padj = c(0.01, 0.01),
+  delta_psi = c(0.20, -0.20)
+)
+hits <- data.table::data.table(
+  event_id = "E1",
+  event_type = "SE",
+  gene_id = "ENSG000001",
+  chr = "chr1",
+  strand = "+",
+  transcript_id_control = "TX1",
+  transcript_id_case = "TX2",
+  inc_control = "100-110",
+  inc_case = "100-115",
+  exc_control = "120-130",
+  exc_case = "121-130",
+  n_ppi = 1L,
+  diff_n = 1L
+)
+obj <- as_splice_impact_result(data = raw, res = res, hits_final = hits)
+obj
+}

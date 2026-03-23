@@ -28,6 +28,9 @@
 #' @param terminal_fill Passed to [get_differential_inclusion()].
 #' @param cooks_cutoff Passed to [get_differential_inclusion()].
 #' @param adjust_method Passed to [get_differential_inclusion()].
+#' @param fdr_threshold Passed to [keep_sig_pairs()] as the adjusted p-value cutoff.
+#' @param delta_psi_threshold Passed to [keep_sig_pairs()] as the absolute
+#'   delta-psi cutoff.
 #' @param parallel_glm Passed to [get_differential_inclusion()].
 #' @param chunk_size_glm Passed to [get_differential_inclusion()].
 #' @param BPPARAM Passed to [get_differential_inclusion()]. Use a
@@ -49,6 +52,24 @@
 #'
 #' If `return_class = "S4"`, returns a [SpliceImpactResult] containing
 #' `raw_events`, `di_events`, and `paired_hits` slots.
+#'
+#' @examples
+#' ex <- load_example_data(
+#'   c("sample_frame", "annotation_df", "protein_feature_total", "ppi")
+#' )
+#' out <- get_splicing_impact(
+#'   sample_frame = ex$sample_frame,
+#'   annotation_df = ex$annotation_df,
+#'   protein_feature_total = ex$protein_feature_total,
+#'   ppi = ex$ppi,
+#'   source_data = "rmats",
+#'   event_types = c("SE"),
+#'   use = "JCEC",
+#'   parallel_glm = FALSE,
+#'   BPPARAM = BiocParallel::SerialParam(),
+#'   verbose = FALSE
+#' )
+#' print(names(out))
 #'
 #' @export
 get_splicing_impact <- function(

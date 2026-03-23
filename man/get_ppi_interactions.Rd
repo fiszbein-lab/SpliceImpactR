@@ -6,6 +6,9 @@
 \usage{
 get_ppi_interactions()
 }
+\value{
+A `data.table` of interaction edges used by PPI switching utilities.
+}
 \description{
 Generation details in inst/scripts
 }

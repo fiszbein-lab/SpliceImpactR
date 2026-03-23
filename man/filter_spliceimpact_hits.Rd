@@ -23,3 +23,24 @@ Filters `paired_hits` using one or more logical expressions evaluated in the
 paired-hit table, then synchronizes all event-linked slots
 (`segments`, `res_di`, `di_events`, `matched`, `raw_events`).
 }
+\examples{
+hits <- data.table::data.table(
+  event_id = c("E1", "E2"),
+  event_type = c("SE", "A3SS"),
+  gene_id = c("ENSG000001", "ENSG000002"),
+  chr = c("chr1", "chr2"),
+  strand = c("+", "-"),
+  transcript_id_control = c("TX1", "TX3"),
+  transcript_id_case = c("TX2", "TX4"),
+  inc_control = c("100-110", "200-210"),
+  inc_case = c("100-115", "205-215"),
+  exc_control = c("120-130", "220-230"),
+  exc_case = c("121-130", "225-235"),
+  n_ppi = c(1L, 0L),
+  diff_n = c(1L, 0L),
+  frame_call = c("Match", "Frameshift")
+)
+obj <- as_splice_impact_result(hits_final = hits)
+obj_keep <- filter_spliceimpact_hits(obj, n_ppi > 0L)
+print(as_dt_from_s4(obj_keep, "paired_hits"))
+}

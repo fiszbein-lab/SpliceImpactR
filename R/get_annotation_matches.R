@@ -434,6 +434,8 @@ match_events_to_annotations_vec <- function(events,
 #'   (default = 50,000).
 #' @param minOverlap double ranging from 0 to 1 (default 0.05), required minimum
 #' overlap to consider a match
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
 #'
 #' @return A data.table with matched transcripts and exons for all events.
 #'   The output order matches the original event order.
@@ -532,6 +534,8 @@ get_matched_events_chunked <- function(events,
 #' @param sequences A data.frame or data.table with at least the columns:
 #'   \code{transcript_id}, \code{protein_id}, \code{transcript_seq},
 #'   and \code{protein_seq}.
+#' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
+#'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
 #'
 #' @return A \link[data.table]{data.table} with the same rows as \code{x} and
 #'   appended sequence columns (\code{transcript_seq}, \code{protein_seq}, etc.).

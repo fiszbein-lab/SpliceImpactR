@@ -12,3 +12,7 @@ Named list describing slots, core key columns, and assay names.
 \description{
 S4 slot and key schema for SpliceImpactResult
 }
+\examples{
+schema <- spliceimpact_s4_schema()
+names(schema)
+}

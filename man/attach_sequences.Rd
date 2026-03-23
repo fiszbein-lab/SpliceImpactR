@@ -12,6 +12,9 @@ attach_sequences(x, sequences, return_class = c("auto", "data.table", "S4"))
 \item{sequences}{A data.frame or data.table with at least the columns:
 \code{transcript_id}, \code{protein_id}, \code{transcript_seq},
 and \code{protein_seq}.}
+
+\item{return_class}{Character. Output mode: `"data.table"`, `"S4"`, or
+`"auto"` (default). In `auto`, S4 input returns updated S4 output.}
 }
 \value{
 A \link[data.table]{data.table} with the same rows as \code{x} and

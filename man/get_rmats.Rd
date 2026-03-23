@@ -34,6 +34,6 @@ Non-standard columns (e.g. IJC_SAMPLE_1) are checked for presence.
 \examples{
 ex <- load_example_data("sample_frame")
 sample_frame <- ex$sample_frame
-rmats <- get_rmats(load_rmats(sample_frame, event_types = c("MXE", "SE", "A3SS", "A5SS", "RI")))
+rmats <- get_rmats(load_rmats(sample_frame, use = "JCEC", event_types = c("MXE", "SE", "A3SS", "A5SS", "RI")))
 print(rmats)
 }

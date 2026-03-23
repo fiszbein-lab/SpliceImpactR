@@ -155,19 +155,26 @@ split_into_bits <- function(gtf_df, max_group_size) {
 
   errs <- character(0)
   for (m in mirrors) {
-    mart <- tryCatch(
-      biomaRt::useEnsembl(
-        biomart = biomart,
-        dataset = dataset,
-        version = version,
-        mirror = m,
-        verbose = verbose
+    attempt <- tryCatch(
+      list(
+        mart = biomaRt::useEnsembl(
+          biomart = biomart,
+          dataset = dataset,
+          version = version,
+          mirror = m,
+          verbose = verbose
+        ),
+        err = NULL
       ),
       error = function(e) {
-        errs <<- c(errs, paste0("mirror=", m, ": ", conditionMessage(e)))
-        NULL
+        list(
+          mart = NULL,
+          err = paste0("mirror=", m, ": ", conditionMessage(e))
+        )
       }
     )
+    if (!is.null(attempt$err)) errs <- c(errs, attempt$err)
+    mart <- attempt$mart
     if (!is.null(mart)) {
       if (!identical(m, mirrors[1])) {
         message("[PROCESSING] Ensembl mirror fallback succeeded on: ", m)
@@ -202,9 +209,9 @@ split_into_bits <- function(gtf_df, max_group_size) {
 #' @param species_dataset Character string giving the Ensembl BioMart
 #'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 #'   \code{"mmusculus_gene_ensembl"}.
-#' @param release release version from ensemble associated with the gencode
-#' version provided in the get_annotation (This can be found in gencode, for
-#' example in humans: https://www.gencodegenes.org/human/releases.html)
+#' @param release Release version from Ensembl associated with the GENCODE
+#'   version used in [get_annotation()]. See the GENCODE human release listing
+#'   to map GENCODE and Ensembl versions.
 #'
 #' @return A \code{data.table} containing protein feature annotations
 #'   including transcript and peptide IDs, feature start/end positions,
@@ -602,10 +609,11 @@ add_user_features <- function(x, default_database = "user") {
 #' @param species Character string giving the Ensembl BioMart
 #'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 #'   \code{"mmusculus_gene_ensembl"}.
-#' @param release release version from ensemble associated with the gencode
-#' version provided in the get_annotation (This can be found in gencode, for
-#' example in humans: \url{"https://www.gencodegenes.org/human/releases.html"})
-#'  ensembl_mirror Optional Ensembl mirror passed to the BioMart connector.
+#' @param release Release version from Ensembl associated with the GENCODE
+#'   version used in [get_annotation()]. See the GENCODE human release listing
+#'   to map GENCODE and Ensembl versions.
+#' @param ensembl_mirror Optional Ensembl mirror passed to the BioMart
+#'   connector.
 #'
 #' @return A \code{data.table} containing protein feature annotations
 #'   including transcript and peptide IDs, feature start/end positions,
@@ -615,6 +623,7 @@ add_user_features <- function(x, default_database = "user") {
 #' Here we access ELM's SLiM database to pull instances and classes and use
 #' BiomaRt to match up uniprot to ensembl + confirm with regex checks
 #'
+#' @importFrom utils URLencode
 #'
 #' @keywords internal
 get_linear_motifs <- function(gtf_df,
@@ -706,10 +715,9 @@ get_linear_motifs <- function(gtf_df,
 #' @param species Character string giving the Ensembl BioMart
 #' dataset (default \code{"human"}). For mouse, use
 #' \code{"mouse"}.
-#' @param release release version from ensemble associated with the gencode
-#' version provided in the get_annotation (This can be found in gencode, for
-#' example in human: \url{"https://www.gencodegenes.org/human/releases.html"})
-#' example in mouse: \url{"https://www.gencodegenes.org/mouse/releases.html"})
+#' @param release Release version from Ensembl associated with the GENCODE
+#'   version used in [get_annotation()]. See the GENCODE human/mouse release
+#'   listings to map GENCODE and Ensembl versions.
 #' @param test Logical; bool for whether to load from reduced test set.
 #' @param combine_overlaps simplifies protein feature output and combines
 #' protein features with the same ID and overlapping coords. Sometimes not 
@@ -874,8 +882,8 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
   )]
   
   pf[, `:=`(
-    start = pmax(1L, pmin(start, cds_len_aa, na.rm=T), na.rm=T),
-    stop  = pmax(1L, pmin(stop,  cds_len_aa, na.rm=T), na.rm=T)
+    start = pmax(1L, pmin(start, cds_len_aa, na.rm = TRUE), na.rm = TRUE),
+    stop  = pmax(1L, pmin(stop,  cds_len_aa, na.rm = TRUE), na.rm = TRUE)
   )]
   pf[, c("t_start","t_stop") := NULL]
 
@@ -1304,8 +1312,4 @@ get_exon_features <- function(gtf_dt, feat, inclusive = TRUE) {
     overlap_aa_len   = overlap_end - overlap_start + 1L
   )][order(ensembl_transcript_id, exon_number, database, prot_start, prot_stop)]
 }
-
-
-
-
 

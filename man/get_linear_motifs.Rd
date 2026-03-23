@@ -23,10 +23,12 @@ annotations; used to derive chromosome groups for batching.}
 dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 \code{"mmusculus_gene_ensembl"}.}
 
-\item{release}{release version from ensemble associated with the gencode
-version provided in the get_annotation (This can be found in gencode, for
-example in humans: \url{"https://www.gencodegenes.org/human/releases.html"})
- ensembl_mirror Optional Ensembl mirror passed to the BioMart connector.}
+\item{release}{Release version from Ensembl associated with the GENCODE
+version used in [get_annotation()]. See the GENCODE human release listing
+to map GENCODE and Ensembl versions.}
+
+\item{ensembl_mirror}{Optional Ensembl mirror passed to the BioMart
+connector.}
 }
 \value{
 A \code{data.table} containing protein feature annotations

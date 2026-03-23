@@ -21,3 +21,20 @@ paired-hits `data.table` input.
 \description{
 Convenience accessor for PPI-focused paired-hit columns
 }
+\examples{
+hits <- data.table::data.table(
+  event_id = c("E1", "E2"),
+  event_type = c("SE", "A3SS"),
+  gene_id = c("ENSG000001", "ENSG000002"),
+  chr = c("chr1", "chr2"),
+  strand = c("+", "-"),
+  transcript_id_control = c("TX1", "TX3"),
+  transcript_id_case = c("TX2", "TX4"),
+  case_ppi = c("A;B", "C"),
+  control_ppi = c("A", "C;D"),
+  n_case_ppi = c(2L, 1L),
+  n_control_ppi = c(1L, 2L),
+  n_ppi = c(1L, 1L)
+)
+print(get_hits_ppi(hits))
+}

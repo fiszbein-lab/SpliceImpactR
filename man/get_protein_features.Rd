@@ -55,10 +55,9 @@ specific `release` is provided, biomaRt ignores mirror selection.}
 dataset (default \code{"human"}). For mouse, use
 \code{"mouse"}.}
 
-\item{release}{release version from ensemble associated with the gencode
-version provided in the get_annotation (This can be found in gencode, for
-example in human: \url{"https://www.gencodegenes.org/human/releases.html"})
-example in mouse: \url{"https://www.gencodegenes.org/mouse/releases.html"})}
+\item{release}{Release version from Ensembl associated with the GENCODE
+version used in [get_annotation()]. See the GENCODE human/mouse release
+listings to map GENCODE and Ensembl versions.}
 
 \item{test}{Logical; bool for whether to load from reduced test set.}
 

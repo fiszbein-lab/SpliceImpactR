@@ -122,7 +122,7 @@ custom_hits_domain <- data.table::data.table(
 }
 
 \examples{
-\dontrun{
+\donttest{
 # Example highlight row (skipped exon / SE), but can usually just use 
 # hits_domain/hits_final and supply the event_id in highlight_event_id
 custom_hits_domain <- data.table::data.table(

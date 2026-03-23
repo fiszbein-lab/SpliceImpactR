@@ -61,7 +61,6 @@ bg <- get_background(source = "hit_index",
 ppi <- get_ppi_interactions()             
 hits_ppi <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
 print(hits_ppi)
-
-hits_domain[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
+hits_ppi[n_ppi > 0, .(event_id, gene_id, n_case_ppi, n_control_ppi, n_ppi, case_ppi, control_ppi)]
 
 }

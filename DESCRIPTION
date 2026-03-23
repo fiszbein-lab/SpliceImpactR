@@ -25,6 +25,7 @@ Imports:
     BiocParallel,
     Biostrings,
     GenomicRanges,
+    SummarizedExperiment,
     biomaRt,
     IRanges,
     PFAM.db,
@@ -41,13 +42,12 @@ Imports:
     utils,
     magrittr,
     methods,
-    ComplexUpset,
-    S4Vectors,
-    methods
+    S4Vectors
 RoxygenNote: 7.3.3
 biocViews: AlternativeSplicing, DifferentialSplicing, StatisticalMethod, 
     Alignment
 Suggests: 
+    devtools,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,

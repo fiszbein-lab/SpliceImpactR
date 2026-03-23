@@ -280,6 +280,47 @@ as_se_raw_events <- function(data_dt) {
 #' @param hits_final Optional paired/final hit table.
 #' @param metadata Optional list.
 #' @return `SpliceImpactResult`
+#' @examples
+#' raw <- data.table::data.table(
+#'   event_id = c("E1", "E1"),
+#'   form = c("inc", "exc"),
+#'   sample = c("S1", "S1"),
+#'   chr = c("chr1", "chr1"),
+#'   strand = c("+", "+"),
+#'   inc = c("100-110", "120-130"),
+#'   exc = c("120-130", "100-110"),
+#'   psi = c(0.70, 0.30),
+#'   inclusion_reads = c(70, 30),
+#'   exclusion_reads = c(30, 70)
+#' )
+#' res <- data.table::data.table(
+#'   event_id = c("E1", "E1"),
+#'   form = c("inc", "exc"),
+#'   inc = c("100-110", "120-130"),
+#'   exc = c("120-130", "100-110"),
+#'   chr = c("chr1", "chr1"),
+#'   strand = c("+", "+"),
+#'   gene_id = c("ENSG000001", "ENSG000001"),
+#'   padj = c(0.01, 0.01),
+#'   delta_psi = c(0.20, -0.20)
+#' )
+#' hits <- data.table::data.table(
+#'   event_id = "E1",
+#'   event_type = "SE",
+#'   gene_id = "ENSG000001",
+#'   chr = "chr1",
+#'   strand = "+",
+#'   transcript_id_control = "TX1",
+#'   transcript_id_case = "TX2",
+#'   inc_control = "100-110",
+#'   inc_case = "100-115",
+#'   exc_control = "120-130",
+#'   exc_case = "121-130",
+#'   n_ppi = 1L,
+#'   diff_n = 1L
+#' )
+#' obj <- as_splice_impact_result(data = raw, res = res, hits_final = hits)
+#' obj
 #' @export
 as_splice_impact_result <- function(
     data = NULL,
@@ -331,6 +372,21 @@ as_splice_impact_result <- function(
 #' @param sample_frame Optional sample manifest table.
 #' @param hits_final Optional paired/final hits table.
 #' @return Updated `SpliceImpactResult`
+#' @examples
+#' obj <- as_splice_impact_result()
+#' res <- data.table::data.table(
+#'   event_id = c("E1", "E1"),
+#'   form = c("inc", "exc"),
+#'   inc = c("100-110", "120-130"),
+#'   exc = c("120-130", "100-110"),
+#'   chr = c("chr1", "chr1"),
+#'   strand = c("+", "+"),
+#'   gene_id = c("ENSG000001", "ENSG000001"),
+#'   padj = c(0.01, 0.01),
+#'   delta_psi = c(0.25, -0.25)
+#' )
+#' obj <- add_splice_part(obj, res = res)
+#' print(as_dt_from_s4(obj, "di_events"))
 #' @export
 add_splice_part <- function(
     obj,
@@ -380,6 +436,20 @@ add_splice_part <- function(
 #'   as `"matched"`.
 #' @param keep_internal_keys Keep internal key columns (`raw_key`, `di_key`, `pair_key`).
 #' @return `data.table`
+#' @examples
+#' res <- data.table::data.table(
+#'   event_id = c("E1", "E1"),
+#'   form = c("inc", "exc"),
+#'   inc = c("100-110", "120-130"),
+#'   exc = c("120-130", "100-110"),
+#'   chr = c("chr1", "chr1"),
+#'   strand = c("+", "+"),
+#'   gene_id = c("ENSG000001", "ENSG000001"),
+#'   padj = c(0.01, 0.01),
+#'   delta_psi = c(0.20, -0.20)
+#' )
+#' obj <- as_splice_impact_result(res = res)
+#' print(as_dt_from_s4(obj, "di_events"))
 #' @export
 as_dt_from_s4 <- function(x, slot = c("raw_events", "di_events", "res_di", "matched", "sample_frame", "hits_sequences", "paired_hits"), keep_internal_keys = FALSE) {
   slot <- match.arg(slot)
@@ -425,6 +495,9 @@ coerce_to_dt <- function(x, what = c("raw_events", "di_events", "res_di", "match
 #' S4 slot and key schema for SpliceImpactResult
 #'
 #' @return Named list describing slots, core key columns, and assay names.
+#' @examples
+#' schema <- spliceimpact_s4_schema()
+#' names(schema)
 #' @export
 spliceimpact_s4_schema <- function() {
   list(
@@ -456,6 +529,9 @@ spliceimpact_s4_schema <- function() {
 #'
 #' @param as_markdown Logical; if `TRUE`, returns guide text instead of printing.
 #' @return Invisible character guide text (or visible text if `as_markdown = TRUE`).
+#' @examples
+#' guide_txt <- spliceimpact_s4_guide(as_markdown = TRUE)
+#' cat(substr(guide_txt, 1, 80), "\n")
 #' @export
 spliceimpact_s4_guide <- function(as_markdown = FALSE) {
   schema <- spliceimpact_s4_schema()
@@ -515,7 +591,7 @@ spliceimpact_s4_guide <- function(as_markdown = FALSE) {
 #' List predefined paired-hit column subsets
 #'
 #' @return Named list of predefined column vectors for paired-hit accessors.
-#' @export
+#' @keywords internal
 spliceimpact_hit_colsets <- function() {
   list(
     core = c(
@@ -577,6 +653,36 @@ spliceimpact_hit_colsets <- function() {
 #' @return A `data.table` containing the selected columns. Row count and row
 #' order are preserved from the input (`SpliceImpactResult@paired_hits` or
 #' provided `data.table`).
+#' @examples
+#' hits <- data.table::data.table(
+#'   event_id = c("E1", "E2"),
+#'   event_type = c("SE", "A3SS"),
+#'   gene_id = c("ENSG000001", "ENSG000002"),
+#'   chr = c("chr1", "chr2"),
+#'   strand = c("+", "-"),
+#'   transcript_id_control = c("TX1", "TX3"),
+#'   transcript_id_case = c("TX2", "TX4"),
+#'   protein_id_control = c("P1", "P3"),
+#'   protein_id_case = c("P2", "P4"),
+#'   inc_control = c("100-110", "200-210"),
+#'   inc_case = c("100-115", "205-215"),
+#'   exc_control = c("120-130", "220-230"),
+#'   exc_case = c("121-130", "225-235"),
+#'   case_only_domains = c("IPR0001", ""),
+#'   control_only_domains = c("", "IPR0002"),
+#'   case_only_n = c(1L, 0L),
+#'   control_only_n = c(0L, 1L),
+#'   diff_n = c(1L, 1L),
+#'   case_ppi = c("A;B", "C"),
+#'   control_ppi = c("A", "C;D"),
+#'   n_case_ppi = c(2L, 1L),
+#'   n_control_ppi = c(1L, 2L),
+#'   n_ppi = c(1L, 1L),
+#'   dna_pid = c(0.95, 0.90),
+#'   prot_pid = c(0.90, 0.85),
+#'   frame_call = c("Match", "Frameshift")
+#' )
+#' print(get_hits_final_view(hits, col_subset = c("core", "ppi")))
 #' @export
 get_hits_final_view <- function(
     x,
@@ -631,6 +737,19 @@ get_hits_final_view <- function(
 #' @inheritParams get_hits_final_view
 #' @return `data.table` with the `core` subset. Works for both S4 and
 #' paired-hits `data.table` input.
+#' @examples
+#' hits <- data.table::data.table(
+#'   event_id = c("E1", "E2"),
+#'   event_type = c("SE", "A3SS"),
+#'   gene_id = c("ENSG000001", "ENSG000002"),
+#'   chr = c("chr1", "chr2"),
+#'   strand = c("+", "-"),
+#'   transcript_id_control = c("TX1", "TX3"),
+#'   transcript_id_case = c("TX2", "TX4"),
+#'   n_ppi = c(1L, 0L),
+#'   diff_n = c(1L, 0L)
+#' )
+#' print(get_hits_core(hits))
 #' @export
 get_hits_core <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE) {
   get_hits_final_view(
@@ -646,6 +765,22 @@ get_hits_core <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE) {
 #' @inheritParams get_hits_final_view
 #' @return `data.table` with the `domain` subset. Works for both S4 and
 #' paired-hits `data.table` input.
+#' @examples
+#' hits <- data.table::data.table(
+#'   event_id = c("E1", "E2"),
+#'   event_type = c("SE", "A3SS"),
+#'   gene_id = c("ENSG000001", "ENSG000002"),
+#'   chr = c("chr1", "chr2"),
+#'   strand = c("+", "-"),
+#'   transcript_id_control = c("TX1", "TX3"),
+#'   transcript_id_case = c("TX2", "TX4"),
+#'   case_only_domains = c("IPR0001", ""),
+#'   control_only_domains = c("", "IPR0002"),
+#'   case_only_n = c(1L, 0L),
+#'   control_only_n = c(0L, 1L),
+#'   diff_n = c(1L, 1L)
+#' )
+#' print(get_hits_domain(hits))
 #' @export
 get_hits_domain <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE) {
   get_hits_final_view(
@@ -661,6 +796,22 @@ get_hits_domain <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE) 
 #' @inheritParams get_hits_final_view
 #' @return `data.table` with the `ppi` subset. Works for both S4 and
 #' paired-hits `data.table` input.
+#' @examples
+#' hits <- data.table::data.table(
+#'   event_id = c("E1", "E2"),
+#'   event_type = c("SE", "A3SS"),
+#'   gene_id = c("ENSG000001", "ENSG000002"),
+#'   chr = c("chr1", "chr2"),
+#'   strand = c("+", "-"),
+#'   transcript_id_control = c("TX1", "TX3"),
+#'   transcript_id_case = c("TX2", "TX4"),
+#'   case_ppi = c("A;B", "C"),
+#'   control_ppi = c("A", "C;D"),
+#'   n_case_ppi = c(2L, 1L),
+#'   n_control_ppi = c(1L, 2L),
+#'   n_ppi = c(1L, 1L)
+#' )
+#' print(get_hits_ppi(hits))
 #' @export
 get_hits_ppi <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE) {
   get_hits_final_view(
@@ -676,6 +827,22 @@ get_hits_ppi <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE) {
 #' @inheritParams get_hits_final_view
 #' @return `data.table` with the `sequence` subset. Works for both S4 and
 #' paired-hits `data.table` input.
+#' @examples
+#' hits <- data.table::data.table(
+#'   event_id = c("E1", "E2"),
+#'   event_type = c("SE", "A3SS"),
+#'   gene_id = c("ENSG000001", "ENSG000002"),
+#'   chr = c("chr1", "chr2"),
+#'   strand = c("+", "-"),
+#'   transcript_id_control = c("TX1", "TX3"),
+#'   transcript_id_case = c("TX2", "TX4"),
+#'   protein_id_control = c("P1", "P3"),
+#'   protein_id_case = c("P2", "P4"),
+#'   dna_pid = c(0.95, 0.90),
+#'   prot_pid = c(0.90, 0.85),
+#'   frame_call = c("Match", "Frameshift")
+#' )
+#' print(get_hits_sequence(hits))
 #' @export
 get_hits_sequence <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE) {
   get_hits_final_view(
@@ -699,6 +866,26 @@ get_hits_sequence <- function(x, drop_missing = TRUE, keep_internal_keys = FALSE
 #' @param keep_sample_frame Logical; keep `sample_frame` unchanged (default `TRUE`).
 #'
 #' @return Filtered [SpliceImpactResult].
+#' @examples
+#' hits <- data.table::data.table(
+#'   event_id = c("E1", "E2"),
+#'   event_type = c("SE", "A3SS"),
+#'   gene_id = c("ENSG000001", "ENSG000002"),
+#'   chr = c("chr1", "chr2"),
+#'   strand = c("+", "-"),
+#'   transcript_id_control = c("TX1", "TX3"),
+#'   transcript_id_case = c("TX2", "TX4"),
+#'   inc_control = c("100-110", "200-210"),
+#'   inc_case = c("100-115", "205-215"),
+#'   exc_control = c("120-130", "220-230"),
+#'   exc_case = c("121-130", "225-235"),
+#'   n_ppi = c(1L, 0L),
+#'   diff_n = c(1L, 0L),
+#'   frame_call = c("Match", "Frameshift")
+#' )
+#' obj <- as_splice_impact_result(hits_final = hits)
+#' obj_keep <- filter_spliceimpact_hits(obj, n_ppi > 0L)
+#' print(as_dt_from_s4(obj_keep, "paired_hits"))
 #' @export
 filter_spliceimpact_hits <- function(obj, ..., keep_sample_frame = TRUE) {
   if (!methods::is(obj, "SpliceImpactResult")) {
@@ -732,8 +919,13 @@ filter_spliceimpact_hits <- function(obj, ..., keep_sample_frame = TRUE) {
 
   keep_by_event <- function(dt) {
     dt <- data.table::as.data.table(dt)
-    if (!nrow(dt) || !("event_id" %in% names(dt))) return(dt[0])
+    if (!("event_id" %in% names(dt))) return(dt)
     dt[as.character(event_id) %in% event_keep]
+  }
+
+  has_required <- function(dt, req) {
+    dt <- data.table::as.data.table(dt)
+    all(req %in% names(dt))
   }
 
   out <- obj
@@ -743,17 +935,25 @@ filter_spliceimpact_hits <- function(obj, ..., keep_sample_frame = TRUE) {
 
   # 2) res_di before di_events to keep validity checks stable
   res_di_dt <- as_dt_from_s4(out, "res_di", keep_internal_keys = TRUE)
-  out <- add_splice_part(out, res_di = keep_by_event(res_di_dt))
+  if (has_required(res_di_dt, c("event_id", "form", "inc", "exc", "chr", "strand"))) {
+    out <- add_splice_part(out, res_di = keep_by_event(res_di_dt))
+  }
 
   di_dt <- as_dt_from_s4(out, "di_events", keep_internal_keys = TRUE)
-  out <- add_splice_part(out, res = keep_by_event(di_dt))
+  if (has_required(di_dt, c("event_id", "form", "inc", "exc", "chr", "strand"))) {
+    out <- add_splice_part(out, res = keep_by_event(di_dt))
+  }
 
   # 3) raw + matched
   raw_dt <- as_dt_from_s4(out, "raw_events", keep_internal_keys = TRUE)
-  out <- add_splice_part(out, data = keep_by_event(raw_dt))
+  if (has_required(raw_dt, c("event_id", "form", "sample", "chr", "strand", "psi", "inclusion_reads", "exclusion_reads"))) {
+    out <- add_splice_part(out, data = keep_by_event(raw_dt))
+  }
 
   matched_dt <- as_dt_from_s4(out, "matched", keep_internal_keys = TRUE)
-  out <- add_splice_part(out, matched = keep_by_event(matched_dt))
+  if (has_required(matched_dt, "event_id")) {
+    out <- add_splice_part(out, matched = keep_by_event(matched_dt))
+  }
 
   if (isTRUE(keep_sample_frame)) {
     # no-op (kept as-is); explicit branch for future options.

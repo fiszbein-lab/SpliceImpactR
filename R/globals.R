@@ -66,3 +66,42 @@ utils::globalVariables(c(
   "genomic_start", "grp", "i.end", "i.start", "na_genomic", "rmax",
   "transcript1", "transcript2", "inc_exons", "exc_exons"
 ))
+
+# Additional NSE symbols referenced in data.table/ggplot calls across S4 and
+# visualization helpers.
+utils::globalVariables(c(
+  "..cols_old", "..matched_cols", ".data",
+  "DDI", "DDI_A", "DDI_B", "DDI_changed_case", "DDI_changed_control",
+  "DMI", "DMI_A", "DMI_B", "DMI_changed_case", "DMI_changed_control",
+  "ELMIdentifier", "End", "Primary_Acc", "Regex", "Start",
+  "anchor_span", "c1", "c2",
+  "case_only_flag", "case_only_n",
+  "chr_1", "chr_2",
+  "confirmed", "control_only_flag", "control_only_n",
+  "coord", "cxmax", "cxmax_eps", "cxmin", "cxmin_eps",
+  "delta_psi_case", "delta_psi_control",
+  "di_key", "diff_n", "domain_name",
+  "event_group", "ex_cxmin", "exc_case", "exc_control",
+  "exon_alpha", "exon_idx", "exons_case", "exons_control",
+  "fill",
+  "geneA", "geneB", "gene_id_1", "gene_id_2",
+  "gx1", "gx2", "gxmax", "gxmin",
+  "has_value", "i.xmax", "i.xmin",
+  "inc_case", "inc_control", "inc_exons_by_idx",
+  "interaction_changed_case", "interaction_changed_control",
+  "ipr", "label_wrapped", "label_y",
+  "n_case_ppi", "n_control_ppi",
+  "pair_key", "partial_protein_seqs",
+  "pf_chr", "pf_end", "pf_instance_id", "pf_start",
+  "protein_seq_case", "protein_seq_control",
+  "pvalue", "raw_key",
+  "strand_1", "strand_2",
+  "sxmax", "sxmin",
+  "t_start", "t_stop",
+  "text", "tmp", "track", "transcript",
+  "transcript_id_case", "transcript_id_control",
+  "transcript_seq_case", "transcript_seq_control",
+  "uniprotswissprot",
+  "x", "xend", "xmax", "xmin",
+  "y", "y_bottom", "y_top", "ymax", "ymin"
+))

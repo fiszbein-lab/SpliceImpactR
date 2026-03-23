@@ -1169,7 +1169,7 @@ get_annotation <- function(
   }
   filter_tsl <- match.arg(
     filter_tsl,
-    choices = as.character(1:5),
+    choices = as.character(seq_len(5)),
     several.ok = TRUE
   )
 

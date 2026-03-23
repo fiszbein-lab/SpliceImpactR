@@ -27,3 +27,18 @@ as `"matched"`.}
 \description{
 Convert S4 slots back to data.table
 }
+\examples{
+res <- data.table::data.table(
+  event_id = c("E1", "E1"),
+  form = c("inc", "exc"),
+  inc = c("100-110", "120-130"),
+  exc = c("120-130", "100-110"),
+  chr = c("chr1", "chr1"),
+  strand = c("+", "+"),
+  gene_id = c("ENSG000001", "ENSG000001"),
+  padj = c(0.01, 0.01),
+  delta_psi = c(0.20, -0.20)
+)
+obj <- as_splice_impact_result(res = res)
+print(as_dt_from_s4(obj, "di_events"))
+}
