@@ -14,7 +14,10 @@ get_rmats_hit(
 \arguments{
 \item{sample_frame}{Data.frame with columns: \code{path}, \code{condition}, and \code{sample_name}.}
 
-\item{event_types}{event types to load from rMATS}
+\item{event_types}{Event types to load: \code{"AFE"}, \code{"ALE"},
+\code{"HFE"} and \code{"HLE"} from the HIT index, \code{"MXE"},
+\code{"SE"}, \code{"A3SS"}, \code{"A5SS"} and \code{"RI"} from rMATS.
+Any other value is an error.}
 
 \item{use}{Character scalar, one of \code{"JC"} or \code{"JCEC"}.}
 

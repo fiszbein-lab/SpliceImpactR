@@ -28,8 +28,10 @@ A `data.table` (or updated `SpliceImpactResult` when
 \describe{
   \item{frame_call}{Result from [compare_frames()].}
   \item{rescue}{Rescue classification.}
-  \item{summary_classification}{One of `"FrameShift"`, `"Rescue"`,
+  \item{summary_classification}{One of `"NMD"`, `"FrameShift"`, `"Rescue"`,
   `"Match"`, or the original `pc_class`.}
+  \item{transcript_type_case, transcript_type_control}{Annotated biotypes,
+  added from `ann` when the input lacks them.}
 }
 }
 \description{
@@ -44,10 +46,16 @@ sequence and frame comparison stages in one call, producing an annotated
 table suitable for downstream summarization or visualization.
 
 The summary label `summary_classification` follows this precedence:
-1. `"Match"` - identical protein sequences.
-2. `"FrameShift"` - frame disrupted.
+1. `"NMD"` - a member is annotated as nonsense-mediated decay
+   (`transcript_type`). It is taken to make no protein; `frame_call` still
+   records the frameshift that usually causes the decay.
+2. `"Match"` - identical protein sequences.
 3. `"Rescue"` - frame restored downstream.
-4. Otherwise, inherited from `pc_class`.
+4. `"FrameShift"` - frame disrupted.
+5. Otherwise, inherited from `pc_class`.
+
+Biotypes are taken from `transcript_type_case`/`transcript_type_control`
+when the pairs carry them (both matchers add them), otherwise from `ann`.
 }
 \examples{
 ex <- load_example_data("sample_frame")

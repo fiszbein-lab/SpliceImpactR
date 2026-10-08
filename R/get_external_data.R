@@ -6,7 +6,9 @@
 #' @param df A `data.frame` or `data.table` containing differential inclusion results.
 #' @param colmap A named list mapping required fields in `df` to standard
 #'   names (`gene_id`, `chr`, `strand`, `inc`, `exc`, `delta_psi`, `pvalue`,
-#'   and optionally `event_type`).
+#'   and optionally `event_type`, `event_id`, `form`, and `padj`). Canonically
+#'   named optional columns are preserved automatically. Forms belonging to
+#'   the same event must share an event ID; grouping is never inferred by gene.
 #' @param default_event_type Character. Default `event_type` to assign if none
 #'   provided (default `"SITE"`).
 #' @param adjust_method Character. Multiple-testing correction method passed
@@ -15,12 +17,15 @@
 #'
 #' @return A standardized `data.table` with columns:
 #'   `site_id`, `event_type`, `gene_id`, `chr`, `strand`, `inc`, `exc`,
-#'   `delta_psi`, `p.value`, `padj`, and `form`.
+#'   `delta_psi`, `p.value`, `padj`, `form`, and `event_id`. Missing sample counts
+#'   are represented by `NA`. Without an event ID, each site is its own event.
 #'
 #' @details
 #' This function provides a uniform interface for importing external DI results
 #' (e.g. from rMATS, MAJIQ, or SUPPA2) so they can be compared or plotted
-#' alongside SpliceImpactR outputs.
+#' alongside SpliceImpactR outputs. Strands must be `+` or `-`; other values
+#' (such as `*` or `.`) are an error naming the affected events, since guessing
+#' a strand would mismatch minus-strand events.
 #'
 #' @examples
 #' df <- data.frame(
@@ -79,15 +84,24 @@ import_di_table <- function(df,
     # Cleanups
     out[is.na(inc), inc := ""]
     out[is.na(exc), exc := ""]
-    out[!strand %chin% c("+","-"), strand := "+"]
+
+    optional_column <- function(field) {
+      column <- colmap[[field]]
+      if (is.null(column) || !nzchar(column)) {
+        return(if (field %in% names(DT)) field else NULL)
+      }
+      if (!column %in% names(DT)) stop("Input is missing mapped column: ", column)
+      column
+    }
 
     if (isTRUE(add_chr_prefix)) {
       out[!grepl("^chr", chr, ignore.case = FALSE), chr := paste0("chr", chr)]
     }
 
     # event_type: from input if available, else default
-    if (!is.null(colmap$event_type) && colmap$event_type %in% names(DT)) {
-      out[, event_type := as.character(DT[[colmap$event_type]])]
+    event_type_column <- optional_column("event_type")
+    if (!is.null(event_type_column)) {
+      out[, event_type := as.character(DT[[event_type_column]])]
     } else {
       out[, event_type := default_event_type]
     }
@@ -95,17 +109,41 @@ import_di_table <- function(df,
     # site_id = event_type|gene_id|chr|inc|exc  (strand can be appended if you prefer)
     out[, site_id := paste(event_type, gene_id, chr, inc, exc, sep="|")]
 
-    # padj (multiple-testing correction on available p-values)
-    out[, padj := p.adjust(p.value, method = adjust_method)]
+    padj_column <- optional_column("padj")
+    out[, padj := if (is.null(padj_column)) p.adjust(p.value, method = adjust_method) else
+          suppressWarnings(as.numeric(DT[[padj_column]]))]
 
-    # form: this table is already per-site summary, so mark as SITE
-    out[, form := "SITE"]
+    # Preserve explicit forms; otherwise retain site-level semantics.
+    form_column <- optional_column("form")
+    out[, form := if (is.null(form_column)) "SITE" else toupper(trimws(as.character(DT[[form_column]])))]
+    if (anyNA(out$form) || any(!out$form %chin% c("INC", "EXC", "SITE"))) {
+      stop("form must contain INC, EXC or SITE.")
+    }
+    event_column <- optional_column("event_id")
+    out[, event_id := if (is.null(event_column)) site_id else as.character(DT[[event_column]])]
+    if (anyNA(out$event_id) || any(!nzchar(trimws(out$event_id)))) {
+      stop("event_id must be non-missing and non-empty.")
+    }
+    # An unstranded row cannot be matched safely; guessing "+" would mismatch
+    # minus-strand events.
+    bad_strand <- !out$strand %chin% c("+", "-")
+    if (any(bad_strand)) {
+      ids <- unique(out$event_id[bad_strand])
+      stop(sprintf("strand must be + or - (found %s). Affected: %s%s.",
+                   paste(unique(out$strand[bad_strand]), collapse = ", "),
+                   paste(utils::head(ids, 5L), collapse = ", "),
+                   if (length(ids) > 5L) sprintf(" and %d more", length(ids) - 5L) else ""),
+           call. = FALSE)
+    }
 
     # (optional) light, useful counts if present in input
     maybe_cols <- intersect(c("n","n_used","n_samples","n_control","n_case",
                               "mean_psi_ctrl","mean_psi_case"), names(DT))
     if (length(maybe_cols)) {
-      out <- cbind(out, DT[, ..maybe_cols, with=FALSE])
+      out <- cbind(out, DT[, ..maybe_cols])
+    }
+    for (column in c("n_samples", "n_control", "n_case")) {
+      if (!column %in% names(out)) out[, (column) := NA_integer_]
     }
 
     # Tidy column order

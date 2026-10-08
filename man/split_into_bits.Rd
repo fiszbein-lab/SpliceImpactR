@@ -2,32 +2,19 @@
 % Please edit documentation in R/get_protein_features.R
 \name{split_into_bits}
 \alias{split_into_bits}
-\title{Split GTF transcripts into balanced chromosome groups (internal)}
+\title{Split protein-coding transcript IDs into bounded BioMart batches (internal)}
 \usage{
 split_into_bits(gtf_df, max_group_size)
 }
 \arguments{
-\item{gtf_df}{A \code{data.frame} or \code{data.table} containing
-GTF annotations, typically from [load_gtf_long()].}
+\item{gtf_df}{Annotation table containing transcript metadata.}
 
-\item{max_group_size}{Numeric scalar giving the maximum total number
-of transcripts allowed per group (passed to \code{bin_under_cap()}).}
+\item{max_group_size}{Maximum number of transcript IDs in each request.}
 }
 \value{
-A list of character vectors, where each element corresponds
-  to a bin of chromosome names grouped under the cumulative cap.
+List of character vectors of version-free transcript IDs.
 }
 \description{
-Internal helper that groups protein-coding transcripts by chromosome,
-ensuring that each group remains below a cumulative size threshold.
-Useful for dividing GTF processing or annotation tasks into balanced
-batches.
-}
-\details{
-The function considers only transcripts where
-\code{type == "transcript"}, \code{transcript_type == "protein_coding"}
-
-Chromosome names are simplified by removing a leading \code{"chr"}
-prefix before grouping.
+Split protein-coding transcript IDs into bounded BioMart batches (internal)
 }
 \keyword{internal}

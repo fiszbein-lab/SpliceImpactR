@@ -90,6 +90,27 @@
   path
 }
 
+#' Local RDS cache records stored inside the cache directory (internal)
+#'
+#' Records written with `fname = "exact"` by earlier versions hold a bare file
+#' name, which resolves against the working directory. They are ignored, so a
+#' cached object is never read from or written outside the cache; their files
+#' are left untouched.
+#'
+#' @param bfc A `BiocFileCache` object.
+#' @param rname Cache key name.
+#' @return The matching `bfcquery()` rows.
+#' @keywords internal
+#' @noRd
+.si_bfc_rds_hits <- function(bfc, rname) {
+  hit <- BiocFileCache::bfcquery(bfc, query = rname, field = "rname", exact = TRUE)
+  if (!nrow(hit)) return(hit)
+  paths <- unname(BiocFileCache::bfcpath(bfc, hit$rid))
+  inside <- normalizePath(dirname(paths), winslash = "/", mustWork = FALSE) ==
+    normalizePath(BiocFileCache::bfccache(bfc), winslash = "/", mustWork = FALSE)
+  hit[inside, ]
+}
+
 #' Store R object in BiocFileCache as local RDS (internal)
 #'
 #' @param bfc A `BiocFileCache` object.
@@ -98,14 +119,14 @@
 #' @return Invisible cached file path.
 #' @keywords internal
 .si_bfc_put_rds <- function(bfc, rname, obj) {
-  hit <- BiocFileCache::bfcquery(bfc, query = rname, field = "rname", exact = TRUE)
+  hit <- .si_bfc_rds_hits(bfc, rname)
   if (nrow(hit) == 0L) {
     out <- BiocFileCache::bfcnew(
       bfc,
       rname = rname,
       rtype = "local",
       ext = ".rds",
-      fname = "exact"
+      fname = "unique"
     )
     rid <- names(out)[1]
   } else {
@@ -124,7 +145,7 @@
 #' @return Cached R object or `NULL` if not present.
 #' @keywords internal
 .si_bfc_get_rds <- function(bfc, rname) {
-  hit <- BiocFileCache::bfcquery(bfc, query = rname, field = "rname", exact = TRUE)
+  hit <- .si_bfc_rds_hits(bfc, rname)
   if (nrow(hit) == 0L) return(NULL)
 
   rid <- hit$rid[1]
@@ -1104,6 +1125,10 @@ add_exon_frames <- function(gtf_df) {
 #' annotation/{species}/v{release}/tsl-{...}/sequences.rds
 #' annotation/{species}/v{release}/tsl-{...}/hybrids.rds
 #' }
+#' Setting `filter_tsl = NULL` disables transcript-support filtering and uses
+#' separate `tsl-none` processed cache entries. Use the same `filter_tsl` when
+#' creating and loading the cache. Gene-biotype and incomplete-CDS tag filters
+#' still apply. The `test` mode loads its bundled subset as stored.
 #'
 #' @param load Character string specifying load mode:
 #'   one of `"link"`, `"path"`, `"cached"`, `"test"`.
@@ -1117,6 +1142,8 @@ add_exon_frames <- function(gtf_df) {
 #' @param translation_path Path to protein FASTA (.fa/.fa.gz) when `load = "path"`.
 #' @param filter_tsl Transcript support levels to retain (default `c("1","2","3")`).
 #'   Transcripts outside this set are dropped unless the row is a gene record.
+#'   Set to `NULL` to retain transcripts regardless of TSL, including missing
+#'   or unknown support levels. An empty vector retains the default filter.
 #'
 #' @return A list with:
 #' \describe{
@@ -1149,6 +1176,10 @@ add_exon_frames <- function(gtf_df) {
 #' #   base_dir = "/project/annotation_cache/"
 #' # )
 #'
+#' # Disable TSL filtering, including for transcripts without a TSL value
+#' # ann <- get_annotation(load = "link", filter_tsl = NULL)
+#' # ann <- get_annotation(load = "cached", filter_tsl = NULL)
+#'
 #' @importFrom magrittr %>%
 #' @export
 get_annotation <- function(
@@ -1163,15 +1194,17 @@ get_annotation <- function(
 ) {
   load <- match.arg(load)
   species <- match.arg(species)
-  filter_tsl <- as.character(filter_tsl)
-  if (!length(filter_tsl)) {
-    filter_tsl <- c("1", "2", "3")
+  if (!is.null(filter_tsl)) {
+    filter_tsl <- as.character(filter_tsl)
+    if (!length(filter_tsl)) {
+      filter_tsl <- c("1", "2", "3")
+    }
+    filter_tsl <- match.arg(
+      filter_tsl,
+      choices = as.character(seq_len(5)),
+      several.ok = TRUE
+    )
   }
-  filter_tsl <- match.arg(
-    filter_tsl,
-    choices = as.character(seq_len(5)),
-    several.ok = TRUE
-  )
 
   ### ---- TEST MODE ----
   if (load == "test") {
@@ -1276,9 +1309,12 @@ get_annotation <- function(
       add_exon_frames %>%
       add_feature_length
 
+    if (!is.null(filter_tsl)) {
+      gtf_df <- gtf_df[
+        transcript_support_level %in% filter_tsl | type == 'gene'
+      ]
+    }
     gtf_df <- gtf_df[
-      transcript_support_level %in% filter_tsl | type == 'gene'
-    ][
       !(tag %in% c("cds_start_NF", "cds_end_NF")) | type == 'gene'
     ]
 

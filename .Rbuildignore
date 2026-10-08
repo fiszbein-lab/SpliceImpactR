@@ -4,3 +4,4 @@ inst/*.png
 ^LICENSE\.md$
 ^doc$
 ^Meta$
+^dev$

@@ -25,6 +25,8 @@ A named list with:
   \item{`plot`}{A multi-panel [`patchwork`] composite summarizing
     classification, alignment, domain changes, and coordination.}
 }
+With no pairs, the summaries are zero-row tables (\code{relative_use}
+still counts the input events) and `plot` is a placeholder.
 }
 \description{
 Provides a comprehensive visualization and summary of event classification outcomes

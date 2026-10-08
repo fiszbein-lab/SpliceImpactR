@@ -49,15 +49,17 @@ more examples)
   all relevant comparisons
 - `p.value`, `padj`:
   - If missing: set to 0
-- All diagnostic fields
-  (`cooks_max, n, n_used, n_samples, n_case,
-    mean_psi_ctrl, mean_psi_case, n_control`)
+- Sample counts (`n_samples, n_control, n_case`): set to `NA` if missing
+- Other diagnostic fields
+  (`cooks_max, n, n_used, mean_psi_ctrl, mean_psi_case`)
    set to -1 if missing
 
 ## Validation
 - Throws error if:
+  - `event_id` is absent, or missing or empty in any row
   - Any event lacks **INC+EXC** or **SITE**
   - An event mixes SITE with INC/EXC
+- Errors name up to five affected rows or events.
 
 ## Output
 Returns a `data.table` formatted like SpliceImpactR DI output.

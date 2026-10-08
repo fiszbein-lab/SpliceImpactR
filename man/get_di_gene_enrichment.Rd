@@ -42,7 +42,7 @@ bg <- get_background(source = "hit_index",
                      input = sample_frame,
                      annotations = annotation_df$annotations,
                      protein_features = protein_feature_total)
-enrichment <- get_enrichment(get_di_gene_enrichment(res, .05, .1), bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
+enrichment <- get_enrichment(get_di_gene_enrichment(res, .05, .1), intersect(attr(bg, "gene_universe"), res$gene_id[is.finite(res$padj)]), species = 'human', 'ensembl', 'MSigDB:H')
 print(enrichment)
 }
 }

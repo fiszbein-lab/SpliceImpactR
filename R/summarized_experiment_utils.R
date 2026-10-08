@@ -195,6 +195,7 @@ as_granges_hits <- function(hits_dt) {
 
   dt[, anchor_span := ifelse(nzchar(inc_case), inc_case, inc_control)]
   dt[, pair_key := .mk_pair_key(event_id, inc_case, inc_control, exc_case, exc_control)]
+  if ("matching_pair_id" %in% names(dt)) dt[, pair_key := matching_pair_id]
   gr <- .gr_from_span_col(dt, span_col = "anchor_span", chr_col = "chr", strand_col = "strand")
   S4Vectors::mcols(gr) <- S4Vectors::DataFrame(dt[, !"anchor_span"])
   gr
@@ -208,6 +209,7 @@ as_segments_grl <- function(hits_dt) {
   miss <- setdiff(need, names(dt))
   if (length(miss)) stop("as_segments_grl: missing required columns: ", paste(miss, collapse = ", "))
   dt[, pair_key := .mk_pair_key(event_id, inc_case, inc_control, exc_case, exc_control)]
+  if ("matching_pair_id" %in% names(dt)) dt[, pair_key := matching_pair_id]
 
   mk_one <- function(i, col) {
     rr <- .parse_spans(dt[[col]][i])
@@ -338,14 +340,16 @@ as_splice_impact_result <- function(
   if (!is.null(sample_frame) && !is.data.frame(sample_frame)) stop("as_splice_impact_result: `sample_frame` must be a data.frame/data.table.")
   if (!is.null(hits_final) && !is.data.frame(hits_final)) stop("as_splice_impact_result: `hits_final` must be a data.frame/data.table.")
 
-  md <- c(metadata, list(
+  flags <- list(
     has_raw = !is.null(data),
     has_di = !is.null(res),
     has_res_di = !is.null(res_di),
     has_matched = !is.null(matched),
     has_sample_frame = !is.null(sample_frame),
     has_hits = !is.null(hits_final)
-  ))
+  )
+  # Supplied metadata takes precedence; never store a field twice.
+  md <- c(metadata, flags[setdiff(names(flags), names(metadata))])
 
   obj <- methods::new(
     "SpliceImpactResult",

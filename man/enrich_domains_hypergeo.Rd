@@ -13,7 +13,7 @@ enrich_domains_hypergeo(
   event_filter = NULL,
   db_filter = NULL,
   min_fg_count = 2,
-  delim = "[,;|[:space:]]+"
+  delim = "\\\\|"
 )
 }
 \arguments{
@@ -43,7 +43,8 @@ IDs (default: `"total_sd_domains"`).}
 test a domain (default `2`).}
 
 \item{delim}{Regular expression describing the delimiters in string
-list columns (default `[,;|[:space:]]+`).}
+list columns (default `\\|`). Semicolons and spaces within a domain ID
+are preserved; a list column is preferred.}
 }
 \value{
 A `data.table` with one row per domain, including:
@@ -77,6 +78,18 @@ where:
   \item \code{k} = foreground count of pairs containing the domain.
 }
 P-values are Benjamini-Hochberg adjusted (`padj`).
+Foreground and background pairs without a tested domain change are excluded,
+so both are drawn from the same conditional population. With `db_filter`,
+that population is pairs with a change in the selected databases. When
+transcript IDs are supplied in both tables, repeated unordered pairs are
+counted once. Foreground pairs and their changed domains must belong to the
+corresponding background pairs.
+Odds ratios compare foreground pairs with the rest of the background.
+Without transcript IDs, rows must already be distinct pair observations and
+the caller is responsible for membership; impossible counts are rejected.
+Counts are per transcript pair, not per event: a multi-site event (for
+example an AFE with several first exons) can contribute one pair per
+comparison, which `n_event_comparisons` in the hits identifies.
 
 Optionally, analyses can be restricted by event type or database
 prefix (e.g. `"Pfam"`, `"SMART"`) and domains with fewer than
@@ -100,8 +113,7 @@ exon_features <- get_exon_features(annotation_df$annotations, protein_feature_to
 
 hits_domain <- get_domains(seq_compare, exon_features)
 
-bg <- get_background(source = "hit_index",
-                     input = sample_frame,
+bg <- get_background(source = "annotated",
                      annotations = annotation_df$annotations,
                      protein_features = protein_feature_total)
 

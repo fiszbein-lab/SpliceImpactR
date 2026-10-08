@@ -35,12 +35,12 @@
 #' @keywords internal
 .find_hitindex_files <- function(p) {
   if (dir.exists(p)) {
-    list.files(
+    .prefer_uncompressed(list.files(
       p,
-      pattern = "(^|\\.)((AFE|ALE|HFE|HLE)PSI)(\\.|$)",
+      pattern = "(^|\\.)(AFE|ALE|HFE|HLE)PSI(\\.gz)?$",
       full.names = TRUE,
       ignore.case = TRUE
-    )
+    ))
   } else if (file.exists(p)) {
     p
   } else {
@@ -48,14 +48,31 @@
   }
 }
 
+#' Drop gzipped inputs that have an uncompressed copy (internal)
+#'
+#' Reading both copies would duplicate every row, so the uncompressed file is
+#' kept, as for `.exon` files.
+#' @param files Character vector of file paths.
+#' @return `files` without `.gz` paths whose uncompressed path is also present.
+#' @noRd
+#' @keywords internal
+.prefer_uncompressed <- function(files) {
+  gz <- grepl("\\.gz$", files, ignore.case = TRUE)
+  files[!(gz & sub("\\.gz$", "", files, ignore.case = TRUE) %in% files[!gz])]
+}
+
 #' Read exon-level counts or annotations used in HIT index files.
 #'
 #' @param path Base path to HIT index outputs (excluding suffix like ".exon").
 #' @param columns Columns to select from the exon file.
 #' @return A data.table with the specified columns.
+#' @importFrom R.utils decompressFile
 #' @keywords internal
 .read_exon_files <- function(path, columns = c("gene", "exon", "ID")) {
   exon_path <- paste0(path, "exon")
+  if (!file.exists(exon_path) && file.exists(paste0(exon_path, ".gz"))) {
+    exon_path <- paste0(exon_path, ".gz")
+  }
   if (!file.exists(exon_path))
     stop("Expected exon file not found at: ", exon_path)
   data.table::fread(exon_path, select = columns, showProgress = FALSE)
@@ -83,7 +100,9 @@
 
   dt_init <- suppressWarnings(data.table::fread(f, na.strings = c("NA", "NaN"), quote = ""))
 
-  exon_limited <- .read_exon_files(gsub(paste0(ev, "PSI"), "", f, ignore.case = TRUE))
+  exon_limited <- .read_exon_files(sub(
+    "(AFE|ALE|HFE|HLE)PSI(\\.gz)?$", "", f, ignore.case = TRUE
+  ))
   dt <- exon_limited[dt_init, on = .(gene, exon)]
 
   # rename PSI column
@@ -132,8 +151,8 @@
     nLE = suppressWarnings(as.numeric(dt$nLE %||% 0)),
     nUP = nUP,
     nDOWN = nDOWN,
-    nTXPT = suppressWarnings(as.numeric(dt$nTXPT)),
-    HITindex = suppressWarnings(as.numeric(dt$HITindex)),
+    nTXPT = suppressWarnings(as.numeric(dt$nTXPT %||% NA_real_)),
+    HITindex = suppressWarnings(as.numeric(dt$HITindex %||% NA_real_)),
     source = "hitindex",
     source_file = f,
     class = class_i
@@ -225,7 +244,10 @@ get_hitindex <- function(paths_df, keep_annotated_first_last = FALSE) {
 
 #' Wrapper function to get both rmats and hit index cleanly
 #' @param sample_frame Data.frame with columns: \code{path}, \code{condition}, and \code{sample_name}.
-#' @param event_types event types to load from rMATS
+#' @param event_types Event types to load: \code{"AFE"}, \code{"ALE"},
+#'   \code{"HFE"} and \code{"HLE"} from the HIT index, \code{"MXE"},
+#'   \code{"SE"}, \code{"A3SS"}, \code{"A5SS"} and \code{"RI"} from rMATS.
+#'   Any other value is an error.
 #' @param use Character scalar, one of \code{"JC"} or \code{"JCEC"}.
 #' @param keep_annotated_first_last Logical; if TRUE, retain only annotated first/last exons and normalize PSI.
 #'
@@ -256,27 +278,37 @@ get_rmats_hit <- function(sample_frame,
     sample_frame <- as.data.frame(sf)
   }
 
-  if ("ALE" %in% event_types | "AFE" %in% event_types) {
+  supported <- c("AFE", "ALE", "HFE", "HLE", "MXE", "SE", "A3SS", "A5SS", "RI")
+  unknown <- setdiff(event_types, supported)
+  if (length(unknown)) {
+    stop("get_rmats_hit: unsupported event_types: ", paste(unknown, collapse = ", "),
+         ". Supported: ", paste(supported, collapse = ", "), ".", call. = FALSE)
+  }
+  terminal_types <- intersect(event_types, c("AFE", "ALE", "HFE", "HLE"))
+  internal_types <- intersect(event_types, c("MXE", "SE", "A3SS", "A5SS", "RI"))
+  if (!length(terminal_types) && !length(internal_types)) {
+    stop("No supported event types were requested.")
+  }
+  if (length(terminal_types)) {
     hit_index <- get_hitindex(sample_frame, keep_annotated_first_last)
-    if (sum(c("MXE", "SE", "A3SS", "A5SS", "RI") %in% event_types) > 0) {
-      rmats <- get_rmats(load_rmats(sample_frame, use, event_types))
-      data <- rbind(rmats, hit_index[, .SD, .SDcols = seq(1, ncol(rmats))])
+    hit_index <- hit_index[event_type %chin% terminal_types]
+    if (length(internal_types)) {
+      rmats <- get_rmats(load_rmats(sample_frame, use, internal_types))
+      data <- data.table::rbindlist(
+        list(rmats, hit_index[, names(rmats), with = FALSE]), use.names = TRUE
+      )
     } else {
       data <- hit_index
     }
 
-  } else if (sum(c("MXE", "SE", "A3SS", "A5SS", "RI") %in% event_types) > 0) {
-    data <- get_rmats(load_rmats(sample_frame, use, event_types))
+  } else if (length(internal_types)) {
+    data <- get_rmats(load_rmats(sample_frame, use, internal_types))
   }
   if (methods::is(.spi_obj, "SpliceImpactResult")) {
     return(add_splice_part(.spi_obj, data = data))
   }
   return(data)
 }
-
-
-
-
 
 
 

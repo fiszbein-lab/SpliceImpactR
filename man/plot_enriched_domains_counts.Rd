@@ -52,8 +52,7 @@ protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
 
 hits_domain <- get_domains(seq_compare, exon_features)
-bg <- get_background(source = "hit_index",
-                     input = sample_frame,
+bg <- get_background(source = "annotated",
                      annotations = annotation_df$annotations,
                      protein_features = protein_feature_total)
 enriched_domains <- enrich_domains_hypergeo(hits_domain, bg, db_filter = 'interpro')

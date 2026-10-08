@@ -34,7 +34,9 @@ A package-specific `BiocFileCache` is created under this root.}
 \item{translation_path}{Path to protein FASTA (.fa/.fa.gz) when `load = "path"`.}
 
 \item{filter_tsl}{Transcript support levels to retain (default `c("1","2","3")`).
-Transcripts outside this set are dropped unless the row is a gene record.}
+Transcripts outside this set are dropped unless the row is a gene record.
+Set to `NULL` to retain transcripts regardless of TSL, including missing
+or unknown support levels. An empty vector retains the default filter.}
 }
 \value{
 A list with:
@@ -66,6 +68,10 @@ annotation/{species}/v{release}/tsl-{...}/annotations.rds
 annotation/{species}/v{release}/tsl-{...}/sequences.rds
 annotation/{species}/v{release}/tsl-{...}/hybrids.rds
 }
+Setting `filter_tsl = NULL` disables transcript-support filtering and uses
+separate `tsl-none` processed cache entries. Use the same `filter_tsl` when
+creating and loading the cache. Gene-biotype and incomplete-CDS tag filters
+still apply. The `test` mode loads its bundled subset as stored.
 }
 \examples{
 # Load bundled test data
@@ -91,5 +97,9 @@ print(ann)
 #   load = "cached",
 #   base_dir = "/project/annotation_cache/"
 # )
+
+# Disable TSL filtering, including for transcripts without a TSL value
+# ann <- get_annotation(load = "link", filter_tsl = NULL)
+# ann <- get_annotation(load = "cached", filter_tsl = NULL)
 
 }

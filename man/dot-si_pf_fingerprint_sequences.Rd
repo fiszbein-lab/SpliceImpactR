@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_protein_features.R
 \name{.si_pf_fingerprint_sequences}
 \alias{.si_pf_fingerprint_sequences}
-\title{Build a stable sequence fingerprint for ELM-dependent caching (internal)}
+\title{Build a content fingerprint for ELM-dependent caching (internal)}
 \usage{
 .si_pf_fingerprint_sequences(sequences)
 }
@@ -13,6 +13,6 @@
 Character scalar fingerprint hash.
 }
 \description{
-Build a stable sequence fingerprint for ELM-dependent caching (internal)
+Build a content fingerprint for ELM-dependent caching (internal)
 }
 \keyword{internal}

@@ -45,10 +45,26 @@
 #'   `hits_sequences`, `pairs`, `seq_compare`, `hits_domain`) in data.table mode.
 #' @param metadata Optional list attached to `SpliceImpactResult@metadata`.
 #' @param verbose Logical; emit progress messages.
+#' @param matching Transcript selection protocol: `"legacy"` (default) or
+#'   the alternate `"orf"` protocol in [get_ranked_pairs()].
+#' @param matching_max_candidates Maximum candidate transcripts per form in the
+#'   alternate protocol (passed to `max_candidates` in [get_ranked_pairs()];
+#'   default 100). A form with more keeps the best supported, and the number
+#'   dropped is reported.
+#' @param matching_fallback Logical; in the alternate protocol, select a labelled
+#'   `approximate` pair when no structural pair exists (passed to `fallback` in
+#'   [get_ranked_pairs()]; default `TRUE`).
 #'
 #' @return
 #' If `return_class = "data.table"`, returns a named list with
-#' `data`, `res`, and `hits_final`.
+#' `data`, `res`, and `hits_final`. A supplied `res` can be analyzed without
+#' raw data. If no events pass the cutoffs or no pairs remain, downstream
+#' results are zero-row tables with their usual columns, so plotting and
+#' enrichment helpers return empty results; unused reference/feature resources
+#' are not loaded.
+#' With `matching="orf"`, an additional `matching` list contains the candidate,
+#' ranking, event and unmatched diagnostics from [get_ranked_pairs()]. In S4 mode
+#' these are stored in `metadata$matching_diagnostics`.
 #'
 #' If `return_class = "S4"`, returns a [SpliceImpactResult] containing
 #' `raw_events`, `di_events`, and `paired_hits` slots.
@@ -100,8 +116,12 @@ get_splicing_impact <- function(
     return_class = c("data.table", "S4"),
     debug_steps = FALSE,
     metadata = list(),
-    verbose = TRUE
+    verbose = TRUE,
+    matching = c("legacy", "orf"),
+    matching_max_candidates = 100L,
+    matching_fallback = TRUE
 ) {
+  matching <- match.arg(matching)
   source_data <- match.arg(source_data)
   source_pairs <- match.arg(source_pairs)
   return_class <- match.arg(return_class)
@@ -114,7 +134,7 @@ get_splicing_impact <- function(
     data <- as_dt_from_s4(si, "raw_events")
     if (is.null(res)) {
       res <- as_dt_from_s4(si, "di_events")
-      if (!nrow(res)) res <- NULL
+      if (!ncol(res)) res <- NULL
     }
     if (is.null(sample_frame)) {
       sf0 <- as_dt_from_s4(si, "sample_frame")
@@ -123,7 +143,8 @@ get_splicing_impact <- function(
   }
 
   have_data <- !is.null(data) && nrow(data.table::as.data.table(data)) > 0L
-  if (!have_data) {
+  if (!is.null(data) && !ncol(data.table::as.data.table(data))) data <- NULL
+  if (!have_data && is.null(res)) {
     if (is.null(sample_frame)) {
       stop("get_splicing_impact: provide either `data` or `sample_frame`.")
     }
@@ -177,10 +198,10 @@ get_splicing_impact <- function(
     }
 
   } else {
-    data <- data.table::as.data.table(data)
+    if (!is.null(data)) data <- data.table::as.data.table(data)
   }
 
-  have_res <- !is.null(res) && nrow(data.table::as.data.table(res)) > 0L
+  have_res <- !is.null(res)
   if (!have_res) {
     if (verbose) message("[STEP] Differential inclusion")
     res <- get_differential_inclusion(
@@ -196,55 +217,91 @@ get_splicing_impact <- function(
       verbose = verbose
     )
   } else {
-    res <- data.table::as.data.table(res)
+    res <- data.table::copy(data.table::as.data.table(res))
   }
-    res_di <- keep_sig_pairs(res, fdr_threshold, delta_psi_threshold)
-  
-  if (is.null(annotation_df) || !all(c("annotations", "sequences") %in% names(annotation_df))) {
-    stop("get_splicing_impact: `annotation_df` must be provided and contain `annotations` and `sequences`.")
+  res_di <- keep_sig_pairs(res, fdr_threshold, delta_psi_threshold)
+
+  # Preserve a usable schema for valid analyses with no significant events or
+  # no pairs, without requesting annotations/features/PPI that cannot be used.
+  empty_matched <- data.table::copy(res_di[0])
+  for (column in c("event_id", "gene_id", "transcript_id", "chr", "strand",
+                   "event_type", "form", "exons", "protein_id", "inc", "exc",
+                   "transcript_seq", "protein_seq", "transcript_type")) {
+    if (!column %in% names(empty_matched)) empty_matched[, (column) := character()]
   }
+  for (column in c("delta_psi", "p.value", "padj")) {
+    if (!column %in% names(empty_matched)) empty_matched[, (column) := numeric()]
+  }
+  matched <- data.table::copy(empty_matched)
+  hits_sequences <- data.table::copy(empty_matched)
+  pairs <- get_pairs(empty_matched, source = source_pairs)
+  matching_diagnostics <- NULL
 
-  if (verbose) message("[STEP] Match -> sequence attach -> pairing")
-  matched <- get_matched_events_chunked(
-    events = res_di,
-    annotations = annotation_df$annotations,
-    chunk_size = chunk_size_match
-  )
-  hits_sequences <- attach_sequences(matched, annotation_df$sequences)
-  pairs <- get_pairs(hits_sequences, source = source_pairs)
-
-  if (verbose) message("[STEP] Sequence/frame comparison")
-  seq_compare <- compare_sequence_frame(pairs, annotation_df$annotations)
-
-  if (is.null(exon_features)) {
-    if (is.null(protein_feature_total)) {
-      stop("get_splicing_impact: provide `exon_features` or `protein_feature_total`.")
+  has_annotation <- !is.null(annotation_df) && all(c("annotations", "sequences") %in% names(annotation_df))
+  # With no significant events the ORF matcher still runs when annotations are
+  # supplied (cheap: no genes), so its empty pairs and diagnostics keep their
+  # usual columns.
+  if (nrow(res_di) || (matching == "orf" && has_annotation)) {
+    if (!has_annotation) {
+      stop("get_splicing_impact: `annotation_df` must be provided and contain `annotations` and `sequences`.")
     }
-    if (verbose) message("[STEP] Exon-feature mapping")
-    exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
+    if (verbose) message("[STEP] Match -> sequence attach -> pairing")
+    if (matching == "orf") {
+      ranked <- get_ranked_pairs(res_di, annotation_df$annotations, annotation_df$sequences,
+                                 source = source_pairs, max_candidates = matching_max_candidates,
+                                 fallback = matching_fallback,
+                                 verbose = verbose)
+      pairs <- ranked$pairs
+      matched <- hits_sequences <- ranked$matched
+      matching_diagnostics <- ranked[setdiff(names(ranked), c("pairs", "matched"))]
+    } else {
+      matched <- get_matched_events_chunked(
+        events = res_di,
+        annotations = annotation_df$annotations,
+        chunk_size = chunk_size_match,
+        verbose = verbose
+      )
+      hits_sequences <- attach_sequences(matched, annotation_df$sequences)
+      pairs <- get_pairs(hits_sequences, source = source_pairs)
+    }
   }
 
-  if (verbose) message("[STEP] Domain calls")
-  hits_domain <- get_domains(
-    hits = seq_compare,
-    exon_features = exon_features,
-    show_protein_domains = show_protein_domains
-  )
+  if (nrow(pairs)) {
+    if (verbose) message("[STEP] Sequence/frame comparison")
+    seq_compare <- compare_sequence_frame(pairs, annotation_df$annotations)
 
-  if (is.null(ppi)) {
-    if (verbose) message("[STEP] Loading PPI interactions")
-    ppi <- get_ppi_interactions()
+    if (is.null(exon_features)) {
+      if (is.null(protein_feature_total)) {
+        stop("get_splicing_impact: provide `exon_features` or `protein_feature_total`.")
+      }
+      if (verbose) message("[STEP] Exon-feature mapping")
+      exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
+    }
+    if (verbose) message("[STEP] Domain calls")
+    hits_domain <- get_domains(
+      hits = seq_compare, exon_features = exon_features,
+      show_protein_domains = show_protein_domains
+    )
+    if (is.null(protein_feature_total)) {
+      stop("get_splicing_impact: `protein_feature_total` is required for get_ppi_switches().")
+    }
+    if (is.null(ppi)) {
+      if (verbose) message("[STEP] Loading PPI interactions")
+      ppi <- get_ppi_interactions()
+    }
+    if (verbose) message("[STEP] PPI switch calls")
+    hits_final <- get_ppi_switches(
+      hits_domain = hits_domain, ppi = ppi,
+      protein_feature_total = protein_feature_total
+    )
+  } else {
+    if (verbose) message("[INFO] No transcript pairs to analyze at the current thresholds.")
+    # The same steps on zero rows return empty tables with their usual columns;
+    # they look nothing up, so no feature or PPI data is loaded.
+    seq_compare <- compare_sequence_frame(pairs, if (has_annotation) annotation_df$annotations)
+    hits_domain <- get_domains(seq_compare, exon_features, show_protein_domains = show_protein_domains)
+    hits_final <- get_ppi_switches(hits_domain, ppi, protein_feature_total)
   }
-  if (is.null(protein_feature_total)) {
-    stop("get_splicing_impact: `protein_feature_total` is required for get_ppi_switches().")
-  }
-
-  if (verbose) message("[STEP] PPI switch calls")
-  hits_final <- get_ppi_switches(
-    hits_domain = hits_domain,
-    ppi = ppi,
-    protein_feature_total = protein_feature_total
-  )
 
   if (identical(return_class, "S4")) {
     md <- c(
@@ -252,22 +309,25 @@ get_splicing_impact <- function(
       list(
         source_data = source_data,
         source_pairs = source_pairs,
-        has_raw = TRUE,
-        has_di = TRUE,
-        has_res_di = TRUE,
-        has_matched = TRUE,
+        matching = matching,
+        matching_diagnostics = matching_diagnostics,
+        has_raw = !is.null(data) && nrow(data) > 0L,
+        has_di = nrow(res) > 0L,
+        has_res_di = nrow(res_di) > 0L,
+        has_matched = nrow(matched) > 0L,
         has_sample_frame = !is.null(sample_frame),
-        has_hits = TRUE
+        has_hits = nrow(hits_final) > 0L
       )
     )
     if (!is.null(si)) {
-      si <- add_splice_part(si, data = data)
+      if (!is.null(data)) si <- add_splice_part(si, data = data)
       si <- add_splice_part(si, res = res)
       si <- add_splice_part(si, res_di = res_di)
       si <- add_splice_part(si, matched = matched)
       if (!is.null(sample_frame)) si <- add_splice_part(si, sample_frame = sample_frame)
       si <- add_splice_part(si, hits_final = hits_final)
-      si@metadata <- c(si@metadata, md)
+      # Replace fields from earlier runs; appending would leave stale duplicates.
+      si@metadata[names(md)] <- md
       return(si)
     } else {
       return(as_splice_impact_result(
@@ -287,6 +347,7 @@ get_splicing_impact <- function(
     res = res_di,
     hits_final = hits_final
   )
+  if (matching == "orf") out$matching <- matching_diagnostics
 
   if (isTRUE(debug_steps)) {
     out$matched <- matched

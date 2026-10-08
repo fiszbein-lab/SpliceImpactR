@@ -574,7 +574,11 @@ get_differential_inclusion <- function(
 #' Filter event pairs by significance and deltaPSI thresholds
 #'
 #' Keeps all rows belonging to events where at least one isoform or site
-#' passes adjusted p-value and deltaPSI significance criteria.
+#' passes adjusted p-value and deltaPSI significance criteria. The
+#' `site_significant` column marks the rows that pass themselves; the other
+#' rows are kept as the event's comparators. In a multi-site event (for
+#' example an AFE with several first exons) these include sites whose own
+#' change does not meet the thresholds.
 #'
 #' @param DT A `data.frame` or `data.table` containing at least `event_id`,
 #'   `padj`, and `delta_psi` columns.
@@ -585,7 +589,8 @@ get_differential_inclusion <- function(
 #'
 #' @return A `data.table` (or updated `SpliceImpactResult` when
 #' `return_class` resolves to S4) containing all rows from event pairs in which
-#' at least one row meets the significance criteria.
+#' at least one row meets the significance criteria, with a logical
+#' `site_significant` column.
 #'
 #' @examples
 #' ex <- load_example_data("sample_frame")
@@ -607,13 +612,13 @@ keep_sig_pairs <- function(
   .spi_obj <- .spi_in$obj
   x <- data.table::as.data.table(.spi_in$dt)
 
-  # which rows pass?
-  x[, pass := is.finite(padj) & is.finite(delta_psi) &
+  # Rows that pass themselves are labelled; the other forms or sites of a
+  # passing event are kept as its comparators.
+  x[, site_significant := is.finite(padj) & is.finite(delta_psi) &
       (padj <= padj_thr) & (abs(delta_psi) >= dpsi_thr)]
 
-  # keep all rows from pairs where any row passed
-  keep_pairs <- x[, any(pass), by = event_id][V1 == TRUE, event_id]
-  out <- x[event_id %chin% keep_pairs][, pass := NULL][]
+  keep_pairs <- x[, any(site_significant), by = event_id][V1 == TRUE, event_id]
+  out <- x[event_id %chin% keep_pairs]
   out <- out[!is.na(delta_psi) & !is.na(p.value)]
   .return_splice_output(out, obj = .spi_obj, what = "res_di", return_class = return_class)
 }

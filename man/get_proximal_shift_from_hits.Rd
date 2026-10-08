@@ -17,9 +17,12 @@ get_proximal_shift_from_hits(hits)
 }}
 }
 \value{
-A `data.table` identical to `hits` with an additional
-column (named `V1`) specifying `"proximal"`, `"distal"`,
-`"overlap"`, or `"nonTerminal"`.
+A list with `data`, a `data.table` of the AFE/ALE pairs
+(`event_id`, `event_type`, `strand`, `pos`, `neg`, the two
+`delta_psi` columns, a row index `I`, and `V1` specifying
+`"proximal"`, `"distal"` or `"overlap"`), and `plot`, the summary
+from [plot_prox_dist()]. Without AFE/ALE pairs, `data` has zero rows
+and `plot` is a placeholder.
 }
 \description{
 Determines whether inclusion/exclusion events correspond to
@@ -28,18 +31,19 @@ First Exon) and **ALE** (Alternative Last Exon) events, based on
 genomic coordinates and strand orientation.
 }
 \details{
-The function compares the genomic coordinates of the inclusion
-(`inc_case`) and exclusion (`inc_control`) segments per event:
+Only AFE and ALE pairs are used; other event types are dropped. Each pair's
+case exon (`inc_case`) is compared with its control exon (`inc_control`)
+at the end facing the gene body:
 \itemize{
-  \item For **AFE** events, proximal = exon with smaller start
-        coordinate on the `+` strand (or larger end on `-` strand).
-  \item For **ALE** events, proximal = exon with smaller start
-        coordinate on the `+` strand (or larger end on `-` strand).
+  \item For **AFE** pairs, `"proximal"` means the case first exon lies
+        further downstream (larger end on the `+` strand, smaller start
+        on the `-` strand).
+  \item For **ALE** pairs, `"proximal"` means the case last exon lies
+        further upstream (smaller start on the `+` strand, larger end on
+        the `-` strand).
 }
-Events outside these types are labeled `"nonTerminal"`.
-
-If \code{plot = TRUE}, a summary donut chart is printed showing
-the proportion of proximal vs distal usage per event type.
+The reverse order is `"distal"`, and equal ends are `"overlap"`. Each
+`inc_case` and `inc_control` must be a single `start-end` interval.
 }
 \examples{
 ex <- load_example_data("sample_frame")

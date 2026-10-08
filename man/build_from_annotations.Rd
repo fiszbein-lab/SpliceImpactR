@@ -13,7 +13,9 @@ annotation records with at least the following columns:
 \code{strand}, \code{gene_id}, \code{gene_name},
 \code{transcript_id}, \code{transcript_name},
 \code{transcript_type}, \code{protein_id},
-\code{exon_id}, and \code{exon_number}.}
+\code{exon_id}, and \code{exon_number}. An optional
+\code{transcript_support_level} column only breaks ties between equally
+well-matched transcripts; when absent, support is treated as unknown.}
 }
 \value{
 A named list with three components:
@@ -22,8 +24,8 @@ A named list with three components:
     `classification` (`"first"`, `"last"`, or `"internal"`)
     determined per transcript.}
   \item{`transcripts`}{A `data.table` of transcript records.}
-  \item{`protein_tx`}{Character vector of transcript IDs
-    annotated as protein-coding (non-NA `protein_id`).}
+  \item{`protein_tx`}{Character vector of transcript IDs whose
+    `transcript_type` is `"protein_coding"`.}
 }
 }
 \description{

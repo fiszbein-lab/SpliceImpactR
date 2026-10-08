@@ -419,27 +419,20 @@
   mode <- match.arg(mode)
   r <- as.list(hits_row)
   
-  spans <- data.table::rbindlist(list(
-    {
-      tx <- r$transcript_id_case
-      a <- .viz_parse_span(r$inc_case)
-      b <- .viz_parse_span(r$exc_case)
-      data.table::rbindlist(list(
-        if (!is.null(a)) data.table::data.table(transcript=tx, xmin=a[1], xmax=a[2], fill=col_blue),
-        if (!is.null(b)) data.table::data.table(transcript=tx, xmin=b[1], xmax=b[2], fill=col_red)
-      ), fill=TRUE)
-    },
-    {
-      tx <- r$transcript_id_control
-      a <- .viz_parse_span(r$inc_control)
-      b <- .viz_parse_span(r$exc_control)
-      data.table::rbindlist(list(
-        if (!is.null(a)) data.table::data.table(transcript=tx, xmin=a[1], xmax=a[2], fill=col_blue),
-        if (!is.null(b)) data.table::data.table(transcript=tx, xmin=b[1], xmax=b[2], fill=col_red)
-      ), fill=TRUE)
-    }
-  ), fill=TRUE)
-  
+  spans <- data.table::rbindlist(lapply(c("case", "control"), function(side) {
+    tx <- r[[paste0("transcript_id_", side)]]
+    data.table::rbindlist(lapply(c("inc", "exc"), function(kind) {
+      value <- r[[paste0(kind, "_", side)]]
+      if (is.null(value) || is.na(value) || !nzchar(value)) return(NULL)
+      intervals <- lapply(strsplit(value, ";", fixed = TRUE)[[1L]], .viz_parse_span)
+      data.table::rbindlist(lapply(intervals, function(a) {
+        if (is.null(a)) return(NULL)
+        data.table::data.table(transcript = tx, xmin = a[1L], xmax = a[2L],
+                               fill = if (kind == "inc") col_blue else col_red)
+      }), fill = TRUE)
+    }), fill = TRUE)
+  }), fill = TRUE)
+
   if (!nrow(spans)) return(NULL)
   
   if (mode == "compact") {

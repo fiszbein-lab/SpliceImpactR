@@ -4,7 +4,12 @@
 \alias{match_events_to_annotations_vec}
 \title{Match alternative splicing events to annotated exons and transcripts}
 \usage{
-match_events_to_annotations_vec(events, annotations, minOverlap = 0.05)
+match_events_to_annotations_vec(
+  events,
+  annotations,
+  minOverlap = 0.05,
+  .annotation_index = NULL
+)
 }
 \arguments{
 \item{events}{A `data.frame` or `data.table` containing splicing events with
@@ -17,6 +22,9 @@ to [build_from_annotations()].}
 
 \item{minOverlap}{Minimum fractional overlap (0-1) required between an
 inclusion segment and an annotated exon to count as a hit. Default `0.05`.}
+
+\item{.annotation_index}{Optional index from [build_from_annotations()] for
+reuse across chunks. Internal callers must use the same annotation table.}
 }
 \value{
 A `data.table` containing one row per input event with the following
@@ -33,16 +41,21 @@ A `data.table` containing one row per input event with the following
 \description{
 Performs vectorized overlap mapping between event coordinates (e.g. inclusion
 or exclusion intervals) and exons from an annotation resource. Returns the
-best-matching transcript and exon set per event based on coverage, exon
-classification, and protein-coding preference.
+best-matching transcript and exon set per event based on coverage and exon
+classification, with protein-coding status as a tie-breaker.
 }
 \details{
 The function uses [GenomicRanges::findOverlaps()] to match event inclusion
 intervals to exons. Candidate transcripts are filtered to ensure sufficient
 coverage and absence of overlaps with exclusion coordinates.
 
-The algorithm prioritizes exon classification (`first`, `internal`, `last`)
-consistent with the event type (AFE, ALE, SE, etc.), followed by reciprocal
-overlap fractions, intersection width, and protein-coding status.
+Transcripts that pass these checks are ranked by structural fit: exon
+classification (`first`, `internal`, `last`) consistent with the event type
+(AFE, ALE, SE, etc.), then reciprocal overlap fraction and intersection
+width. Protein-coding status and then transcript support level (TSL; 1 best
+through 5 worst) only break remaining ties, so neither outranks a better
+structural match. The exon class is a preference, not a requirement: an AFE
+site with no annotated transcript starting there can still match an internal
+exon.
 }
 \keyword{internal}

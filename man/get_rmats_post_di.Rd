@@ -4,15 +4,24 @@
 \alias{get_rmats_post_di}
 \title{Import post-differential-inclusion rMATS results}
 \usage{
-get_rmats_post_di(input, event_type = NULL)
+get_rmats_post_di(input, event_type = NULL, case_group = 1)
 }
 \arguments{
 \item{input}{Either:
-* a data.frame with columns `path`, `grp1`, `grp2`, `event_type`, or
-* a data.frame of rMATS post-DI results.}
+  * a data.frame with columns `path`, `grp1`, `grp2`, `event_type`, or
+  * a data.frame of rMATS post-DI results.
+
+  `grp1` and `grp2` name rMATS groups 1 and 2; they must describe one
+  comparison and can identify the case through `case_group`.}
 
 \item{event_type}{Optional event type when `input` contains a single
 rMATS data.frame. Ignored when file metadata table is supplied.}
+
+\item{case_group}{Which rMATS sample group holds the case samples: `1` (the
+`--b1` samples, default) or `2` (`--b2`). With a file table that has
+`grp1`/`grp2` columns, a group label such as `"KO"` may be given instead;
+it is matched in each file's row. Tables already in SpliceImpactR format
+are returned unchanged and accept only the default.}
 }
 \value{
 A `data.table` with columns:
@@ -27,7 +36,8 @@ A `data.table` with columns:
   \item{exc}{genomic coordinates of excluded segment(s)}
   \item{p.value}{rMATS p-value}
   \item{padj}{FDR}
-  \item{delta_psi}{signed PSI change (+INC, -EXC)}
+  \item{delta_psi}{case minus control PSI change; the INC and EXC rows of an
+  event have opposite signs}
 }
 }
 \description{
@@ -42,24 +52,39 @@ Input can be:
   must be supplied.
 
 For each event, the function constructs paired INC and EXC entries:
-* `inc` contains genomic segments included in the form
+* `inc` contains genomic segments included in the form; for A3SS/A5SS, the
+  long or short exon and its partner (rMATS flanking) exon
 * `exc` contains the excluded segment(s)
 * `delta_psi`, `p.value`, and `padj` are assigned using
-  the rMATS-reported values
+  the rMATS-reported values, with `delta_psi` oriented by `case_group`
+Raw rMATS coordinates are converted to one-based, closed intervals.
+An already standardized SpliceImpactR DI table is returned without conversion.
 
-Event IDs are automatically generated (event_type:N) if not supplied
+rMATS reports `IncLevelDifference` as mean(`IncLevel1`) - mean(`IncLevel2`),
+where group 1 holds the `--b1` samples and group 2 the `--b2` samples.
+SpliceImpactR uses `delta_psi` = case - control, so `case_group` states which
+rMATS group holds the case samples. With the default, group 1,
+`IncLevelDifference` is used as reported; with group 2 its sign is reversed.
+Each import reports the group it treated as the case.
+
+Event IDs are automatically generated (event_type:N) if not supplied.
+With several files, events are numbered across all files, so each ID names
+one event; identical event definitions are kept once. All files belong to
+one comparison: an event type listed under different `grp1`/`grp2` labels
+is an error.
 }
 \examples{
-# # Multiple files
+# # Multiple files from one rMATS run with the KO samples given as --b2
 # input <- data.frame(
 #   path = c('/path/A3SS.MATS.JC.txt', '/path2/A5SS.MATS.JC.txt'),
 #   grp1 = c("WT","WT"),
 #   grp2 = c("KO","KO"),
 #   event_type = c("A3SS", "A5SS")
 # )
-# res <- get_rmats_post_di(meta)
+# res <- get_rmats_post_di(input, case_group = "KO")
 
-# Single rMATS table already loaded as df
+# Single rMATS table already loaded as df; group 1 (--b1) holds the case
+# samples, the default
 df <- data.frame(
   ID = 1L,
   GeneID = "ENSG00000182871",

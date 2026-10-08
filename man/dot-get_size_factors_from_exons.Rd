@@ -4,31 +4,32 @@
 \alias{.get_size_factors_from_exons}
 \title{Compute size factors directly from exon count files}
 \usage{
-.get_size_factors_from_exons(sample_df, method = c("exon_files", "user_given"))
+.get_size_factors_from_exons(sample_df, method = c("exon_files", "user-given"))
 }
 \arguments{
 \item{sample_df}{`data.frame` containing sample metadata with
-columns `sample_name`, `path`, and optionally `condition`.}
+columns `sample_name`, `path`, and optionally `condition`. For
+`'user-given'`, it must also have a `sizeFactor` column.}
 
-\item{method}{Either `'exon_files'` (compute) or `'user_given'` (join).}
+\item{method}{Either `'exon_files'` (compute) or `'user-given'` (use the
+`sizeFactor` column; `'user_given'` is accepted as an alias).}
 }
 \value{
-A `data.frame` equal to `sample_df` with an appended
-  numeric column `sizeFactor`.
+For `'exon_files'`, `sample_df` merged by `sample_name` with a
+  numeric `sizeFactor` column. For `'user-given'`, a copy of `sample_df`.
 }
 \description{
-Wrapper around `getSizeFactors()` that can either compute
-normalization factors from raw exon count files (`exon_files`)
-or use user-provided values (`user_given`).
+Computes median-of-ratios normalization factors from raw exon count
+files (`exon_files`), or checks size factors the user already supplied
+in `sample_df` (`user-given`).
 }
 \details{
 - If `method = 'exon_files'`, the function loads exon-level count tables
-  using `.read_exon_files()` and computes per-sample size factors.
-- If `method = 'user_given'`, it merges the user-supplied `size_factors`
-  data frame into `sample_df`.
-
-Size factors are normalized to have a geometric mean of 1
-(DESeq2-style).
+  using `.read_exon_files()` and computes per-sample size factors from
+  exons with more than 10 reads (`nUP + nDOWN`). Size factors are
+  normalized to have a geometric mean of 1 (DESeq2-style).
+- If `method = 'user-given'`, every sample must have a positive, finite
+  `sizeFactor`; otherwise the function stops.
 }
 \seealso{
 [getSizeFactors()]

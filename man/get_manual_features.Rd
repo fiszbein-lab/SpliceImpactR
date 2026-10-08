@@ -15,7 +15,9 @@ get_manual_features(
 \arguments{
 \item{manual_features}{Data.frame or data.table with at least
 \code{name}, \code{start}, \code{stop} amino acid, and one of
-\code{ensembl_transcript_id} or \code{ensembl_peptide_id}.}
+\code{ensembl_transcript_id} or \code{ensembl_peptide_id}. Rows with
+only \code{ensembl_peptide_id} are placed on the transcript whose
+\code{protein_id} in \code{gtf_df} matches it.}
 
 \item{gtf_df}{get_annotation annotation output}
 
@@ -34,29 +36,27 @@ A \code{data.table} of manual (and optionally combined)
 Converts a manual feature table into the standardized long format
 and optionally merges it with biomaRt-derived features.
 }
+\details{
+Rows that cannot be placed are dropped and reported in a message that
+names up to five of them: rows whose transcript or peptide ID is not in
+\code{gtf_df}, and rows on transcripts without an annotated CDS. Features
+that extend past the end of the CDS are truncated to it.
+}
 \examples{
 annotation_df <- load_example_data("annotation_df")$annotation_df
+# Illustrative features on coding transcripts in the bundled annotation
+# (PPFIA1, COL1A2, EPS15, NUP62); start and stop are amino-acid positions.
+# The NUP62 feature is given by its peptide ID only.
 user_df <- data.frame(
-  ensembl_transcript_id = c(
-    "ENST00000511072","ENST00000374900","ENST00000373020","ENST00000456328",
-    "ENST00000367770","ENST00000331789","ENST00000335137","ENST00000361567",
-    NA,                    "ENST00000380152"
-  ),
-  ensembl_peptide_id = c(
-    "ENSP00000426975", NA,                   "ENSP00000362048","ENSP00000407743",
-    "ENSP00000356802","ENSP00000326734", NA,                  "ENSP00000354587",
-    "ENSP00000364035", NA
-  ),
-  name = c(
-    "Low complexity","Transmembrane helix","Coiled-coil","Signal peptide",
-    "Transmembrane helix","Low complexity","Coiled-coil","Transmembrane helix",
-    "Signal peptide","Low complexity"
-  ),
-  start = c(80L, 201L, 35L, 1L, 410L, 150L, 220L, 30L, 1L, 300L),
-  stop  = c(120L,223L, 80L, 20L, 430L, 190L, 260L, 55L, 24L, 360L),
-  database   = c("seg","tmhmm","ncoils","signalp","tmhmm","seg","ncoils","tmhmm","signalp", NA),
-  alt_name   = c(NA,"TMhelix",NA,"SignalP-noTM", "TMhelix", NA, NA, "TMhelix", "SignalP-TAT", NA),
-  feature_id = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+  ensembl_transcript_id = c("ENST00000253925", "ENST00000297268",
+                            "ENST00000371730", NA),
+  ensembl_peptide_id = c("ENSP00000253925", "ENSP00000297268",
+                         "ENSP00000360795", "ENSP00000305503"),
+  name = c("Coiled-coil", "Signal peptide", "Low complexity",
+           "Low complexity"),
+  start = c(100L, 1L, 600L, 1L),
+  stop  = c(400L, 22L, 650L, 300L),
+  database = c("ncoils", "signalp", "seg", "seg")
 )
 user_features <- get_manual_features(user_df, annotation_df$annotations)
 print(user_features)

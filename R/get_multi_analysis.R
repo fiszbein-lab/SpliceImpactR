@@ -153,18 +153,19 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
 #' genomic coordinates and strand orientation.
 #'
 #' @details
-#' The function compares the genomic coordinates of the inclusion
-#' (`inc_case`) and exclusion (`inc_control`) segments per event:
+#' Only AFE and ALE pairs are used; other event types are dropped. Each pair's
+#' case exon (`inc_case`) is compared with its control exon (`inc_control`)
+#' at the end facing the gene body:
 #' \itemize{
-#'   \item For **AFE** events, proximal = exon with smaller start
-#'         coordinate on the `+` strand (or larger end on `-` strand).
-#'   \item For **ALE** events, proximal = exon with smaller start
-#'         coordinate on the `+` strand (or larger end on `-` strand).
+#'   \item For **AFE** pairs, `"proximal"` means the case first exon lies
+#'         further downstream (larger end on the `+` strand, smaller start
+#'         on the `-` strand).
+#'   \item For **ALE** pairs, `"proximal"` means the case last exon lies
+#'         further upstream (smaller start on the `+` strand, larger end on
+#'         the `-` strand).
 #' }
-#' Events outside these types are labeled `"nonTerminal"`.
-#'
-#' If \code{plot = TRUE}, a summary donut chart is printed showing
-#' the proportion of proximal vs distal usage per event type.
+#' The reverse order is `"distal"`, and equal ends are `"overlap"`. Each
+#' `inc_case` and `inc_control` must be a single `start-end` interval.
 #'
 #' @param hits `data.frame` or `data.table` containing at least:
 #'   \itemize{
@@ -175,9 +176,12 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
 #'     \item `delta_psi_case`, `delta_psi_control`
 #'   }
 #'
-#' @return A `data.table` identical to `hits` with an additional
-#' column (named `V1`) specifying `"proximal"`, `"distal"`,
-#' `"overlap"`, or `"nonTerminal"`.
+#' @return A list with `data`, a `data.table` of the AFE/ALE pairs
+#' (`event_id`, `event_type`, `strand`, `pos`, `neg`, the two
+#' `delta_psi` columns, a row index `I`, and `V1` specifying
+#' `"proximal"`, `"distal"` or `"overlap"`), and `plot`, the summary
+#' from [plot_prox_dist()]. Without AFE/ALE pairs, `data` has zero rows
+#' and `plot` is a placeholder.
 #'
 #' @seealso [plot_prox_dist()]
 #'
@@ -196,6 +200,10 @@ probe_individual_event <- function(data, event, fill_zeros = TRUE) {
 get_proximal_shift_from_hits <- function(hits) {
   .spi_in <- .resolve_splice_input(hits, what = "paired_hits")
   H <- data.table::as.data.table(.spi_in$dt)[event_type %in% c('AFE', 'ALE'), .(event_id, event_type, strand, pos = inc_case, delta_psi_case, neg = inc_control, delta_psi_control)]
+  if (!nrow(H)) {
+    return(list(data = cbind(H, data.table::data.table(I = integer(), V1 = character())),
+                plot = ggplot() + theme_void() + ggtitle("No AFE/ALE transcript pairs to show")))
+  }
   res <- H[, {
     pos <- .split_coord(pos)
     neg <- .split_coord(neg)
@@ -235,8 +243,6 @@ get_proximal_shift_from_hits <- function(hits) {
           "overlap"
         }
       }
-    } else {
-      "nonTerminal"
     }
   }, by = .I
   ]
@@ -519,7 +525,7 @@ plot_length_comparison <- function(
     plot_annotation(title = title_txt)
 
   if (!is.null(output_file)) {
-    ggsave(output_file, plot = final_plot, width = 12, height = 5.5)
+    ggplot2::ggsave(output_file, plot = final_plot, width = 12, height = 5.5)
   }
 
   final_plot
@@ -541,7 +547,7 @@ plot_length_comparison <- function(
 #'
 #' @return A composite `ggplot` object (from `ggpubr::ggarrange`)
 #' showing stacked bar counts by coding class and histogram of
-#' alignment identity scores.
+#' alignment identity scores. With no pairs, a placeholder plot.
 #'
 #' @examples
 #' ex <- load_example_data("sample_frame")
@@ -569,12 +575,19 @@ plot_alignment_summary <- function(hits,
   .spi_in <- .resolve_splice_input(hits, what = "paired_hits")
   hits <- data.table::as.data.table(.spi_in$dt)
   mode <- match.arg(mode)
+  if (!nrow(hits)) {
+    gdf_comp <- ggplot() + theme_void() + ggtitle("No transcript pairs to show")
+    if (!is.null(output_file)) {
+      ggplot2::ggsave(output_file, plot = gdf_comp, width = 12, height = 5.5)
+    }
+    return(gdf_comp)
+  }
   if (mode == "protein") pid_col <- 'prot_pid' else pid_col <- 'dna_pid'
   A <- hits[, .(score = get(pid_col), summary_classification, event_type)]
   C <- A[, .N, by = .(summary_classification, event_type)]
   A <- A[!is.na(score)]
 
-  lvl <- rev(c("noPC", "onePC", "protein_coding", "FrameShift", "Rescue", "Match") )
+  lvl <- rev(c("noPC", "onePC", "NMD", "protein_coding", "FrameShift", "Rescue", "Match") )
   #                         ^ bottom         ^ middle       ^ top
 
   A[, summary_classification :=
@@ -584,21 +597,24 @@ plot_alignment_summary <- function(hits,
 
   propCoding <- ggplot2::ggplot(C, ggplot2::aes(fill=summary_classification, x = 1, y = N)) +
     ggplot2::geom_bar(position="stack", stat="identity") +
-    ggplot2::scale_fill_manual(values=c('noPC' = "azure4", 'onePC' = "azure2", "Match" = "#E69F00", 'Rescue' = "#56B4E9", 'FrameShift' = "pink", 'protein_coding' = "deeppink4")) +
+    ggplot2::scale_fill_manual(values=c('noPC' = "azure4", 'onePC' = "azure2", 'NMD' = "#D55E00", "Match" = "#E69F00", 'Rescue' = "#56B4E9", 'FrameShift' = "pink", 'protein_coding' = "deeppink4")) +
     ggplot2::theme_classic() + ggplot2::xlab("") + ggplot2::ylab("Count") + theme(axis.ticks.x = element_blank(),axis.text.x = element_blank()) +
     facet_wrap(~event_type, ncol = 1, scales = 'free_y')
 
-  gdf <- ggplot2::ggplot(A, ggplot2::aes(x = score, fill = summary_classification)) +
+  # Pairs without a scored alignment (e.g. all noPC) leave nothing to histogram.
+  gdf <- if (nrow(A)) {
+    ggplot2::ggplot(A, ggplot2::aes(x = score, fill = summary_classification)) +
     ggplot2::geom_histogram(ggplot2::aes(y=ggplot2::after_stat(count/sum(count))), colour = 1,
                             bins = 20) +
-    ggplot2::scale_fill_manual(values=c('noPC' = "azure4", 'onePC' = "azure2", "Match" = "#E69F00", 'Rescue' = "#56B4E9", 'FrameShift' = "pink", 'protein_coding' = "deeppink4")) +
+    ggplot2::scale_fill_manual(values=c('noPC' = "azure4", 'onePC' = "azure2", 'NMD' = "#D55E00", "Match" = "#E69F00", 'Rescue' = "#56B4E9", 'FrameShift' = "pink", 'protein_coding' = "deeppink4")) +
     ggplot2::theme_classic() + ggplot2::xlab("Alignment Score") + ggplot2::ylab("Fraction")+
     facet_wrap(~event_type, ncol = 1, scales = 'free_y')
+  } else ggplot() + theme_void() + ggtitle("Alignment scores not available")
 
   gdf_comp <- ggpubr::ggarrange(propCoding, gdf, nrow = 1, widths = c(1, 3),
                                 common.legend = TRUE)
   if (!is.null(output_file)) {
-    ggsave(output_file, plot = final_plot, width = 12, height = 5.5)
+    ggplot2::ggsave(output_file, plot = gdf_comp, width = 12, height = 5.5)
   }
   return(gdf_comp)
 }
@@ -658,41 +674,48 @@ getSizeFactors <- function(df) {
 #' Compute size factors directly from exon count files
 #'
 #' @description
-#' Wrapper around `getSizeFactors()` that can either compute
-#' normalization factors from raw exon count files (`exon_files`)
-#' or use user-provided values (`user_given`).
+#' Computes median-of-ratios normalization factors from raw exon count
+#' files (`exon_files`), or checks size factors the user already supplied
+#' in `sample_df` (`user-given`).
 #'
 #' @param sample_df `data.frame` containing sample metadata with
-#'   columns `sample_name`, `path`, and optionally `condition`.
-#' @param method Either `'exon_files'` (compute) or `'user_given'` (join).
+#'   columns `sample_name`, `path`, and optionally `condition`. For
+#'   `'user-given'`, it must also have a `sizeFactor` column.
+#' @param method Either `'exon_files'` (compute) or `'user-given'` (use the
+#'   `sizeFactor` column; `'user_given'` is accepted as an alias).
 #'
 #' @details
 #' - If `method = 'exon_files'`, the function loads exon-level count tables
-#'   using `.read_exon_files()` and computes per-sample size factors.
-#' - If `method = 'user_given'`, it merges the user-supplied `size_factors`
-#'   data frame into `sample_df`.
+#'   using `.read_exon_files()` and computes per-sample size factors from
+#'   exons with more than 10 reads (`nUP + nDOWN`). Size factors are
+#'   normalized to have a geometric mean of 1 (DESeq2-style).
+#' - If `method = 'user-given'`, every sample must have a positive, finite
+#'   `sizeFactor`; otherwise the function stops.
 #'
-#' Size factors are normalized to have a geometric mean of 1
-#' (DESeq2-style).
-#'
-#' @return A `data.frame` equal to `sample_df` with an appended
-#'   numeric column `sizeFactor`.
+#' @return For `'exon_files'`, `sample_df` merged by `sample_name` with a
+#'   numeric `sizeFactor` column. For `'user-given'`, a copy of `sample_df`.
 #'
 #' @seealso [getSizeFactors()]
 #' @importFrom data.table dcast rbindlist setDT
 #' @importFrom stats median
 #' @keywords internal
-.get_size_factors_from_exons <- function(sample_df, method = c('exon_files', 'user_given')) {
+.get_size_factors_from_exons <- function(sample_df, method = c('exon_files', 'user-given')) {
+  if (identical(method, "user_given")) method <- "user-given"
+  method <- match.arg(method)
   if (method == 'user-given') {
-    sf <- merge(sample_df, size_factors, by = sample_name)
-    return(sf)
+    if (!"sizeFactor" %in% names(sample_df) ||
+        !is.numeric(sample_df$sizeFactor) ||
+        any(!is.finite(sample_df$sizeFactor) | sample_df$sizeFactor <= 0)) {
+      stop("User-given normalization requires a positive, finite sizeFactor for every sample.")
+    }
+    return(data.table::copy(sample_df))
   } else {
     counts_long <- data.table::rbindlist(lapply(seq_len(nrow(sample_df)), function(i) {
       x <- sample_df$path[i]
       s <- sample_df$sample_name[i]
 
       exon_file <- .read_exon_files(
-        paste0(x, basename(x), "."),           # keep your pattern
+        file.path(x, paste0(basename(x), ".")),
         columns = c("gene", "exon", "nUP", "nDOWN")
       )
       data.table::setDT(exon_file)
@@ -700,6 +723,8 @@ getSizeFactors <- function(df) {
       exon_file <- exon_file[reads > 10]
       exon_file[, .(reads = sum(reads)), by = .(exon)][, sample_name := s]
     }), use.names = TRUE, fill = TRUE)
+
+    if (!nrow(counts_long)) stop("No informative exon counts for size-factor estimation.")
 
     # 2) Cast to exon x sample matrix
     counts_wide <- data.table::dcast(
@@ -751,7 +776,7 @@ getSizeFactors <- function(df) {
 #'   `inc`, `exc`.
 #' @param sample_df Metadata `data.frame` with sample-level paths and conditions.
 #' @param depth_norm Normalization mode: `'exon_files'` (compute from read files)
-#'   or `'user-given'` (use provided size factors).
+#'   or `'user-given'` (use a positive `sizeFactor` column in `sample_df`).
 #' @param event_type Character string specifying the event class (e.g., `"AFE"`, `"ALE"`).
 #' @param conditions Named character vector mapping `control` and `experimental`
 #'   condition labels.
@@ -879,7 +904,7 @@ overview_spicing_comparison <- function(
     )
 
   if (!is.null(output_file)) {
-    ggsave(output_file, plot = combined, width = 9, height = 8)
+    ggplot2::ggsave(output_file, plot = combined, width = 9, height = 8)
   }
 
   invisible(combined)
@@ -909,7 +934,7 @@ overview_spicing_comparison <- function(
     s <- sample_df$sample_name[i]
 
     exon_file <- .read_exon_files(
-      paste0(x, basename(x), "."),           # keep your pattern
+      file.path(x, paste0(basename(x), ".")),
       columns = c("gene", "exon", "HITindex")
     )
     exon_file[, `:=` (sample = sample_df$sample_name[i],
@@ -1189,6 +1214,8 @@ compare_hit_index <- function(
 #'   \item{`plot`}{A multi-panel [`patchwork`] composite summarizing
 #'     classification, alignment, domain changes, and coordination.}
 #' }
+#' With no pairs, the summaries are zero-row tables (\code{relative_use}
+#' still counts the input events) and `plot` is a placeholder.
 #'
 #' @examples
 #' ex <- load_example_data("sample_frame")
@@ -1247,7 +1274,8 @@ integrated_event_summary <- function(
     onePC        = "azure2",
     FrameShift   = "pink",
     protein_coding = "deeppink4",
-    Rescue       = "#56B4E9"
+    Rescue       = "#56B4E9",
+    NMD          = "#D55E00"
   )
 
   DT[, score := as.numeric(if ("prot_pid" %in% names(DT)) prot_pid else prot_score)]
@@ -1267,7 +1295,7 @@ integrated_event_summary <- function(
 
   class_counts <- DT[, .N, by = .(event_type, summary_classification)]
   class_props  <- class_counts[, .(prop = N/sum(N)), by = summary_classification]
-  lvl <- rev(c("noPC", "onePC", "protein_coding", "FrameShift", "Rescue", "Match") )
+  lvl <- rev(c("noPC", "onePC", "NMD", "protein_coding", "FrameShift", "Rescue", "Match") )
   #                         ^ bottom         ^ middle       ^ top
   class_counts[, summary_classification :=
                  factor(summary_classification, levels = lvl)]
@@ -1287,6 +1315,22 @@ integrated_event_summary <- function(
     prop_control  = mean(dom_kind=="control_only", na.rm = TRUE),
     prop_both = mean(dom_kind=="both",     na.rm = TRUE)
   ), by = event_type]
+
+  ru <- relative_use_pre_post(pre_filter_hits, DT)
+
+  summaries <- list(
+    by_type         = by_type[],
+    class_counts    = class_counts[],
+    score_summary   = score_summary[],
+    domain_prevalence = dom_prev[],
+    relative_use = ru$summary[]
+  )
+  # With no pairs every panel would be empty; the summaries still record
+  # how many events of each type went in (relative_use).
+  if (!nrow(DT)) {
+    return(list(summaries = summaries,
+                plot = ggplot() + theme_void() + ggtitle("No transcript pairs to show")))
+  }
 
   ## =====================  plots  =====================
 
@@ -1355,7 +1399,9 @@ integrated_event_summary <- function(
     value.name  = "ppi_count"
   )
 
+  # Explicit levels keep the relabelling valid when no protein-coding pairs remain.
   DT_long[, ppi_direction := factor(ppi_direction,
+                                    levels = c("n_case_ppi", "n_control_ppi"),
                                     labels = c("CASE gained","CONTROL gained"))]
 
   ppi2 <- ggplot(DT_long[ppi_count > 0],
@@ -1415,8 +1461,6 @@ integrated_event_summary <- function(
     coord_heatmap <- ggplot() + theme_void() + ggtitle("Coordination heatmap (no gene column found)")
   }
 
-  ru <- relative_use_pre_post(pre_filter_hits, DT)
-
   top_row    <- wrap_plots(list(p1, p2), ncol = 2)
   middle_row <- wrap_plots(list(p3, ppi1, ppi2), ncol = 3)
   bottom_row <- wrap_plots(list(ru$plot, coord_heatmap), ncol = 2, widths = c(1, 1))
@@ -1425,13 +1469,7 @@ integrated_event_summary <- function(
   combined <- combined & theme(text = element_text(size = 13))
 
   return(list(
-    summaries = list(
-      by_type         = by_type[],
-      class_counts    = class_counts[],
-      score_summary   = score_summary[],
-      domain_prevalence = dom_prev[],
-      relative_use = ru$summary[]
-    ),
+    summaries = summaries,
     plot = combined
   ))
 }
@@ -1592,7 +1630,7 @@ relative_use_pre_post <- function(
 #'                      input = sample_frame,
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
-#' enrichment <- get_enrichment(res$gene_id, bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
+#' enrichment <- get_enrichment(res$gene_id, attr(bg, "gene_universe"), species = 'human', 'ensembl', 'MSigDB:H')
 #' print(enrichment)
 #' }
 #' @export
@@ -2017,7 +2055,7 @@ get_enrichment <- function(
 #'                      input = sample_frame,
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
-#' enrichment <- get_enrichment(get_domain_gene_for_enrichment(hits_domain), bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
+#' enrichment <- get_enrichment(get_domain_gene_for_enrichment(hits_domain), intersect(attr(bg, "feature_gene_universe"), res$gene_id[is.finite(res$padj)]), species = 'human', 'ensembl', 'MSigDB:H')
 #' print(enrichment)
 #' }
 get_domain_gene_for_enrichment <- function(hits) {
@@ -2075,7 +2113,7 @@ get_domain_gene_for_enrichment <- function(hits) {
 #'                      input = sample_frame,
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
-#' enrichment <- get_enrichment(get_ppi_gene_enrichment(hits_final), bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
+#' enrichment <- get_enrichment(get_ppi_gene_enrichment(hits_final), intersect(attr(bg, "feature_gene_universe"), res$gene_id[is.finite(res$padj)]), species = 'human', 'ensembl', 'MSigDB:H')
 #' print(enrichment)
 #' }
 get_ppi_gene_enrichment <- function(hits) {
@@ -2135,7 +2173,7 @@ get_ppi_gene_enrichment <- function(hits) {
 #'                      input = sample_frame,
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
-#' enrichment <- get_enrichment(get_di_gene_enrichment(res, .05, .1), bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
+#' enrichment <- get_enrichment(get_di_gene_enrichment(res, .05, .1), intersect(attr(bg, "gene_universe"), res$gene_id[is.finite(res$padj)]), species = 'human', 'ensembl', 'MSigDB:H')
 #' print(enrichment)
 #' }
 get_di_gene_enrichment <- function(hits, padj_threshold, delta_psi_threshold) {

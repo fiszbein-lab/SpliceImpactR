@@ -5,8 +5,8 @@
 \title{Build a transcript-pair background with domain and length annotations}
 \usage{
 get_background(
-  source = c("hit_index", "annotated", "user-given"),
-  input,
+  source = c("annotated", "hit_index", "user-given"),
+  input = NULL,
   annotations,
   protein_features,
   keep_annotated_first_last = TRUE,
@@ -18,15 +18,15 @@ get_background(
 \item{source}{Character string specifying the source of the background.
 One of:
 \itemize{
+  \item \code{"annotated"} (default) use all transcripts from the annotation.
   \item \code{"hit_index"} use HIT index output directories.
-  \item \code{"annotated"} use all transcripts from the annotation.
   \item \code{"user-given"} use a user-supplied list of transcript IDs.
 }}
 
 \item{input}{Source-specific input:
 \itemize{
+  \item For \code{"annotated"}: not used (default \code{NULL}).
   \item For \code{"hit_index"}: a data.frame of paths with a \code{path} column.
-  \item For \code{"annotated"}: ignored.
   \item For \code{"user-given"}: a character vector or data.frame containing \code{transcript_id}.
 }}
 
@@ -63,6 +63,20 @@ domain-level or exon-level enrichment analyses. Depending on the
 \code{source} parameter, the function can derive the background from
 HIT index results, annotated transcripts, or a user-provided list
 of transcript IDs.
+The returned table has a `gene_universe` attribute containing eligible genes
+before filtering for domain-changing pairs. Gene-level enrichment should
+intersect this universe with the genes actually evaluated for its foreground.
+`feature_gene_universe` contains genes with at least one eligible pair whose
+features differ, i.e. genes that could appear in a domain or PPI
+foreground; use it for domain and PPI gene enrichment.
+}
+\details{
+Use \code{source = "annotated"} (the default) for
+\code{enrich_domains_hypergeo()}. A \code{"hit_index"} background keeps one
+annotated transcript per exon observed in the samples, so it usually lacks
+the transcript pairs the matcher chose and domain enrichment rejects it; its
+\code{gene_universe} and \code{feature_gene_universe} still serve gene-level
+enrichment.
 }
 \examples{
 
@@ -70,7 +84,9 @@ annots <- load_example_data("annotation_df")$annotation_df
 interpro_features <- get_protein_features(c("interpro"), annots$annotations, timeout = 600, test = TRUE)
 protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 
-# Build background from HIT index paths
+# The default, source = "annotated", pairs every annotated transcript (see
+# enrich_domains_hypergeo()). A HIT-index background serves gene-level
+# universes:
 ex <- load_example_data("sample_frame")
 sample_frame <- ex$sample_frame
 bg <- get_background(source = "hit_index",

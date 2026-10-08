@@ -19,8 +19,10 @@ Description: Works by taking in processed data from the HIT Index and/or rMATS
     holistic analyses regarding the impact of different RNA processing events. 
 License: GPL-3
 Encoding: UTF-8
+Depends: R (>= 4.5.0)
 Imports:
     data.table,
+    R.utils (>= 2.13.0),
     BiocFileCache,
     BiocParallel,
     Biostrings,
@@ -63,4 +65,5 @@ Suggests:
     org.Mm.eg.db
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+URL: https://github.com/fiszbein-lab/SpliceImpactR
 BugReports: https://github.com/fiszbein-lab/SpliceImpactR/issues

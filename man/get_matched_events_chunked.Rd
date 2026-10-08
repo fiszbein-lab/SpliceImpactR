@@ -9,7 +9,8 @@ get_matched_events_chunked(
   annotations,
   chunk_size = 50000,
   minOverlap = 0.05,
-  return_class = c("auto", "data.table", "S4")
+  return_class = c("auto", "data.table", "S4"),
+  verbose = TRUE
 )
 }
 \arguments{
@@ -27,10 +28,14 @@ overlap to consider a match}
 
 \item{return_class}{Character. Output mode: `"data.table"`, `"S4"`, or
 `"auto"` (default). In `auto`, S4 input returns updated S4 output.}
+
+\item{verbose}{Logical; if `TRUE` (default), report each chunk's rows with
+[message()].}
 }
 \value{
-A data.table with matched transcripts and exons for all events.
-  The output order matches the original event order.
+A data.table with matched transcripts and exons for all events,
+  including each matched transcript's annotated `transcript_type` (`NA`
+  when unmatched). The output order matches the original event order.
 }
 \description{
 This is a wrapper around match_events_to_annotations_vec that

@@ -46,7 +46,8 @@ mark_changing_partners_split <- function(ppi,
                                          changed_motif_case = character(),
                                          changed_motif_control = character()) {
   ppi  <- as.data.table(ppi)
-  sub <- ppi[geneA == gene_id | geneB == gene_id]
+  target_gene <- as.character(gene_id)
+  sub <- ppi[geneA == target_gene | geneB == target_gene]
   
   any_in <- function(x, set) {
     if (!length(set)) return(FALSE)
@@ -56,7 +57,7 @@ mark_changing_partners_split <- function(ppi,
   
   # ensure expected output cols exist even when sub is empty
   sub[, `:=`(
-    partner_gene = if (nrow(sub)) fifelse(geneA == gene_id, geneB, geneA) else character(),
+    partner_gene = if (nrow(sub)) fifelse(geneA == target_gene, geneB, geneA) else character(),
     DDI_changed_case = FALSE, DDI_changed_control = FALSE,
     DMI_changed_case = FALSE, DMI_changed_control = FALSE,
     interaction_changed_case = FALSE,
@@ -66,20 +67,26 @@ mark_changing_partners_split <- function(ppi,
   if (!nrow(sub)) return(sub)
   
   if (all(c("DDI","DDI_A","DDI_B") %in% names(sub))) {
-    sub[, DDI_changed_case := DDI & (any_in(DDI_A, changed_pfam_case) | any_in(DDI_B, changed_pfam_case)), by = .I]
-    sub[, DDI_changed_control := DDI & (any_in(DDI_A, changed_pfam_control) | any_in(DDI_B, changed_pfam_control)), by = .I]
+    sub[, DDI_changed_case := (DDI %in% TRUE) & (
+      (geneA == target_gene & any_in(DDI_A, changed_pfam_case)) |
+      (geneB == target_gene & any_in(DDI_B, changed_pfam_case))), by = .I]
+    sub[, DDI_changed_control := (DDI %in% TRUE) & (
+      (geneA == target_gene & any_in(DDI_A, changed_pfam_control)) |
+      (geneB == target_gene & any_in(DDI_B, changed_pfam_control))), by = .I]
   }
   
   if (all(c("DMI","DMI_A","DMI_B") %in% names(sub))) {
-    # convention: DMI_A is PFAM domain; DMI_B is motif/feature id (e.g., ELM)
-    sub[, DMI_changed_case := DMI & (
-      any_in(DMI_A, changed_pfam_case) |
-        (length(changed_motif_case) > 0L && any_in(DMI_B, changed_motif_case))
+    # A/B evidence belongs to geneA/geneB; either endpoint can carry a motif.
+    changed_dmi_case <- unique(c(changed_pfam_case, changed_motif_case))
+    changed_dmi_control <- unique(c(changed_pfam_control, changed_motif_control))
+    sub[, DMI_changed_case := (DMI %in% TRUE) & (
+      (geneA == target_gene & any_in(DMI_A, changed_dmi_case)) |
+      (geneB == target_gene & any_in(DMI_B, changed_dmi_case))
     ), by = .I]
     
-    sub[, DMI_changed_control := DMI & (
-      any_in(DMI_A, changed_pfam_control) |
-        (length(changed_motif_control) > 0L && any_in(DMI_B, changed_motif_control))
+    sub[, DMI_changed_control := (DMI %in% TRUE) & (
+      (geneA == target_gene & any_in(DMI_A, changed_dmi_control)) |
+      (geneB == target_gene & any_in(DMI_B, changed_dmi_control))
     ), by = .I]
   }
   
@@ -94,7 +101,9 @@ mark_changing_partners_split <- function(ppi,
 #' Also returns (optionally useful) per-event token sets in PFAM + ELM forms.
 #'
 #' @param hits_domain data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list
-#' @param ppi wide interaction table from saved data (get_ppi)
+#' @param ppi Wide interaction table. DDI_A and DMI_A describe evidence on
+#'   geneA; DDI_B and DMI_B describe evidence on geneB. Either DMI endpoint
+#'   can contain a domain or a motif.
 #' @param protein_feature_total table with database/clean_name/feature_id for interpro mapping
 #' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
 #'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
@@ -142,12 +151,15 @@ get_ppi_switches <- function(hits_domain, ppi, protein_feature_total, return_cla
   .spi_obj <- .spi_in$obj
   hd <- as.data.table(.spi_in$dt)
   
-  ipr_map <- unique(as.data.table(protein_feature_total)[
-    database == "interpro",
-    .(clean_name, ipr = feature_id)
-  ])
-  ipr_map <- ipr_map[!is.na(clean_name) & nzchar(clean_name) &
-                       !is.na(ipr) & nzchar(ipr)]
+  # Without rows nothing is looked up, so no protein features are needed.
+  if (nrow(hd)) {
+    ipr_map <- unique(as.data.table(protein_feature_total)[
+      database == "interpro",
+      .(clean_name, ipr = feature_id)
+    ])
+    ipr_map <- ipr_map[!is.na(clean_name) & nzchar(clean_name) &
+                         !is.na(ipr) & nzchar(ipr)]
+  }
   
   # Core parser you provided, generalized to accept a *single list-cell* input.
   # Returns a list with:

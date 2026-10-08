@@ -202,7 +202,7 @@ read_background <- function(paths_df, keep_annotated_first_last=FALSE) {
   }
 
   parts <- lapply(seq_len(nrow(paths_df)), function(i){
-    files <- .read_exon_files(paste0(paths_df$path[i], basename(paths_df$path[i]), '.'), columns = c("gene", "exon", "ID", "nFE", "nLE", "nUP", "nDOWN"))
+    files <- .read_exon_files(file.path(paths_df$path[i], paste0(basename(paths_df$path[i]), '.')), columns = c("gene", "exon", "ID", "nFE", "nLE", "nUP", "nDOWN"))
     if (!length(files)) stop("No .exon files under: ", paths_df$path[i])
     files
   })
@@ -260,7 +260,7 @@ get_domain_background <- function(background,
     stop("BPPARAM must be a BiocParallelParam object.")
   }
 
-  Pf <- data.table::as.data.table(protein_features)
+  Pf <- data.table::copy(data.table::as.data.table(protein_features))
 
   Pf[, domain_id := paste0(
     database, ";",
@@ -327,6 +327,11 @@ get_domain_background <- function(background,
             sd_n_domains_2 = lengths(domains_2),
             total_sd_n_domains = lengths(domains_1)+lengths(domains_2))]
   bg[, total_sd_domains := Map(union, domains_1, domains_2)]
+  # Only genes with a feature-changing pair can enter a domain or PPI foreground.
+  feature_gene_universe <- sort(unique(stats::na.omit(
+    as.character(bg[lengths(total_sd_domains) > 0L, gene_id])
+  )))
+  data.table::setattr(bg, "feature_gene_universe", feature_gene_universe)
 
   bg[]
 }
@@ -540,19 +545,31 @@ get_genes_from_transcripts <- function(matched_background, A) {
 #' \code{source} parameter, the function can derive the background from
 #' HIT index results, annotated transcripts, or a user-provided list
 #' of transcript IDs.
+#' The returned table has a `gene_universe` attribute containing eligible genes
+#' before filtering for domain-changing pairs. Gene-level enrichment should
+#' intersect this universe with the genes actually evaluated for its foreground.
+#' `feature_gene_universe` contains genes with at least one eligible pair whose
+#' features differ, i.e. genes that could appear in a domain or PPI
+#' foreground; use it for domain and PPI gene enrichment.
 #'
+#' Use \code{source = "annotated"} (the default) for
+#' \code{enrich_domains_hypergeo()}. A \code{"hit_index"} background keeps one
+#' annotated transcript per exon observed in the samples, so it usually lacks
+#' the transcript pairs the matcher chose and domain enrichment rejects it; its
+#' \code{gene_universe} and \code{feature_gene_universe} still serve gene-level
+#' enrichment.
 #'
 #' @param source Character string specifying the source of the background.
 #'   One of:
 #'   \itemize{
+#'     \item \code{"annotated"} (default) use all transcripts from the annotation.
 #'     \item \code{"hit_index"} use HIT index output directories.
-#'     \item \code{"annotated"} use all transcripts from the annotation.
 #'     \item \code{"user-given"} use a user-supplied list of transcript IDs.
 #'   }
 #' @param input Source-specific input:
 #'   \itemize{
+#'     \item For \code{"annotated"}: not used (default \code{NULL}).
 #'     \item For \code{"hit_index"}: a data.frame of paths with a \code{path} column.
-#'     \item For \code{"annotated"}: ignored.
 #'     \item For \code{"user-given"}: a character vector or data.frame containing \code{transcript_id}.
 #'   }
 #' @param annotations A data.table annotations from \code{get_annotations}
@@ -584,7 +601,9 @@ get_genes_from_transcripts <- function(matched_background, A) {
 #' interpro_features <- get_protein_features(c("interpro"), annots$annotations, timeout = 600, test = TRUE)
 #' protein_feature_total <- get_comprehensive_annotations(list(interpro_features))
 #'
-#' # Build background from HIT index paths
+#' # The default, source = "annotated", pairs every annotated transcript (see
+#' # enrich_domains_hypergeo()). A HIT-index background serves gene-level
+#' # universes:
 #' ex <- load_example_data("sample_frame")
 #' sample_frame <- ex$sample_frame
 #' bg <- get_background(source = "hit_index",
@@ -601,13 +620,24 @@ get_genes_from_transcripts <- function(matched_background, A) {
 #'
 #'
 #' @export
-get_background <- function(source = c("hit_index", "annotated", "user-given"),
-                           input,
+get_background <- function(source = c("annotated", "hit_index", "user-given"),
+                           input = NULL,
                            annotations,
                            protein_features,
                            keep_annotated_first_last = TRUE,
                            minOverlap = 0.8,
                            BPPARAM = BiocParallel::bpparam()) {
+  # The default used to be "hit_index"; a call relying on it would now build an
+  # annotated background and ignore its input.
+  if (missing(source) && !is.null(input)) {
+    warning("get_background: `input` is ignored because `source` defaults to \"annotated\". ",
+            "Set source = \"hit_index\" or \"user-given\" to use it.", call. = FALSE)
+  }
+  source <- match.arg(source)
+  if (source != "annotated" && is.null(input)) {
+    stop(sprintf("get_background: `input` is required when source = \"%s\".", source), call. = FALSE)
+  }
+  annotations <- data.table::as.data.table(annotations)
   if (source == "hit_index") {
     background_init <- read_background(paths_df = input, keep_annotated_first_last)
     matched_background <- match_exon_table(exon_df = background_init, annotations = annotations, minOverlap)
@@ -625,5 +655,7 @@ get_background <- function(source = c("hit_index", "annotated", "user-given"),
     protein_features,
     BPPARAM = BPPARAM
   )
+  data.table::setattr(background_domains, "gene_universe",
+                     sort(unique(stats::na.omit(as.character(matched_background$gene_id)))))
   return(background_domains)
 }

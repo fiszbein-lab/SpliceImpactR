@@ -29,6 +29,10 @@ segments for downstream genomic mapping.
 \details{
 Handles all five canonical rMATS event types (SE, MXE, A3SS, A5SS, RI),
 applying strand-aware logic for MXE and coordinate adjustments for A3/A5.
+A3SS/A5SS forms contain the long or short exon and its partner (rMATS
+flanking) exon, in genomic order; the excluded segment is the extension.
+Raw rMATS starts are converted from zero-based to one-based coordinates;
+ends are unchanged. Output intervals are closed, including one-base segments.
 Non-standard columns (e.g. IJC_SAMPLE_1) are checked for presence.
 }
 \examples{

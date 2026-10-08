@@ -48,7 +48,9 @@
   # Fast path: identical
   if (identical(a, b)) {
     n <- length(a)  # works on DNAString
-    return(list(pid = 100, score = n, width = n))
+    letters <- strsplit(as.character(a), "", fixed = TRUE)[[1L]]
+    self_score <- sum(alignmentMat[cbind(letters, letters)])
+    return(list(pid = 100, score = self_score, width = n))
   }
 
   aln <- pwalign::pairwiseAlignment(
@@ -87,7 +89,9 @@
 
   if (identical(a, b)) {
     n <- length(a)
-    return(list(pid = 100, score = n, width = n))
+    letters <- strsplit(as.character(a), "", fixed = TRUE)[[1L]]
+    self_score <- sum(alignmentMat[cbind(letters, letters)])
+    return(list(pid = 100, score = self_score, width = n))
   }
 
   aln <- pwalign::pairwiseAlignment(
@@ -105,8 +109,9 @@
 
 #' Sum exon CDS and feature lengths for each event row
 #' @param H Event table containing exon IDs.
-#' @param annotations Annotation data.table with exon_id, cds_len, and feature_length.
+#' @param annotations Annotation data.table with transcript_id, exon_id, cds_len, and feature_length.
 #' @param col_exons Column name in \code{H} containing exon identifiers.
+#' @param col_transcript Column containing the selected transcript identifier.
 #' @param out_prefix Character vector specifying which outputs to compute ("cds", "exon").
 #' @param exon_delim Regex for splitting exon ID lists.
 #' @noRd
@@ -116,24 +121,24 @@
                               annotations,
                               col_exons,
                               out_prefix = c("cds","exon"),
-                              exon_delim = "[,;|[:space:]]+") {
+                              exon_delim = "[,;|[:space:]]+",
+                              col_transcript = sub("^exons", "transcript_id", col_exons)) {
 
-  L <- as.data.table(annotations)[, .(exon_id = as.character(exon_id),
-                                      cds_len = as.integer(cds_len),
-                                      feature_length = as.integer(feature_length))]
-  setkey(L, exon_id)
-
+  if (!col_transcript %in% names(H)) {
+    stop("Missing selected transcript column: ", col_transcript)
+  }
   DT <- as.data.table(H)[, .(row_id = .I,
                              event_type,
+                             transcript_id = as.character(get(col_transcript)),
                              exons = get(col_exons))]
 
   # explode to long
   LONG <- DT[, {
     s <- as.character(exons); s[is.na(s)] <- ""
     ids <- unlist(strsplit(s, exon_delim))
-    ids <- ids[nzchar(ids)]
-    .(exon_id = ids)
-  }, by = .(row_id, event_type)]
+    ids <- unique(ids[nzchar(ids)])
+    .(exon_id = as.character(ids))
+  }, by = .(row_id, event_type, transcript_id)]
 
   if (!nrow(LONG)) {
     # no exon ids: return NA vectors aligned to H
@@ -143,15 +148,30 @@
     return(res[order(row_id)])
   }
 
+  # Annotations are read only when there are exons to sum.
+  A <- as.data.table(annotations)
+  selected_tx <- unique(as.character(H[[col_transcript]]))
+  A <- A[as.character(transcript_id) %chin% selected_tx]
+  if ("type" %in% names(A)) A <- A[type == "exon"]
+  L <- unique(A[, .(transcript_id = as.character(transcript_id),
+                    exon_id = as.character(exon_id),
+                    cds_len = as.integer(cds_len),
+                    feature_length = as.integer(feature_length))])
+  L <- L[!is.na(transcript_id) & !is.na(exon_id)]
+  if (anyDuplicated(L[, .(transcript_id, exon_id)])) {
+    stop("Annotations contain conflicting lengths for a transcript/exon pair.")
+  }
+  L[, found := TRUE]
+
   # join once, then sum
-  J <- L[LONG, on = "exon_id", nomatch = 0L]
+  J <- L[LONG, on = c("transcript_id", "exon_id")]
   SUM <- J[, .(
-    cds_len   = sum(cds_len,         na.rm = TRUE),
-    exon_len  = sum(feature_length,  na.rm = TRUE)
+    cds_len   = if (anyNA(found)) NA_integer_ else sum(cds_len, na.rm = TRUE),
+    exon_len  = if (anyNA(found)) NA_integer_ else sum(feature_length, na.rm = TRUE)
   ), by = row_id]
 
   # ensure every input row has an entry
-  ALL <- data.table(row_id = seq_len(nrow(H)))[SUM, on = "row_id"]
+  ALL <- SUM[data.table(row_id = seq_len(nrow(H))), on = "row_id"]
   if ("cds" %notin% out_prefix)  ALL[, cds_len := NULL]
   if ("exon" %notin% out_prefix) ALL[, exon_len := NULL]
   ALL[order(row_id)]
@@ -193,7 +213,8 @@
 #' @return Character vector of parsed exon IDs.
 #' @noRd
 #' @keywords internal
-.safe_nchar <- function(z) ifelse(is.na(z) | !nzchar(z), NA_integer_, nchar(z))
+# fifelse keeps the integer type when there are no rows.
+.safe_nchar <- function(z) data.table::fifelse(is.na(z) | !nzchar(z), NA_integer_, nchar(z))
 
 
 
@@ -388,7 +409,6 @@ compare_sequences_alignment <- function(hits, annotations, include_sequences = F
   data.table::setcolorder(DT, c(setdiff(names(DT), metric_cols), metric_cols))
   DT[]
 }
-
 
 
 

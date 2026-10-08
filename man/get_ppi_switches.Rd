@@ -14,7 +14,9 @@ get_ppi_switches(
 \arguments{
 \item{hits_domain}{data.table with gene_id and list-cols case_only_domains_list / control_only_domains_list}
 
-\item{ppi}{wide interaction table from saved data (get_ppi)}
+\item{ppi}{Wide interaction table. DDI_A and DMI_A describe evidence on
+geneA; DDI_B and DMI_B describe evidence on geneB. Either DMI endpoint
+can contain a domain or a motif.}
 
 \item{protein_feature_total}{table with database/clean_name/feature_id for interpro mapping}
 

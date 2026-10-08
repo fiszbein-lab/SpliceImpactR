@@ -25,11 +25,16 @@ keep_sig_pairs(
 \value{
 A `data.table` (or updated `SpliceImpactResult` when
 `return_class` resolves to S4) containing all rows from event pairs in which
-at least one row meets the significance criteria.
+at least one row meets the significance criteria, with a logical
+`site_significant` column.
 }
 \description{
 Keeps all rows belonging to events where at least one isoform or site
-passes adjusted p-value and deltaPSI significance criteria.
+passes adjusted p-value and deltaPSI significance criteria. The
+`site_significant` column marks the rows that pass themselves; the other
+rows are kept as the event's comparators. In a multi-site event (for
+example an AFE with several first exons) these include sites whose own
+change does not meet the thresholds.
 }
 \examples{
 ex <- load_example_data("sample_frame")

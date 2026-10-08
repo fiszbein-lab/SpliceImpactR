@@ -22,7 +22,7 @@ or `"transcript"` (uses `dna_pid`).}
 \value{
 A composite `ggplot` object (from `ggpubr::ggarrange`)
 showing stacked bar counts by coding class and histogram of
-alignment identity scores.
+alignment identity scores. With no pairs, a placeholder plot.
 }
 \description{
 Visualizes alignment scores (`prot_pid` or `dna_pid`) and coding class

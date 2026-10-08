@@ -1,3 +1,21 @@
+#' Check that each event has INC and EXC forms, or SITE forms only (internal)
+#'
+#' @param dt data.table with `event_id` and `form` columns.
+#' @return `NULL` invisibly; stops naming up to five events otherwise.
+#' @keywords internal
+.check_event_forms <- function(dt) {
+  forms <- dt[, .(inc_exc = all(c("INC", "EXC") %chin% form),
+                  site = "SITE" %chin% form,
+                  mixed = "SITE" %chin% form && any(c("INC", "EXC") %chin% form)),
+              by = event_id]
+  name <- function(ids) paste(utils::head(ids, 5L), collapse = ", ")
+  bad <- forms[!(inc_exc | site), event_id]
+  if (length(bad)) stop("Some events do not have INC+EXC or SITE: ", name(bad))
+  mixed_ids <- forms[(mixed), event_id]
+  if (length(mixed_ids)) stop("Some events contain both SITE and INC/EXC forms: ", name(mixed_ids))
+  invisible(NULL)
+}
+
 #' @title Get User-Supplied Splicing Event Data
 #'
 #' @description
@@ -86,22 +104,7 @@ get_user_data <- function(df) {
   if (!"source_file" %in% names(dt)) dt[, source_file := ""]
   if (!"event_type" %in% names(dt)) dt[, event_type := "unknown"]
 
-  # Check INC/EXC or SITE
-  ok_events <- dt[, {
-    forms <- unique(form)
-    valid <- ("INC" %in% forms & "EXC" %in% forms) || ("SITE" %in% forms)
-    .(ok = valid)
-  }, by = event_id]$ok
-
-  if (!all(ok_events)) stop("Some events do not have INC+EXC or SITE")
-
-  # Disallow events that mix INC/EXC with SITE
-  mixed <- dt[, {
-    f <- unique(form)
-    .(bad = ("SITE" %in% f) & (any(f %in% c("INC","EXC"))))
-  }, by = event_id]$bad
-
-  if (any(mixed)) stop("Some events contain both SITE and INC/EXC forms")
+  .check_event_forms(dt)
 
   # Check >1 sample per condition
   cond_check <- dt[, .N, by = .(event_id, condition)][, all(N > 1), by = event_id]$V1
@@ -162,15 +165,17 @@ get_user_data <- function(df) {
 #'   all relevant comparisons
 #' - `p.value`, `padj`:
 #'   - If missing: set to 0
-#' - All diagnostic fields
-#'   (`cooks_max, n, n_used, n_samples, n_case,
-#'     mean_psi_ctrl, mean_psi_case, n_control`)
+#' - Sample counts (`n_samples, n_control, n_case`): set to `NA` if missing
+#' - Other diagnostic fields
+#'   (`cooks_max, n, n_used, mean_psi_ctrl, mean_psi_case`)
 #'    set to -1 if missing
 #'
 #' ## Validation
 #' - Throws error if:
+#'   - `event_id` is absent, or missing or empty in any row
 #'   - Any event lacks **INC+EXC** or **SITE**
 #'   - An event mixes SITE with INC/EXC
+#' - Errors name up to five affected rows or events.
 #'
 #' ## Output
 #' Returns a `data.table` formatted like SpliceImpactR DI output.
@@ -213,20 +218,22 @@ get_user_data_post_di <- function(df) {
   .spi_in <- .resolve_splice_input(df, what = "raw_events")
   dt <- data.table::as.data.table(.spi_in$dt)
 
-  required_cols <- c("gene_id","chr","strand","inc","exc","form")
+  required_cols <- c("event_id","gene_id","chr","strand","inc","exc","form")
   missing <- setdiff(required_cols, names(dt))
   if (length(missing) > 0) {
     stop("Missing required columns: ", paste(missing, collapse=", "))
   }
+  # IDs group the forms of an event, so they are never generated.
+  no_id <- which(is.na(dt$event_id) | !nzchar(trimws(dt$event_id)))
+  if (length(no_id)) {
+    stop("event_id is missing or empty in ", length(no_id), " row(s): ",
+         paste(utils::head(no_id, 5L), collapse = ", "))
+  }
+  .check_event_forms(dt)
 
   # Fill event_type if missing
   if (!"event_type" %in% names(dt))
     dt[, event_type := "unknown"]
-
-  # Assign event_id if missing
-  if (!"event_id" %in% names(dt)) {
-    dt[, event_id := paste0(gene_id, ":", event_type, ":", .I)]
-  }
 
   # Site ID
   dt[, site_id := paste(event_type, gene_id, chr, inc, exc, form, sep="|")]
@@ -260,8 +267,11 @@ get_user_data_post_di <- function(df) {
   if (!"padj" %in% names(dt))   dt[, padj := 0]
 
   # Default diagnostic stats
+  for (column in c("n_samples", "n_control", "n_case")) {
+    if (!column %in% names(dt)) dt[, (column) := NA_integer_]
+  }
   defaults <- c(
-    "cooks_max","n","n_used","n_samples","n_case",
+    "cooks_max","n","n_used",
     "mean_psi_ctrl","mean_psi_case"
   )
   for (col in defaults) {
@@ -275,9 +285,6 @@ get_user_data_post_di <- function(df) {
     "mean_psi_ctrl","mean_psi_case","delta_psi","p.value",
     "padj","cooks_max","form","n","n_used"
   )
-
-  # Fill missing n_control if not present
-  if (!"n_control" %in% names(dt)) dt[, n_control := -1]
 
   # Keep any extras trailing
   dt <- dt[, c(final_cols, setdiff(names(dt), final_cols)), with = FALSE]

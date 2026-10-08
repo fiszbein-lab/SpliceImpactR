@@ -1,0 +1,388 @@
+---
+title: "An alternate protocol for transcript-pair selection"
+author: "SpliceImpactR"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{An alternate protocol for transcript-pair selection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(SpliceImpactR)
+BiocParallel::register(BiocParallel::SerialParam())
+```
+
+## Purpose and scope
+
+An alternative splicing event describes local RNA processing. It usually does
+not identify the complete transcripts expressed in either condition. The aim
+of matching is to select plausible annotated transcripts for the two forms,
+then compare the proteins they encode. A transcript that only overlaps a small
+part of the event is not sufficient evidence for that form.
+
+`get_ranked_pairs()` is an opt-in alternative to the existing independent
+matcher. It first checks AS-form compatibility, then ranks **pairs** of
+compatible transcripts. Coding status (an annotated CDS) and transcript support
+remain priorities. Within a support tier, similarity of coding sequence outside
+the event precedes exact TSL. The existing protocol remains the default.
+
+This protocol ranks plausible representatives. It does not estimate transcript
+abundance, phase distant splicing events, establish actual isoform expression,
+or assign probabilities that a particular pair is expressed. Protein features
+and interaction consequences remain predictions conditional on the selected
+pair and the supplied reference.
+
+## Step 1: validate the input and establish the comparison
+
+Supply canonical differential rows with `event_id`, `event_type`, `form`,
+`gene_id`, `chr`, `strand`, `inc`, and `exc`. Coordinates must be **one-based,
+closed**; `101-200` contains 100 bases. Multiple intervals use semicolons.
+The rMATS import functions perform their zero-based-start conversion before
+matching. Do not convert their standardized output a second time.
+
+Each event ID must refer to one gene, chromosome, strand, and event type.
+Each event/form/interval definition must identify one differential row.
+Malformed coordinates or conflicting metadata are errors raised before any
+matching; the message names the affected events. IDs must already
+agree with the reference; matching does not guess gene aliases or mix releases.
+
+In `source = "multi"`, each positive-delta-PSI form is compared with each
+negative-delta-PSI form in the same event. Positive is case; negative is control.
+Thus a terminal event with two increasing and three decreasing sites has six
+form comparisons, recorded as `n_event_comparisons` on each selected pair. The
+alternate protocol does not replace those comparisons with a single gene-wide
+winner. In `source = "paired"`, one INC and one EXC are
+required. If delta PSI is absent entirely, INC is assigned to case, preserving
+the existing form-based convention. Rows without an opposing form are reported.
+
+Significance is separate from matching. Filter with `keep_sig_pairs()` before
+calling `get_ranked_pairs()` if that is the desired analysis population. The
+pipeline wrapper performs this filtering using its existing thresholds.
+
+## Step 2: build the reference index once
+
+Index the relevant transcript metadata and exon structures. A candidate must
+have the event's **gene, chromosome and strand**. Exons are ordered by genomic
+position for junction comparisons and by transcript direction when extracting
+coding sequence. Exon IDs never determine biological order.
+
+Conflicting transcript metadata, overlapping exons within a transcript, and
+conflicting sequence records for one transcript ID stop the calculation.
+Identical duplicate records are harmless. A failed match remains visible in
+the event diagnostics; it is not interpreted as evidence for a noncoding or
+missing biological isoform.
+
+## Step 3: require the candidate to represent its assigned form
+
+Any overlap between an explicit forbidden interval and a candidate exon
+rejects the candidate, and every event-defining boundary in the table below
+must match exactly. There is no 5% eligibility threshold in this protocol.
+
+A candidate that also contains every required interval completely is an
+`exact` match. The outer ends of flanking exons, the shared boundary of an
+A5SS/A3SS exon and the TSS/PAS end of a terminal exon are not part of the
+event, so a candidate that differs only there is a `relaxed` match. The
+`structural_match` column of `candidates` and the selected `pairs` records
+which applied. Relaxed matches must still contain their form's alternative
+region (otherwise the pair is rejected as `event_region_not_covered`), and they
+lose ties to exact matches. For AFE/HFE/ALE/HLE they are considered only when
+no transcript matches the terminal exon exactly, so two sites that share a
+splice site remain distinguishable.
+
+| Event | Additional eligibility rule |
+|---|---|
+| SE inclusion | With three intervals, the upstream, included and downstream exons must be adjacent in the transcript and have the specified inner splice boundaries. The flanks' outer ends may differ (relaxed). |
+| SE exclusion | The two flanking exons must be adjacent, with the specified skip junction; the skipped exon must be absent. The flanks' outer ends may differ (relaxed). |
+| MXE | Each three-interval branch must follow its specified adjacent-exon chain and exclude the other branch's forbidden exon. The flanks' outer ends may differ (relaxed). |
+| RI inclusion | The intron must lie in a **single annotated exon** that reaches into both flanks; exact matches contain both flanks completely. Separate exons do not establish retention. |
+| RI exclusion | The flanks must form the specified adjacent-exon junction, with the intron absent from exons. The flanks' outer ends may differ (relaxed). |
+| A5SS/A3SS | The variable donor/acceptor boundary must match exactly on the appropriate strand, and the variable exon must be adjacent to the partner exon with the specified junction. The exon's shared boundary and the partner's outer end may differ (relaxed). |
+| AFE/HFE | The transcript's first exon, in transcript direction, must match the specified interval exactly; without such a transcript, a first exon with the same donor and another TSS is accepted as relaxed. |
+| ALE/HLE | The transcript's last exon, in transcript direction, must match the specified interval exactly; without such a transcript, a last exon with the same acceptor and another PAS is accepted as relaxed. |
+| Generic event | Full required-interval coverage and forbidden-interval exclusion; labelled `interval_only`. |
+
+The rMATS converters define each A3SS/A5SS form by the variable exon and the
+flanking exon it is spliced to (rMATS's `flankingES`/`flankingEE`), so the
+junction is verified (`junction_chain`). A definition with the variable exon
+alone, as in DI tables saved by earlier versions or some user imports, is
+labelled `splice_site_only`: the variable boundary can be verified, but the
+partner cannot. The matcher does not invent missing context.
+
+For generic imports labelled `SITE`, SE skip and RI retained/spliced branches
+can be recognized from their supplied interval topology. Original form labels
+are preserved in the output; event grouping still comes from the supplied IDs.
+
+A single internal exon supplied for SE inclusion or MXE is accepted only with
+exact exon boundaries and is labelled `partial_event`; its omitted flanking
+junctions are unverified. RI supplied as one continuous retained span is also
+labelled `partial_event`. A single-exon transcript can satisfy a terminal rule
+at either end. Hybrid first/last events use their terminal role for the chosen
+form; they do not require the alternative terminal exon to be absent from all
+internal positions in the other transcript.
+
+These rules can still reduce the number of matched events. Novel junctions,
+annotation-version differences, or partial event definitions may leave no
+representative pair. That is an explicit unresolved result. Relaxation never
+moves an event-defining boundary, and every relaxed match is labelled.
+
+## Step 4: construct candidate pairs
+
+For each form comparison, cross the compatible case and control candidates.
+A transcript is never paired with itself. A pair is also rejected if both
+transcripts satisfy both form definitions: those candidates cannot distinguish
+the requested forms. A pair is also rejected if either transcript lacks part of
+its own form's alternative region (`event_region_not_covered`). These cases are
+recorded in `pair_rejections`. Nothing is selected independently before
+considering its partner.
+
+`max_candidates` limits each form to 100 candidates per comparison, so at most
+10,000 pairs are scored. A form with more keeps its best-supported
+candidates, in the ranking's own order: annotated CDS, TSL tier, exact
+structure, numeric TSL, then transcript ID. Dropped candidates are counted in
+`candidates_dropped_case` and `candidates_dropped_control`, and a message
+reports how many comparisons were affected. In the default human GENCODE v45
+annotation (TSL 1--3) the largest gene has 58 transcripts, so nothing is
+dropped; the limit matters with `filter_tsl = NULL`, where some genes have
+several hundred transcripts.
+
+## Step 5: identify the event-specific region
+
+Reduce the required intervals for each form to genomic ranges. The event mask
+is their symmetric difference, plus the explicit forbidden intervals from
+either form. Shared flanking sequence is retained as context.
+
+For SE this normally masks the skipped exon. For MXE it masks both alternative
+exons. For RI it masks the retained intron. For A3SS/A5SS it masks the extension
+between the alternative boundaries. For terminal events it masks the regions
+unique to the alternative terminal intervals.
+
+Positions in this mask are excluded from the context comparison in Step 6, so
+the score describes how the two transcripts differ *outside* the event.
+
+## Step 6: compare the coding region outside the event
+
+Exon-level `cds_gen_start` and `cds_gen_stop` define the coding bases. Each pair
+is compared within a coding window:
+
+- When both transcripts are coding, the window is the span coded by either of
+  them (`context_window = "pair_cds_span"`).
+- When a member is noncoding, every such pair of the comparison shares one
+  window, the span coded by any candidate (`"event_cds_span"`), or the
+  candidates' full span when none is coding (`"event_exon_span"`). A shared
+  window keeps those pairs comparable with each other.
+
+`context_similarity` is the base-pair Jaccard overlap of the two transcripts'
+exonic positions in the window, outside the event mask:
+
+\[
+ S = \frac{\text{exonic positions shared by both transcripts}}
+          {\text{exonic positions in either transcript}}.
+\]
+
+Positions in one genome determine sequence, so this is a direct measure of how
+much coding-region structure the two transcripts share. It deliberately does not
+depend on where each annotated reading frame ends. Consider an exon skip that
+shifts the frame:
+
+- the plain skip isoform has the same exons as the inclusion isoform outside the
+  event, but its annotated CDS stops early at the premature stop;
+- another isoform also skips the exon but restores the frame with a second
+  change, such as a 2-nt shorter acceptor downstream, so its CDS stays long.
+
+Comparing annotated CDS sequences would favour the second isoform and hide the
+frameshift. Comparing exonic positions scores the plain skip 1 and the rescue
+slightly lower, because of its extra change. `orf_similarity` is the same score
+including the event region and is a later tie-breaker. The diagnostics also give
+the shared fraction of each transcript's compared positions and the number of
+positions compared.
+
+The sequence table is still checked, because the selected pairs carry sequences
+into the downstream protein analyses. `transcript_seq` may contain CDS or full
+RNA sequence:
+
+1. A sequence whose length equals the annotated CDS length is used as CDS.
+2. An additional terminal TAA/TAG/TGA is removed when it accounts for exactly
+   three extra bases. This accommodates the package's GENCODE FASTA workflow.
+3. A sequence whose length equals the total exon length is sliced to its CDS
+   using exon coordinates and strand.
+4. Other length mismatches are reported; the sequence is not silently trimmed
+   or assumed to represent the ORF.
+
+Length agreement is a consistency check, not proof that independently supplied
+FASTA and GTF files describe the same genome. Use a coherent reference bundle.
+The evidence label records what supports each pair: `cds_sequences` (both CDS
+sequences usable downstream), `cds_annotation` (both coding, a sequence
+unusable), `exon_annotation` (a member without CDS), or
+`no_outside_event_context` (nothing to compare outside the event).
+
+Protein sequence identity is **not** used to rank pairs. A legitimate
+event-induced frameshift can replace much of the downstream protein. Ranking on
+protein identity, or on annotated CDS sequence, could preferentially hide that
+consequence. The existing downstream protein alignment, frame/rescue
+classification and feature analyses still run on the selected pair.
+
+## Step 7: choose the pair transparently
+
+Sort by the following rules, in this exact order:
+
+1. More coding transcripts, meaning transcripts with an annotated CDS: two,
+   then one, then zero.
+2. Better worst-member TSL tier: both within 1–3, then a member at 4–5, then a
+   member with unknown TSL.
+3. Stronger evidence: `cds_sequences`, `cds_annotation`, `exon_annotation`,
+   then `no_outside_event_context`.
+4. Higher `context_similarity`.
+5. Higher `orf_similarity`.
+6. Fewer members that are not exact structural matches (`n_inexact`): exact
+   outer boundaries win ties.
+7. Better worst numeric TSL, then lower summed TSL. Unknown TSL is ranked as 6.
+8. Stable case and control transcript IDs for reproducible ties.
+
+Coding status comes from the annotated CDS, not the biotype, so a transcript
+annotated as nonsense-mediated decay counts as coding. When an event shifts the
+frame, the transcript that carries it faithfully is often annotated that way,
+like the plain skip in Step 6. Requiring the `protein_coding` biotype would hand
+such comparisons to a frame-restoring isoform before similarity is considered.
+The biotype is still reported: both matchers add `transcript_type_case` and
+`transcript_type_control`, and `compare_sequence_frame()` labels a pair with an
+NMD-annotated member `"NMD"`, since that transcript is taken to make no protein.
+
+The 1–3 grouping is a **policy choice for this alternate implementation**,
+consistent with the package's default reference filter. It deliberately allows
+a TSL-2 or TSL-3 transcript to beat a TSL-1 transcript when its coding background
+fits substantially better. It does not equate their underlying evidence. TSL
+describes support for the transcript model; it is not a measurement of
+expression in the samples under study. See the
+[GENCODE FAQ](https://www.gencodegenes.org/pages/faq.html).
+
+`n_tied_best` counts ties across all substantive criteria, before transcript-ID
+ordering. `context_score_margin` compares the winner's context score with the
+next pair in the same coding, support and evidence tiers. A zero margin can
+still be resolved by full ORF similarity or TSL. A missing margin means no
+comparable runner-up or no usable context score. Neither quantity is a p-value
+or calibrated confidence estimate.
+
+## Step 7b: fall back to an approximate pair
+
+If no structural pair exists for a comparison, and `fallback = TRUE` (the
+default; `matching_fallback` in `get_splicing_impact()`), the comparison is
+retried with the legacy matcher's gates: each required interval must overlap
+one exon by at least 5% of its width, and no exon may overlap a forbidden
+interval by 5%. Event boundaries are not checked. A pair must still use two
+different transcripts and must differ at the event in the expected direction.
+`event_agreement` adds, for each form, how much more of that form's
+event-specific bases its own transcript covers than its partner does. It ranges
+up to 2 and must be positive.
+
+Approximate pairs are ranked by `event_agreement` first, then by the Step 7
+criteria. They are labelled `matching_tier = "approximate"`, and a member whose
+structure was not verified is labelled `structural_match = "approximate"`. For
+example, when the annotation lacks the exact alternative exon, the fallback can
+choose a transcript with a slightly different version of it; the frame call is
+then a consequence of that version. Report or filter approximate pairs
+separately where exact event structure matters. Comparisons with no approximate
+pair remain in `unmatched`, whose `fallback` column records why.
+
+## Step 8: inspect and analyze the result
+
+This runnable usage example uses the bundled reference and splicing inputs.
+The comparison against the legacy method is a separate review exercise.
+
+```{r bundled-inputs}
+ex <- load_example_data(c("sample_frame", "annotation_df", "exon_features", "ppi"))
+annotation_df <- ex$annotation_df
+protein_feature_total <- ex$protein_feature_total
+exon_features <- ex$exon_features
+ppi <- ex$ppi
+data <- get_rmats_hit(ex$sample_frame)
+res <- get_differential_inclusion(
+  data, parallel_glm = FALSE,
+  BPPARAM = BiocParallel::SerialParam(), verbose = FALSE
+)
+res_di <- keep_sig_pairs(res)
+```
+
+```{r standalone}
+ranked <- get_ranked_pairs(
+  res_di, annotation_df$annotations, annotation_df$sequences,
+  source = "multi", verbose = FALSE
+)
+names(ranked)
+# ranked$pairs: selected pairs, ready for downstream functions
+# ranked$rankings: every scored pair, all ranking components and ties
+# ranked$candidates: every same-locus candidate, including rejection reasons
+# ranked$pair_rejections: self-pairs, form-indistinguishable combinations and
+#   approximate combinations without an event difference
+# ranked$events: every input form, including forms without matches
+# ranked$unmatched: form comparisons without a pair in any tier
+# ranked$settings: protocol version and scoring parameters
+
+seq_compare <- compare_sequence_frame(ranked$pairs, annotation_df$annotations)
+hits_domain <- get_domains(seq_compare, exon_features)
+```
+
+`ranked$matched` holds the selected form rows qualified by `matching_group`.
+The same form can select different transcript representatives against different
+opposing forms. Use `ranked$pairs` directly for consequences; running ordinary
+`get_pairs()` on all those selected form rows would cross them again.
+
+```{r wrapper}
+out <- get_splicing_impact(
+  res = res,
+  annotation_df = annotation_df,
+  protein_feature_total = protein_feature_total,
+  ppi = ppi,
+  matching = "orf",
+  debug_steps = TRUE,
+  verbose = FALSE
+)
+names(out$matching)
+```
+
+In S4 mode, the audit tables are in `out@metadata$matching_diagnostics`.
+`matching_pair_id` includes the selected transcript IDs and is preserved as the
+S4 pair key. Legacy results keep their established key convention. The wrapper
+does not load unused reference resources when no significant forms remain;
+matching diagnostics are `NULL` in that case.
+
+## Differences from the legacy protocol
+
+| Aspect | Legacy | Alternate |
+|---|---|---|
+| Eligibility | At least 5% of each required segment overlaps an exon by default; forbidden-overlap veto at the same threshold | Exact event boundaries and structure, any forbidden overlap rejected; outer flank ends may differ (`relaxed`); legacy gates only as a labelled `approximate` fallback |
+| Selection unit | One best transcript independently for each form | One best transcript pair for each form comparison |
+| Exon class | A ranking preference | Defining boundaries and junction/terminal roles are eligibility requirements where context is supplied |
+| Coding preference | `protein_coding` biotype, as a tie-breaker after fit | An annotated CDS, so NMD-annotated transcripts count |
+| Transcript support | Breaks the last ties, after fit and coding status | Worst TSL tier first; similarity can distinguish candidates within TSL 1–3; exact TSL breaks later ties |
+| Similarity at selection | Not used | Shared exonic positions in the coding window, outside the event first, including it second |
+| Missing sequence | Appears downstream after transcript selection | Explicit evidence label during ranking |
+| Alternative candidates | Discarded at transcript selection | Retained with eligibility reasons and complete pair scores |
+| Ambiguity | Implicit in ordering | Tied-best counts, comparable score margin and stable IDs |
+| Cost | Overlap search and per-form sorting | Additional candidate cross-products, bounded explicitly; no sequence alignment |
+
+The alternate should reduce cross-context comparisons and prevent structurally
+incompatible isoforms from winning through TSL or overlap preferences. It also
+makes disagreements inspectable. Its main costs are approximate pairs where
+the annotation lacks a transcript with the exact event boundaries, greater
+computation, and dependence on a correct reference/sequence pairing. Structural
+differences in the coding window outside the event, such as a different coding
+start exon, still lower context similarity; a premature stop alone does not.
+The evidence tiers can favour a pair with usable sequences over one with
+missing sequence data.
+
+There are no expression weights, new transcript assembly, ORF prediction,
+machine-learned probabilities or changes to differential testing in this
+implementation. Before adopting it as the default, inspect retained and
+rejected real events across all supported classes, review ties and missing
+context, and confirm that the TSL-tier policy fits the intended analysis. Event
+definitions follow the package's standardized inputs; the upstream file
+conventions are described in the
+[rMATS documentation](https://github.com/Xinglab/rmats-turbo#output).
+
+## Session information
+
+```{r session-information}
+sessionInfo()
+```

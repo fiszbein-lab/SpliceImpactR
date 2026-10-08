@@ -38,8 +38,26 @@ positive and negative deltaPSI rows within each event are cross-joined.
 }
 \details{
 In \code{source="paired"} mode, only events with exactly one INC and one EXC
-row are retained. In \code{source="multi"} mode, all positive deltaPSI rows are
+row are retained. When delta PSI is supplied, the positive form is the case
+and the negative form is the control; without it, INC is the case.
+In \code{source="multi"} mode, all positive deltaPSI rows are
 joined with all negative deltaPSI rows (cartesian join) within each event.
+Missing sample-count diagnostics are retained as `NA`. With matched transcript
+input, both modes return the same columns, including when no pairs remain.
+A `transcript_type` column on the input (added by both matchers) becomes
+`transcript_type_case` and `transcript_type_control`, for example to show
+which selected transcripts are annotated as NMD.
+
+An event with several rising or falling sites, such as an AFE with three
+first exons, gives one comparison per rising x falling pair of sites, so a
+site can appear in several rows. `n_event_comparisons` gives the number of
+comparisons its event defines (1 for a two-form event). After
+[keep_sig_pairs()], `site_significant_case` and `site_significant_control`
+show whether each form or site met the thresholds itself; the other sites
+of a passing event are kept as comparators. Counts of pairs, including the
+domain-enrichment foreground, are therefore counts of comparisons.
+Forms without a matched transcript ID cannot produce a pair. An unmatched
+form is not interpreted as an absent or noncoding isoform.
 }
 \examples{
 ex <- load_example_data("sample_frame")

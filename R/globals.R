@@ -6,7 +6,7 @@ utils::globalVariables(c(
   "IJC_SAMPLE_1", "IPR", "IncLevel1", "M", "N", "N_adj", "OR", "SJC_SAMPLE_1", "V1",
   "a", "aa_end", "aa_start", "abs_start", "abs_stop", "absolute_exon_class",
   "absolute_exon_position", "ac", "all_zero", "alt_name", "any_dom_flag", "any_ppi",
-  "b", "bg_prop", "cds_bp", "cds_bp_1", "cds_bp_2", "cds_end",
+  "b", "bad", "bg_prop", "cds_bp", "cds_bp_1", "cds_bp_2", "cds_end",
   "cds_gen_start", "cds_gen_stop", "cds_has", "cds_len", "cds_rel_start",
   "cds_rel_stop", "cds_start", "chr", "class_match", "class_pref_hit", "class_raw",
   "classification", "code_ord", "coding_exon_class", "coding_exon_position",
@@ -21,7 +21,7 @@ utils::globalVariables(c(
   "exon_aa_end", "exon_aa_start", "exon_bp_all_1", "exon_bp_all_2", "exon_end",
   "exon_id", "exon_ids", "exon_len", "exon_number", "exon_row", "exon_rows",
   "exon_start", "exons", "exons_exc", "exons_inc", "fdr", "feat_len", "feature_id",
-  "feature_len", "feature_length", "fend", "fg_prop", "final_plot", "form", "frac",
+  "feature_len", "feature_length", "fend", "fg_prop", "final_plot", "form", "found", "frac",
   "frag_len", "frame_call", "frame_check_exon1", "frame_check_exon2", "fstart",
   "gen_start", "gen_stop", "gend", "gene", "gene_id", "gene_id_hit", "gene_name",
   "ggsave", "group", "gstart", "has", "has_neg", "has_pos", "has_ppi", "has_pro",
@@ -39,7 +39,7 @@ utils::globalVariables(c(
   "id", "inc", "inc_coord", "inc_exc", "inc_idx", "inc_inc",
   "inc_only_domains_list", "inc_only_flag", "inc_only_n", "inclusion_reads",
   "int_w", "int_width", "interpro", "interpro_end", "interpro_start", "jaccard",
-  "k", "keep_pair", "key_cols", "kind", "label", "max_ex",
+  "k", "keep", "keep_pair", "key_cols", "kind", "label", "max_ex",
   "mean_events_per_gene", "mean_hit", "method", "ml10", "multi", "n", "nDOWN", "nFE",
   "nLE", "nUP", "n_abs", "n_coding", "n_cond", "n_events", "n_exc_ppi", "n_inc",
   "n_inc_ppi", "n_pairs_in_gene", "n_post", "n_ppi", "n_pre", "n_sig", "name",
@@ -53,13 +53,14 @@ utils::globalVariables(c(
   "psi_original", "psi_raw", "pval", "qvalue", "reads", "recip_q", "recip_s",
   "rel_offset", "rel_start", "rel_stop", "relative_use", "rend", "rescue", "row_id",
   "row_uid", "rstart", "sample_name", "save_path", "score", "site_id",
+  "site_significant", "n_pos", "n_neg", "n_event_comparisons",
   "sizeFactor", "size_factors", "start_frame", "stop_frame", "strand",
   "strand_inc", "strand_num", "summary_classification", "t_ord", "tag", "test",
   "total", "total_sd_domains", "total_update", "transcript_id", "transcript_id_1",
   "transcript_id_2", "transcript_id_exc", "transcript_id_inc", "transcript_name",
   "transcript_row_uid", "transcript_seq", "transcript_seq_exc",
   "transcript_seq_inc", "transcript_support_level", "transcript_type",
-  "transcript_uid", "transcript_uid_internal", "transcript_uid_terminal", "tx",
+  "transcript_type_case", "transcript_type_control", "transcript_uid", "transcript_uid_internal", "transcript_uid_terminal", "tx",
   "txA", "txB", "tx_gene", "type", "value", "value_exc", "value_inc",
   "source_file", "maxdiff", "uniq_hits", "n_test", "n_control", "cds_nt_end",
   "cds_nt_start", "clean_name", "d1_pruned", "d2_pruned", "genomic_end",
@@ -104,4 +105,37 @@ utils::globalVariables(c(
   "uniprotswissprot",
   "x", "xend", "xmax", "xmin",
   "y", "y_bottom", "y_top", "ymax", "ymin"
+))
+
+# Alternate pairing diagnostics and domain-enrichment working columns.
+utils::globalVariables(c(
+  "..exon_cols",
+  "..present",
+  ".pair_key",
+  "approximate_ok",
+  "coding_count",
+  "context_score_margin",
+  "eligible",
+  "evidence_rank",
+  "matching_group",
+  "matching_pair_id",
+  "matching_status",
+  "n_candidates",
+  "pair_rank",
+  "structural_match",
+  "tsl_rank",
+  "tsl_tier"
+))
+
+utils::globalVariables(c("structural_context", "tsl_worst"))
+
+# Post-DI event renumbering across input files.
+utils::globalVariables(c(".file", "def", "grp1", "grp2", "i.exc", "i.inc", "i.new_id", "new_id"))
+
+# User-table validation and manual-feature placement working columns.
+utils::globalVariables(c(
+  ".feature_row",
+  ".placed_transcript",
+  "mixed",
+  "site"
 ))

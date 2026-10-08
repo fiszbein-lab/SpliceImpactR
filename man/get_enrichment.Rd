@@ -101,7 +101,7 @@ bg <- get_background(source = "hit_index",
                      input = sample_frame,
                      annotations = annotation_df$annotations,
                      protein_features = protein_feature_total)
-enrichment <- get_enrichment(res$gene_id, bg$gene_id, species = 'human', 'ensembl', 'MSigDB:H')
+enrichment <- get_enrichment(res$gene_id, attr(bg, "gene_universe"), species = 'human', 'ensembl', 'MSigDB:H')
 print(enrichment)
 }
 }

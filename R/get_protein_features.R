@@ -1,96 +1,18 @@
-#' Bin elements under a cumulative cap (internal)
-#'
-#' Internal helper that groups elements sequentially into bins such that
-#' the cumulative value in each bin does not exceed a specified cap.
-#' Often used to split items for batch processing or job chunking based
-#' on approximate size or cost.
-#'
-#' @param df A \code{data.frame} containing at least two columns: one
-#'   with element names and one with numeric values.
-#' @param name_col Character string giving the column name for element
-#'   identifiers.
-#' @param value_col Character string giving the column name for numeric
-#'   values used in cumulative binning.
-#' @param cap Numeric scalar giving the maximum cumulative value allowed
-#'   per bin (default \code{3100}).
-#'
-#' @return A list where each element is a character vector of names that
-#'   belong to one bin.  The bins are created sequentially in the order
-#'   of the input rows.
-#'
-#' @details
-#' The function walks through rows in order, adding elements to the
-#' current bin until the running total exceeds \code{cap}, then starts a
-#' new bin. The algorithm is greedy: it does not reorder or rebalance
-#' after bin formation.
-#'
-#'
-#' @keywords internal
-bin_under_cap <- function(df, name_col, value_col, cap = 3100) {
-  stopifnot(is.data.frame(df),
-            is.character(name_col),
-            is.character(value_col))
-  nms  <- as.character(df[[name_col]])
-  vals <- as.numeric(df[[value_col]])
-
-  bins  <- list()
-  totals <- numeric(0)
-  cur_names <- character(0)
-  cur_sum <- 0
-
-  for (i in seq_along(vals)) {
-    v  <- vals[i]
-    nm <- nms[i]
-
-    if (cur_sum + v <= cap || cur_sum == 0) {
-      cur_names <- c(cur_names, nm)
-      cur_sum   <- cur_sum + v
-    } else {
-      bins[[length(bins) + 1L]] <- cur_names
-      totals <- c(totals, cur_sum)
-      cur_names <- nm
-      cur_sum   <- v
-    }
-  }
-
-  if (length(cur_names)) {
-    bins[[length(bins) + 1L]] <- cur_names
-    totals <- c(totals, cur_sum)
-  }
-
-  return(bins)
-}
-
-
-#' Split GTF transcripts into balanced chromosome groups (internal)
-#'
-#' Internal helper that groups protein-coding transcripts by chromosome,
-#' ensuring that each group remains below a cumulative size threshold.
-#' Useful for dividing GTF processing or annotation tasks into balanced
-#' batches.
-#'
-#' @param gtf_df A \code{data.frame} or \code{data.table} containing
-#'   GTF annotations, typically from [load_gtf_long()].
-#' @param max_group_size Numeric scalar giving the maximum total number
-#'   of transcripts allowed per group (passed to \code{bin_under_cap()}).
-#'
-#' @return A list of character vectors, where each element corresponds
-#'   to a bin of chromosome names grouped under the cumulative cap.
-#'
-#' @details
-#' The function considers only transcripts where
-#' \code{type == "transcript"}, \code{transcript_type == "protein_coding"}
-#'
-#' Chromosome names are simplified by removing a leading \code{"chr"}
-#' prefix before grouping.
-#'
+#' Split protein-coding transcript IDs into bounded BioMart batches (internal)
+#' @param gtf_df Annotation table containing transcript metadata.
+#' @param max_group_size Maximum number of transcript IDs in each request.
+#' @return List of character vectors of version-free transcript IDs.
 #' @keywords internal
 split_into_bits <- function(gtf_df, max_group_size) {
-  chr_counts <- table(gsub("chr", "",
-                           gtf_df[type == 'transcript' & transcript_type == 'protein_coding', chr]))
-  return(bin_under_cap(data.frame(index = names(chr_counts),
-                                  vals = as.integer(chr_counts)),
-                       "index", "vals"))
+  if (length(max_group_size) != 1L || !is.finite(max_group_size) ||
+      max_group_size < 1 || max_group_size != as.integer(max_group_size)) {
+    stop("max_group_size must be a positive integer.")
+  }
+  dt <- data.table::as.data.table(gtf_df)
+  ids <- dt[type == "transcript" & transcript_type == "protein_coding", transcript_id]
+  ids <- sort(unique(sub("\\.\\d+$", "", as.character(ids))))
+  ids <- ids[!is.na(ids) & nzchar(ids)]
+  split(ids, ceiling(seq_along(ids) / as.integer(max_group_size)))
 }
 
 #' Create a biomaRt Ensembl connection with explicit mirror fallback (internal)
@@ -219,10 +141,9 @@ split_into_bits <- function(gtf_df, max_group_size) {
 #'
 #' @details
 #' The function queries the Ensembl BioMart service using
-#' \pkg{biomaRt::getBM()} with filters \code{"chromosome_name"} and
-#' \code{"transcript_biotype"}, restricted to
-#' \code{"protein_coding"} transcripts. Queries are executed in chunks
-#' per chromosome group to avoid API timeouts.
+#' \pkg{biomaRt::getBM()} with the \code{"ensembl_transcript_id"} filter,
+#' restricted to protein-coding transcript IDs in the supplied annotation.
+#' Every request contains at most \code{max_accession_size} transcript IDs.
 #'
 #'
 #' @keywords internal
@@ -232,7 +153,8 @@ get_biomart_protein_features <- function(protein_features = c("interpro"),
                                          species_dataset = "hsapiens_gene_ensembl",
                                          release = 109,
                                          ensembl_mirror = NULL) {
-  options(biomaRt.cache = FALSE)
+  old_options <- options(biomaRt.cache = FALSE)
+  on.exit(options(old_options), add = TRUE)
   mart <- .si_use_ensembl_mart(
     dataset = species_dataset,
     version = release,
@@ -246,12 +168,14 @@ get_biomart_protein_features <- function(protein_features = c("interpro"),
   message(paste0("[PROCESSING] Accessing biomaRt for protein features, retrieving: ", paste0(atts, collapse = ", ")))
 
   access_groups <- split_into_bits(gtf_df, max_accession_size)
+  if (!length(access_groups)) {
+    return(data.table::as.data.table(stats::setNames(rep(list(character()), length(atts)), atts)))
+  }
   biomart_list <- lapply(seq_along(access_groups), function(x) {
     bm0 <- biomaRt::getBM(attributes = atts,
                           mart = mart,
-                          values = list(chromosome_name = access_groups[[x]],
-                                        transcript_biotype = "protein_coding"),
-                          filters = c('chromosome_name', "transcript_biotype"))
+                          values = access_groups[[x]],
+                          filters = "ensembl_transcript_id")
     out_mes <- paste0("[PROCESSING] Protein feature chunk ", x, " access complete")
     message(out_mes)
     return(bm0)
@@ -484,80 +408,54 @@ add_user_features <- function(x, default_database = "user") {
   }
 }
 
-#' Compute an MD5 hash for a text payload (internal)
-#'
-#' @param txt Character scalar payload.
-#' @return Character scalar MD5 hash.
-#' @keywords internal
-.si_md5_text <- function(txt) {
-  tf <- tempfile(fileext = ".txt")
-  on.exit(unlink(tf), add = TRUE)
-  writeLines(enc2utf8(as.character(txt)), tf, useBytes = TRUE)
-  unname(tools::md5sum(tf))
-}
-
 #' Build a stable GTF fingerprint for protein-feature caching (internal)
 #'
 #' @param gtf_df Annotation table used by [get_protein_features()].
 #' @return Character scalar fingerprint hash.
 #' @keywords internal
 .si_pf_fingerprint_gtf <- function(gtf_df) {
-  dt <- data.table::as.data.table(gtf_df)
-  tx <- if ("transcript_id" %in% names(dt)) {
-    sort(unique(as.character(dt[!is.na(transcript_id), transcript_id])))
-  } else {
-    character(0)
-  }
-  tx_head <- paste(utils::head(tx, 25L), collapse = "|")
-  tx_tail <- paste(utils::tail(tx, 25L), collapse = "|")
-  sig <- paste(
-    paste0("nrow=", nrow(dt)),
-    paste0("ncol=", ncol(dt)),
-    paste0("ntx=", length(tx)),
-    paste0("tx_head=", tx_head),
-    paste0("tx_tail=", tx_tail),
-    sep = ";"
-  )
-  .si_md5_text(sig)
+  .si_md5_object(as.list(data.table::as.data.table(gtf_df)))
 }
 
-#' Build a stable sequence fingerprint for ELM-dependent caching (internal)
+#' Hash serialized content without data.table's internal pointer (internal)
 #'
+#' Columns and list elements are hashed one at a time, and the hash of their
+#' names and hashes is returned. The R version recorded in each serialization
+#' header is zeroed, so an R upgrade keeps cache keys.
+#' @param x Object whose values define a cache entry.
+#' @return Character scalar hash.
+#' @keywords internal
+.si_md5_object <- function(x) {
+  tf <- tempfile(fileext = ".bin")
+  on.exit(unlink(tf), add = TRUE)
+  # Format 2 starts with "X\n", the format, the writing R version (bytes 7-10)
+  # and the minimum reading version; the writing version is zeroed in place.
+  leaf <- function(y) {
+    bytes <- serialize(y, NULL, version = 2L)
+    bytes[7:10] <- as.raw(0L)
+    writeBin(bytes, tf)
+    unname(tools::md5sum(tf))
+  }
+  walk <- function(y) {
+    if (is.data.frame(y)) y <- as.list(y)
+    if (is.list(y) && !is.object(y)) {
+      # A fresh copy of the names drops data.table's over-allocation flag, so a
+      # data.frame and a data.table with the same content hash alike.
+      nm <- names(y)
+      return(leaf(list(nm[seq_along(nm)], vapply(y, walk, character(1), USE.NAMES = FALSE))))
+    }
+    leaf(y)
+  }
+  walk(x)
+}
+
+#' Build a content fingerprint for ELM-dependent caching (internal)
 #' @param sequences Sequence table from [get_annotation()].
 #' @return Character scalar fingerprint hash.
 #' @keywords internal
 .si_pf_fingerprint_sequences <- function(sequences) {
   if (is.null(sequences)) return("no_sequences")
-  if (is.list(sequences) && !is.data.frame(sequences) && !data.table::is.data.table(sequences)) {
-    seq_names <- names(sequences)
-    if (is.null(seq_names)) seq_names <- character(0)
-    sig <- paste(
-      paste0("class=", paste(class(sequences), collapse = "|")),
-      paste0("len=", length(sequences)),
-      paste0("names=", paste(sort(seq_names), collapse = "|")),
-      sep = ";"
-    )
-    return(.si_md5_text(sig))
-  }
-  dt <- data.table::as.data.table(sequences)
-  id_col <- intersect(
-    c("protein_id", "ensembl_peptide_id", "transcript_id", "ensembl_transcript_id"),
-    names(dt)
-  )
-  if (length(id_col)) {
-    ids <- sort(unique(as.character(dt[[id_col[1]]])))
-  } else {
-    ids <- character(0)
-  }
-  sig <- paste(
-    paste0("nrow=", nrow(dt)),
-    paste0("ncol=", ncol(dt)),
-    paste0("n_id=", length(ids)),
-    paste0("id_head=", paste(utils::head(ids, 25L), collapse = "|")),
-    paste0("id_tail=", paste(utils::tail(ids, 25L), collapse = "|")),
-    sep = ";"
-  )
-  .si_md5_text(sig)
+  .si_md5_object(sequences)
 }
 
 #' Build BiocFileCache key for get_protein_features() outputs (internal)
@@ -587,7 +485,7 @@ add_user_features <- function(x, default_database = "user") {
   seq_sig <- if ("elm" %in% dbs) .si_pf_fingerprint_sequences(sequences) else "no_elm"
 
   paste0(
-    "protein_features/v", pkg_ver,
+    "protein_features/schema-2/v", pkg_ver,
     "/species-", species,
     "/release-", release,
     "/db-", db_tag,
@@ -640,7 +538,8 @@ get_linear_motifs <- function(gtf_df,
   if (release <= 0L) stop("`release` must be a positive integer.")
   taxon <- if (species == "hsapiens_gene_ensembl") "Homo sapiens" else "Mus musculus"
   
-  options(biomaRt.cache = FALSE)
+  old_options <- options(biomaRt.cache = FALSE)
+  on.exit(options(old_options), add = TRUE)
   mart <- .si_use_ensembl_mart(
     dataset = species,
     version = release,
@@ -765,7 +664,8 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
 
   bfc <- NULL
   cache_key <- NULL
-  options(timeout = timeout)
+  old_timeout <- options(timeout = timeout)
+  on.exit(options(old_timeout), add = TRUE)
   if (!is.null(load_path) && file.exists(load_path)) {
     message("[LOADING] Protein features loaded from: ", load_path)
     pf <- .read_any(load_path)
@@ -931,15 +831,18 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
       strand = data.table::first(strand),
       genomic_start = if (all(is.na(genomic_start))) NA_real_ else min(genomic_start, na.rm = TRUE),
       genomic_end   = if (all(is.na(genomic_end))) NA_real_ else max(genomic_end,   na.rm = TRUE),
-      feature_id = data.table::first(feature_id),
       clean_name = data.table::first(name),
       alt_name = data.table::first(alt_name),
-      database = data.table::first(database),
       ensembl_peptide_id = data.table::first(ensembl_peptide_id),
       method = data.table::first(method)
     ),
-    by = .(ensembl_transcript_id, start, stop)
+    by = .(ensembl_transcript_id, start, stop, database, feature_id)
   ]
+  data.table::setcolorder(mapped, c(
+    "ensembl_transcript_id", "start", "stop", "chr", "strand",
+    "genomic_start", "genomic_end", "feature_id", "clean_name", "alt_name",
+    "database", "ensembl_peptide_id", "method"
+  ))
 
   pf <- mapped[, name := paste0(clean_name, ";", chr, ":",
                                 format(as.numeric(genomic_start), scientific = FALSE, trim = TRUE), "-",
@@ -962,6 +865,30 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
 }
 
 
+#' Report manual feature rows that could not be placed (internal)
+#'
+#' @param n_rows Number of standardized input rows.
+#' @param given_id The transcript (else peptide) ID each row was given.
+#' @param placed,no_cds Row numbers placed on a CDS, and rows whose
+#'   transcript has no annotated CDS.
+#' @return `NULL` invisibly; reports with [message()].
+#' @keywords internal
+.report_unplaced_features <- function(n_rows, given_id, placed, no_cds) {
+  placed <- unique(placed)
+  no_cds <- setdiff(unique(no_cds), placed)
+  absent <- setdiff(seq_len(n_rows), c(placed, no_cds))
+  name <- function(rows) paste(utils::head(unique(given_id[rows]), 5L), collapse = ", ")
+  msg <- sprintf("Placed %d of %d manual feature row(s).", length(placed), n_rows)
+  if (length(absent)) {
+    msg <- paste0(msg, " Not in the annotation: ", length(absent), " (", name(absent), ").")
+  }
+  if (length(no_cds)) {
+    msg <- paste0(msg, " No annotated CDS: ", length(no_cds), " (", name(no_cds), ").")
+  }
+  message(msg)
+  invisible(NULL)
+}
+
 #' Incorporate user-supplied protein features
 #'
 #' Converts a manual feature table into the standardized long format
@@ -969,7 +896,9 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
 #'
 #' @param manual_features Data.frame or data.table with at least
 #'   \code{name}, \code{start}, \code{stop} amino acid, and one of
-#'   \code{ensembl_transcript_id} or \code{ensembl_peptide_id}.
+#'   \code{ensembl_transcript_id} or \code{ensembl_peptide_id}. Rows with
+#'   only \code{ensembl_peptide_id} are placed on the transcript whose
+#'   \code{protein_id} in \code{gtf_df} matches it.
 #' @param gtf_df get_annotation annotation output
 #' @param biomaRt_features Optional \code{data.table} of features from
 #'   [get_protein_features()] to merge with.
@@ -979,29 +908,27 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
 #' @return A \code{data.table} of manual (and optionally combined)
 #'   protein features.
 #'
+#' @details
+#' Rows that cannot be placed are dropped and reported in a message that
+#' names up to five of them: rows whose transcript or peptide ID is not in
+#' \code{gtf_df}, and rows on transcripts without an annotated CDS. Features
+#' that extend past the end of the CDS are truncated to it.
+#'
 #' @examples
 #' annotation_df <- load_example_data("annotation_df")$annotation_df
+#' # Illustrative features on coding transcripts in the bundled annotation
+#' # (PPFIA1, COL1A2, EPS15, NUP62); start and stop are amino-acid positions.
+#' # The NUP62 feature is given by its peptide ID only.
 #' user_df <- data.frame(
-#'   ensembl_transcript_id = c(
-#'     "ENST00000511072","ENST00000374900","ENST00000373020","ENST00000456328",
-#'     "ENST00000367770","ENST00000331789","ENST00000335137","ENST00000361567",
-#'     NA,                    "ENST00000380152"
-#'   ),
-#'   ensembl_peptide_id = c(
-#'     "ENSP00000426975", NA,                   "ENSP00000362048","ENSP00000407743",
-#'     "ENSP00000356802","ENSP00000326734", NA,                  "ENSP00000354587",
-#'     "ENSP00000364035", NA
-#'   ),
-#'   name = c(
-#'     "Low complexity","Transmembrane helix","Coiled-coil","Signal peptide",
-#'     "Transmembrane helix","Low complexity","Coiled-coil","Transmembrane helix",
-#'     "Signal peptide","Low complexity"
-#'   ),
-#'   start = c(80L, 201L, 35L, 1L, 410L, 150L, 220L, 30L, 1L, 300L),
-#'   stop  = c(120L,223L, 80L, 20L, 430L, 190L, 260L, 55L, 24L, 360L),
-#'   database   = c("seg","tmhmm","ncoils","signalp","tmhmm","seg","ncoils","tmhmm","signalp", NA),
-#'   alt_name   = c(NA,"TMhelix",NA,"SignalP-noTM", "TMhelix", NA, NA, "TMhelix", "SignalP-TAT", NA),
-#'   feature_id = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+#'   ensembl_transcript_id = c("ENST00000253925", "ENST00000297268",
+#'                             "ENST00000371730", NA),
+#'   ensembl_peptide_id = c("ENSP00000253925", "ENSP00000297268",
+#'                          "ENSP00000360795", "ENSP00000305503"),
+#'   name = c("Coiled-coil", "Signal peptide", "Low complexity",
+#'            "Low complexity"),
+#'   start = c(100L, 1L, 600L, 1L),
+#'   stop  = c(400L, 22L, 650L, 300L),
+#'   database = c("ncoils", "signalp", "seg", "seg")
 #' )
 #' user_features <- get_manual_features(user_df, annotation_df$annotations)
 #' print(user_features)
@@ -1020,6 +947,26 @@ get_manual_features <- function(manual_features,
     return(as.data.table(manual_features_loaded))
   }
   manual_features_loaded <- add_user_features(manual_features)
+  manual_features_loaded[, .feature_row := .I]
+  n_rows <- nrow(manual_features_loaded)
+  # The ID each row was given, for reporting rows that cannot be placed.
+  given_id <- data.table::fcoalesce(manual_features_loaded$ensembl_transcript_id,
+                                    manual_features_loaded$ensembl_peptide_id)
+
+  # Rows with only a peptide ID are placed through the annotation's protein_id.
+  by_peptide <- is.na(manual_features_loaded$ensembl_transcript_id) &
+    !is.na(manual_features_loaded$ensembl_peptide_id)
+  if (any(by_peptide) && "protein_id" %in% names(gtf_df)) {
+    peptide_map <- unique(as.data.table(gtf_df)[
+      !is.na(protein_id) & nzchar(protein_id),
+      .(ensembl_peptide_id = protein_id, .placed_transcript = transcript_id)
+    ])
+    placed <- peptide_map[manual_features_loaded[by_peptide],
+                          on = "ensembl_peptide_id", allow.cartesian = TRUE]
+    placed[, ensembl_transcript_id := .placed_transcript][, .placed_transcript := NULL]
+    manual_features_loaded <- rbind(manual_features_loaded[!by_peptide], placed,
+                                    use.names = TRUE)
+  }
 
   cds_map <- as.data.table(gtf_df)[
     type == "exon" & cds_has == TRUE,
@@ -1070,8 +1017,8 @@ get_manual_features <- function(manual_features,
         gstart <- cds_sub$cds_gen_start[i1] + (cds_nt_start - cds_sub$cds_rel_start[i1])
         gend   <- cds_sub$cds_gen_start[i2] + (cds_nt_end   - cds_sub$cds_rel_start[i2])
       } else {
-        gstart <- cds_sub$cds_gen_stop[i1] - (cds_sub$cds_rel_stop[i1] - cds_nt_start)
-        gend   <- cds_sub$cds_gen_stop[i2] - (cds_sub$cds_rel_stop[i2] - cds_nt_end)
+        gstart <- cds_sub$cds_gen_stop[i1] - (cds_nt_start - cds_sub$cds_rel_start[i1])
+        gend   <- cds_sub$cds_gen_stop[i2] - (cds_nt_end - cds_sub$cds_rel_start[i2])
       }
       list(gstart, gend)
       }
@@ -1081,8 +1028,9 @@ get_manual_features <- function(manual_features,
   }
   mapped <- map_to_genomic(out, cds_map)
   mapped$na_genomic <- is.na(mapped$genomic_end) | is.na(mapped$genomic_start)
-  badRows <- paste0(sum(mapped$na_genomic), " domain(s) not matched to genomic coords")
-  message(badRows)
+  .report_unplaced_features(n_rows, given_id,
+                            placed = mapped$.feature_row[!mapped$na_genomic],
+                            no_cds = mapped$.feature_row[mapped$na_genomic])
   mapped <- mapped[!(na_genomic)]
   mapped <- mapped[!is.na(genomic_start) & !is.na(genomic_end)]
   mapped <- mapped[
@@ -1091,17 +1039,20 @@ get_manual_features <- function(manual_features,
       strand = first(strand),
       genomic_start = if (all(is.na(genomic_start))) NA_real_ else min(genomic_start, na.rm = TRUE),
       genomic_end   = if (all(is.na(genomic_end))) NA_real_ else max(genomic_end,   na.rm = TRUE),
-      # feature_id = first(feature_id),
       clean_name = first(name),
-      alt_name = first(alt_name),
-      database = first(database),
       ensembl_peptide_id = first(ensembl_peptide_id),
       method = first(method),
-      name = first(name),
       na_genomic = first(na_genomic)
     ),
-    by = .(ensembl_transcript_id, feature_id, start, stop)
+    # Manual feature IDs are often missing, so identity also needs the source
+    # and labels; distinct features at identical coordinates must survive.
+    by = .(ensembl_transcript_id, feature_id, start, stop, database, name, alt_name)
   ]
+  data.table::setcolorder(mapped, c(
+    "ensembl_transcript_id", "feature_id", "start", "stop", "chr", "strand",
+    "genomic_start", "genomic_end", "clean_name", "alt_name", "database",
+    "ensembl_peptide_id", "method", "name", "na_genomic"
+  ))
 
 
   manual_features_loaded <- mapped[, name := paste0(clean_name, ";", chr, ":",
@@ -1312,4 +1263,3 @@ get_exon_features <- function(gtf_dt, feat, inclusive = TRUE) {
     overlap_aa_len   = overlap_end - overlap_start + 1L
   )][order(ensembl_transcript_id, exon_number, database, prot_start, prot_stop)]
 }
-

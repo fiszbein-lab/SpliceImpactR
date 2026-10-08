@@ -1,17 +1,25 @@
 #' @keywords internal
-.clean_pair <- function(s, e) {
-  bad <- is.na(s) | is.na(e) | e <= s
-  s[bad] <- NA_integer_
-  e[bad] <- NA_integer_
-  return(list(s = s, e = e))
-}
-
-#' @keywords internal
 .fmt_pair <- function(s, e) {
-  ok <- !(is.na(s) | is.na(e) | e <= s)
+  ok <- !(is.na(s) | is.na(e) | e < s)
   out <- character(length(s))
   out[ok] <- paste0(as.integer(s[ok]), "-", as.integer(e[ok]))
   return(out)
+}
+
+#' Variable A3SS/A5SS exon plus its partner exon, in genomic order (internal)
+#'
+#' rMATS defines A3SS/A5SS events by the long or short exon and the flanking
+#' exon it is spliced to. Keeping the partner lets matching verify the junction
+#' and keeps events with different partners apart. A missing partner leaves the
+#' variable exon alone.
+#' @keywords internal
+#' @noRd
+.with_partner <- function(vs, ve, ps, pe) {
+  variable <- .fmt_pair(vs, ve)
+  partner <- .fmt_pair(ps, pe)
+  none <- rep("", length(variable))
+  partner_first <- !is.na(ps) & !is.na(vs) & ps < vs
+  ifelse(partner_first, .collapse3(partner, variable, none), .collapse3(variable, partner, none))
 }
 
 #' @keywords internal
@@ -111,8 +119,8 @@ load_rmats <- function(paths,
   resolve_files <- function(p, event_types, use) {
     if (file.exists(p) && !dir.exists(p)) return(p)
     if (dir.exists(p)) {
-      patt <- sprintf("^(%s)\\.MATS\\.%s\\.txt$", paste(event_types, collapse="|"), use)
-      return(list.files(p, pattern = patt, full.names = TRUE))
+      patt <- sprintf("^(%s)\\.MATS\\.%s\\.txt(\\.gz)?$", paste(event_types, collapse="|"), use)
+      return(.prefer_uncompressed(list.files(p, pattern = patt, full.names = TRUE)))
     }
     character(0)
   }
@@ -191,6 +199,10 @@ load_rmats <- function(paths,
 #' @details
 #' Handles all five canonical rMATS event types (SE, MXE, A3SS, A5SS, RI),
 #' applying strand-aware logic for MXE and coordinate adjustments for A3/A5.
+#' A3SS/A5SS forms contain the long or short exon and its partner (rMATS
+#' flanking) exon, in genomic order; the excluded segment is the extension.
+#' Raw rMATS starts are converted from zero-based to one-based coordinates;
+#' ends are unchanged. Output intervals are closed, including one-base segments.
 #' Non-standard columns (e.g. IJC_SAMPLE_1) are checked for presence.
 #'
 #' @importFrom data.table as.data.table copy fifelse setorder setcolorder rbindlist %chin% :=
@@ -216,21 +228,21 @@ get_rmats <- function(DT) {
 
   g <- function(nm) if (nm %in% names(x)) as.integer(x[[nm]]) else rep(NA_integer_, nrow(x))
 
-  # Common coords (0-based, half-open)
-  upES   <- g("upstreamES");    upEE   <- g("upstreamEE")
-  dnES   <- g("downstreamES");  dnEE   <- g("downstreamEE")
+  # Convert rMATS zero-based, half-open intervals to one-based, closed intervals.
+  upES   <- g("upstreamES") + 1L;    upEE   <- g("upstreamEE")
+  dnES   <- g("downstreamES") + 1L;  dnEE   <- g("downstreamEE")
 
   # SE
-  seS <- g("exonStart_0base");  seE <- g("exonEnd")
+  seS <- g("exonStart_0base") + 1L;  seE <- g("exonEnd")
 
   # MXE
-  m1S <- g("1stExonStart_0base"); m1E <- g("1stExonEnd")
-  m2S <- g("2ndExonStart_0base"); m2E <- g("2ndExonEnd")
+  m1S <- g("1stExonStart_0base") + 1L; m1E <- g("1stExonEnd")
+  m2S <- g("2ndExonStart_0base") + 1L; m2E <- g("2ndExonEnd")
 
   # A3/A5
-  longS <- g("longExonStart_0base"); longE <- g("longExonEnd")
-  shS   <- g("shortES");             shE   <- g("shortEE")
-  flS   <- g("flankingES");          flE   <- g("flankingEE")
+  longS <- g("longExonStart_0base") + 1L; longE <- g("longExonEnd")
+  shS   <- g("shortES") + 1L;             shE   <- g("shortEE")
+  flS   <- g("flankingES") + 1L;          flE   <- g("flankingEE")
   t <- .tail_coords_1based(longS, longE, shS, shE)
 
   # # Pre-allocate result skeleton (two copies of base rows)
@@ -242,10 +254,7 @@ get_rmats <- function(DT) {
   # ---------- SE ----------
   idx <- x$event_type %chin% "SE"
   if (any(idx)) {
-    # INC inc: [upES, upEE), [seS, seE), [dnES, dnEE); INC exc: empty
-    p1 <- .clean_pair(upES[idx], upEE[idx])
-    p2 <- .clean_pair(seS[idx],  seE[idx])
-    p3 <- .clean_pair(dnES[idx], dnEE[idx])
+    # INC includes all three closed exon intervals; no excluded segment.
     INC[idx, `:=`(
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                        .fmt_pair(seS[idx], seE[idx]),
@@ -253,7 +262,7 @@ get_rmats <- function(DT) {
       exc = ""
     )]
 
-    # EXC: inc = [upES,upEE); [dnES,dnEE] ; exc = [seS,seE]
+    # EXC includes the two flanking exons and excludes the skipped exon.
     EXC[idx, `:=`(
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                        .fmt_pair(dnES[idx],dnEE[idx]),
@@ -305,26 +314,18 @@ get_rmats <- function(DT) {
   # A3SS rows
   idx_A3 <- x$event_type %chin% "A3SS"
   if (any(idx_A3)) {
-    INC[idx_A3, inc := .collapse3(.fmt_pair(longS[idx_A3],longE[idx_A3]),
-                                 rep("", sum(idx_A3)),
-                                 rep("", sum(idx_A3)))]
+    INC[idx_A3, inc := .with_partner(longS[idx_A3], longE[idx_A3], flS[idx_A3], flE[idx_A3])]
     INC[idx_A3, exc := ""]
-    EXC[idx_A3, inc := .collapse3(.fmt_pair(shS[idx_A3],shE[idx_A3]),
-                                 rep("", sum(idx_A3)),
-                                 rep("", sum(idx_A3)))]
+    EXC[idx_A3, inc := .with_partner(shS[idx_A3], shE[idx_A3], flS[idx_A3], flE[idx_A3])]
     EXC[idx_A3, exc := .fmt_pair(t$start[idx_A3], t$end[idx_A3])]
   }
 
   # A5SS rows
   idx_A5 <- x$event_type %chin% "A5SS"
   if (any(idx_A5)) {
-    INC[idx_A5, inc := .collapse3(.fmt_pair(longS[idx_A5],longE[idx_A5]),
-                                 rep("", sum(idx_A5)),
-                                 rep("", sum(idx_A5)))]
+    INC[idx_A5, inc := .with_partner(longS[idx_A5], longE[idx_A5], flS[idx_A5], flE[idx_A5])]
     INC[idx_A5, exc := ""]
-    EXC[idx_A5, inc := .collapse3(.fmt_pair(shS[idx_A5],shE[idx_A5]),
-                                 rep("", sum(idx_A5)),
-                                 rep("", sum(idx_A5)))]
+    EXC[idx_A5, inc := .with_partner(shS[idx_A5], shE[idx_A5], flS[idx_A5], flE[idx_A5])]
     EXC[idx_A5, exc := .fmt_pair(t$start[idx_A5], t$end[idx_A5])]
   }
 
@@ -332,12 +333,9 @@ get_rmats <- function(DT) {
   idx <- x$event_type %chin% "RI"
   if (any(idx)) {
     # INC: inc = upstream piece + intron + downstream piece ; exc = empty
-    pU <- .clean_pair(upES[idx], upEE[idx])
-    pI <- .clean_pair(upEE[idx], dnES[idx])  # intron
-    pD <- .clean_pair(dnES[idx], dnEE[idx])
     INC[idx, `:=`(
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
-                      .fmt_pair(upEE[idx],dnES[idx]),
+                      .fmt_pair(upEE[idx] + 1L,dnES[idx] - 1L),
                       .fmt_pair(dnES[idx],dnEE[idx])),
       exc = ""
     )]
@@ -347,7 +345,7 @@ get_rmats <- function(DT) {
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                       .fmt_pair(dnES[idx],dnEE[idx]),
                       rep("", sum(idx))),
-      exc = .fmt_pair(upEE[idx], dnES[idx])
+      exc = .fmt_pair(upEE[idx] + 1L, dnES[idx] - 1L)
     )]
   }
   dup_remover <- cbind(INC, EXC)
@@ -409,18 +407,40 @@ get_rmats <- function(DT) {
 #'   must be supplied.
 #'
 #' For each event, the function constructs paired INC and EXC entries:
-#' * `inc` contains genomic segments included in the form
+#' * `inc` contains genomic segments included in the form; for A3SS/A5SS, the
+#'   long or short exon and its partner (rMATS flanking) exon
 #' * `exc` contains the excluded segment(s)
 #' * `delta_psi`, `p.value`, and `padj` are assigned using
-#'   the rMATS-reported values
+#'   the rMATS-reported values, with `delta_psi` oriented by `case_group`
+#' Raw rMATS coordinates are converted to one-based, closed intervals.
+#' An already standardized SpliceImpactR DI table is returned without conversion.
 #'
-#' Event IDs are automatically generated (event_type:N) if not supplied
+#' rMATS reports `IncLevelDifference` as mean(`IncLevel1`) - mean(`IncLevel2`),
+#' where group 1 holds the `--b1` samples and group 2 the `--b2` samples.
+#' SpliceImpactR uses `delta_psi` = case - control, so `case_group` states which
+#' rMATS group holds the case samples. With the default, group 1,
+#' `IncLevelDifference` is used as reported; with group 2 its sign is reversed.
+#' Each import reports the group it treated as the case.
+#'
+#' Event IDs are automatically generated (event_type:N) if not supplied.
+#' With several files, events are numbered across all files, so each ID names
+#' one event; identical event definitions are kept once. All files belong to
+#' one comparison: an event type listed under different `grp1`/`grp2` labels
+#' is an error.
 #'
 #' @param input Either:
 #'   * a data.frame with columns `path`, `grp1`, `grp2`, `event_type`, or
 #'   * a data.frame of rMATS post-DI results.
+#'
+#'   `grp1` and `grp2` name rMATS groups 1 and 2; they must describe one
+#'   comparison and can identify the case through `case_group`.
 #' @param event_type Optional event type when `input` contains a single
 #'   rMATS data.frame. Ignored when file metadata table is supplied.
+#' @param case_group Which rMATS sample group holds the case samples: `1` (the
+#'   `--b1` samples, default) or `2` (`--b2`). With a file table that has
+#'   `grp1`/`grp2` columns, a group label such as `"KO"` may be given instead;
+#'   it is matched in each file's row. Tables already in SpliceImpactR format
+#'   are returned unchanged and accept only the default.
 #'
 #' @return A `data.table` with columns:
 #' \describe{
@@ -434,20 +454,22 @@ get_rmats <- function(DT) {
 #'   \item{exc}{genomic coordinates of excluded segment(s)}
 #'   \item{p.value}{rMATS p-value}
 #'   \item{padj}{FDR}
-#'   \item{delta_psi}{signed PSI change (+INC, -EXC)}
+#'   \item{delta_psi}{case minus control PSI change; the INC and EXC rows of an
+#'   event have opposite signs}
 #' }
 #'
 #' @examples
-#' # # Multiple files
+#' # # Multiple files from one rMATS run with the KO samples given as --b2
 #' # input <- data.frame(
 #' #   path = c('/path/A3SS.MATS.JC.txt', '/path2/A5SS.MATS.JC.txt'),
 #' #   grp1 = c("WT","WT"),
 #' #   grp2 = c("KO","KO"),
 #' #   event_type = c("A3SS", "A5SS")
 #' # )
-#' # res <- get_rmats_post_di(meta)
+#' # res <- get_rmats_post_di(input, case_group = "KO")
 #'
-#' # Single rMATS table already loaded as df
+#' # Single rMATS table already loaded as df; group 1 (--b1) holds the case
+#' # samples, the default
 #' df <- data.frame(
 #'   ID = 1L,
 #'   GeneID = "ENSG00000182871",
@@ -478,10 +500,16 @@ get_rmats <- function(DT) {
 #' print(res2)
 #' @export
 get_rmats_post_di <- function(input,
-                               event_type=NULL) {
+                               event_type=NULL,
+                               case_group = 1) {
   if (methods::is(input, "SpliceImpactResult")) {
     input <- as_dt_from_s4(input, slot = "di_events")
   }
+  if (length(case_group) != 1L || is.na(case_group) ||
+      (is.numeric(case_group) && !case_group %in% c(1, 2))) {
+    stop("get_rmats_post_di: case_group must be 1, 2 or one grp1/grp2 label.")
+  }
+  case_key <- as.character(case_group)
 
   canonical_di_cols <- c(
     "site_id", "event_type", "event_id", "gene_id", "chr", "strand",
@@ -490,21 +518,77 @@ get_rmats_post_di <- function(input,
     "padj", "cooks_max", "form", "n", "n_used"
   )
   if (all(canonical_di_cols %in% colnames(input))) {
+    if (case_key != "1") {
+      stop("get_rmats_post_di: this table is already in SpliceImpactR format ",
+           "(delta_psi = case - control); case_group applies only to rMATS tables.")
+    }
     return(data.table::as.data.table(input))
   }
 
+  # rMATS reports IncLevelDifference = mean(IncLevel1) - mean(IncLevel2), while
+  # delta_psi is case - control: the case group decides the sign.
+  case_index <- function(grp1 = NA_character_, grp2 = NA_character_) {
+    if (case_key %in% c("1", "2")) return(as.integer(case_key))
+    if (is.na(grp1) || is.na(grp2)) {
+      stop("get_rmats_post_di: a case_group label needs a file table with grp1 and grp2 ",
+           "columns; otherwise use 1 (--b1) or 2 (--b2).")
+    }
+    hit <- which(c(grp1, grp2) == case_key)
+    if (length(hit) != 1L) {
+      stop("get_rmats_post_di: case_group \"", case_key, "\" must match exactly one of grp1 (\"",
+           grp1, "\") and grp2 (\"", grp2, "\").")
+    }
+    hit
+  }
+  case_note <- function(g, label) {
+    sprintf("rMATS group %d (--b%d%s) is the case; delta_psi = mean(IncLevel%d) - mean(IncLevel%d)",
+            g, g, if (is.na(label)) "" else paste0(", \"", label, "\""), g, 3L - g)
+  }
+
   if (sum(c("path", "event_type") %in% colnames(input)) == 2) {
+    has_groups <- all(c("grp1", "grp2") %in% colnames(input))
+    if (has_groups) {
+      comparisons <- unique(data.table::as.data.table(input)[, .(event_type, grp1, grp2)])
+      mixed <- comparisons[, .N, by = event_type][N > 1L, event_type]
+      if (length(mixed)) {
+        stop("get_rmats_post_di: event type(s) ", paste(mixed, collapse = ", "),
+             " appear under more than one grp1/grp2 comparison. A DI table ",
+             "represents one comparison; import each comparison separately.")
+      }
+    }
+    grp1 <- if (has_groups) as.character(input$grp1) else rep(NA_character_, nrow(input))
+    grp2 <- if (has_groups) as.character(input$grp2) else rep(NA_character_, nrow(input))
+    cases <- vapply(seq_len(nrow(input)), function(i) case_index(grp1[i], grp2[i]), integer(1))
+    notes <- mapply(case_note, cases, ifelse(cases == 1L, grp1, grp2))
+    message("get_rmats_post_di: ", if (length(unique(notes)) == 1L) notes[1L] else
+      paste0("by file: ", paste(basename(input$path), notes, sep = ": ", collapse = "; ")), ".")
     out_list <- lapply(seq_len(nrow(input)), function(i) {
       dt <- data.table::fread(input$path[i])
       dt[, event_type := input$event_type[i]]
       dt[, GeneID := tstrsplit(GeneID, "[.]")[[1]]]
-      .get_rmats_di_helper(dt)
+      di <- .get_rmats_di_helper(dt)
+      if (cases[i] == 2L) di[, delta_psi := -delta_psi]
+      di
     })
-    return(unique(data.table::rbindlist(out_list, fill=TRUE)))
+    out <- data.table::rbindlist(out_list, fill = TRUE, idcol = ".file")
+    # Events are numbered within each file; renumber across files so an ID
+    # never names two events. Identical definitions share an ID, as they do
+    # within one file, and are kept once.
+    defs <- out[form == "INC", .(.file, event_type, event_id,
+                                 def = paste(gene_id, chr, inc, exc, delta_psi))]
+    defs[out[form == "EXC"], def := paste(def, i.inc, i.exc), on = .(.file, event_id)]
+    defs[, new_id := sprintf("%s:%d", event_type, match(def, unique(def))), by = event_type]
+    out[defs, event_id := i.new_id, on = .(.file, event_id)]
+    out <- out[!duplicated(out[, .(event_id, form)])]
+    out[, .file := NULL]
+    return(out[])
   } else {
+    case <- case_index()
+    message("get_rmats_post_di: ", case_note(case, NA_character_), ".")
     dt <- data.table::as.data.table(input)
     dt[, event_type := event_type]
     out <- .get_rmats_di_helper(dt)
+    if (case == 2L) out[, delta_psi := -delta_psi]
     return(data.table::data.table(out))
   }
 }
@@ -544,21 +628,21 @@ get_rmats_post_di <- function(input,
 
   g <- function(nm) if (nm %in% names(x)) as.integer(x[[nm]]) else rep(NA_integer_, nrow(x))
 
-  # Common coords (0-based, half-open)
-  upES   <- g("upstreamES");    upEE   <- g("upstreamEE")
-  dnES   <- g("downstreamES");  dnEE   <- g("downstreamEE")
+  # Convert rMATS zero-based, half-open intervals to one-based, closed intervals.
+  upES   <- g("upstreamES") + 1L;    upEE   <- g("upstreamEE")
+  dnES   <- g("downstreamES") + 1L;  dnEE   <- g("downstreamEE")
 
   # SE
-  seS <- g("exonStart_0base");  seE <- g("exonEnd")
+  seS <- g("exonStart_0base") + 1L;  seE <- g("exonEnd")
 
   # MXE
-  m1S <- g("1stExonStart_0base"); m1E <- g("1stExonEnd")
-  m2S <- g("2ndExonStart_0base"); m2E <- g("2ndExonEnd")
+  m1S <- g("1stExonStart_0base") + 1L; m1E <- g("1stExonEnd")
+  m2S <- g("2ndExonStart_0base") + 1L; m2E <- g("2ndExonEnd")
 
   # A3/A5
-  longS <- g("longExonStart_0base"); longE <- g("longExonEnd")
-  shS   <- g("shortES");             shE   <- g("shortEE")
-  flS   <- g("flankingES");          flE   <- g("flankingEE")
+  longS <- g("longExonStart_0base") + 1L; longE <- g("longExonEnd")
+  shS   <- g("shortES") + 1L;             shE   <- g("shortEE")
+  flS   <- g("flankingES") + 1L;          flE   <- g("flankingEE")
   t <- .tail_coords_1based(longS, longE, shS, shE)
 
   # # Pre-allocate result skeleton (two copies of base rows)
@@ -570,10 +654,7 @@ get_rmats_post_di <- function(input,
   # ---------- SE ----------
   idx <- x$event_type %chin% "SE"
   if (any(idx)) {
-    # INC inc: [upES, upEE), [seS, seE), [dnES, dnEE); INC exc: empty
-    p1 <- .clean_pair(upES[idx], upEE[idx])
-    p2 <- .clean_pair(seS[idx],  seE[idx])
-    p3 <- .clean_pair(dnES[idx], dnEE[idx])
+    # INC includes all three closed exon intervals; no excluded segment.
     INC[idx, `:=`(
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                        .fmt_pair(seS[idx], seE[idx]),
@@ -581,7 +662,7 @@ get_rmats_post_di <- function(input,
       exc = ""
     )]
 
-    # EXC: inc = [upES,upEE); [dnES,dnEE] ; exc = [seS,seE]
+    # EXC includes the two flanking exons and excludes the skipped exon.
     EXC[idx, `:=`(
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                        .fmt_pair(dnES[idx],dnEE[idx]),
@@ -633,26 +714,18 @@ get_rmats_post_di <- function(input,
   # A3SS rows
   idx_A3 <- x$event_type %chin% "A3SS"
   if (any(idx_A3)) {
-    INC[idx_A3, inc := .collapse3(.fmt_pair(longS[idx_A3],longE[idx_A3]),
-                                  rep("", sum(idx_A3)),
-                                  rep("", sum(idx_A3)))]
+    INC[idx_A3, inc := .with_partner(longS[idx_A3], longE[idx_A3], flS[idx_A3], flE[idx_A3])]
     INC[idx_A3, exc := ""]
-    EXC[idx_A3, inc := .collapse3(.fmt_pair(shS[idx_A3],shE[idx_A3]),
-                                  rep("", sum(idx_A3)),
-                                  rep("", sum(idx_A3)))]
+    EXC[idx_A3, inc := .with_partner(shS[idx_A3], shE[idx_A3], flS[idx_A3], flE[idx_A3])]
     EXC[idx_A3, exc := .fmt_pair(t$start[idx_A3], t$end[idx_A3])]
   }
 
   # A5SS rows
   idx_A5 <- x$event_type %chin% "A5SS"
   if (any(idx_A5)) {
-    INC[idx_A5, inc := .collapse3(.fmt_pair(longS[idx_A5],longE[idx_A5]),
-                                  rep("", sum(idx_A5)),
-                                  rep("", sum(idx_A5)))]
+    INC[idx_A5, inc := .with_partner(longS[idx_A5], longE[idx_A5], flS[idx_A5], flE[idx_A5])]
     INC[idx_A5, exc := ""]
-    EXC[idx_A5, inc := .collapse3(.fmt_pair(shS[idx_A5],shE[idx_A5]),
-                                  rep("", sum(idx_A5)),
-                                  rep("", sum(idx_A5)))]
+    EXC[idx_A5, inc := .with_partner(shS[idx_A5], shE[idx_A5], flS[idx_A5], flE[idx_A5])]
     EXC[idx_A5, exc := .fmt_pair(t$start[idx_A5], t$end[idx_A5])]
   }
 
@@ -660,12 +733,9 @@ get_rmats_post_di <- function(input,
   idx <- x$event_type %chin% "RI"
   if (any(idx)) {
     # INC: inc = upstream piece + intron + downstream piece ; exc = empty
-    pU <- .clean_pair(upES[idx], upEE[idx])
-    pI <- .clean_pair(upEE[idx], dnES[idx])  # intron
-    pD <- .clean_pair(dnES[idx], dnEE[idx])
     INC[idx, `:=`(
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
-                       .fmt_pair(upEE[idx],dnES[idx]),
+                       .fmt_pair(upEE[idx] + 1L,dnES[idx] - 1L),
                        .fmt_pair(dnES[idx],dnEE[idx])),
       exc = ""
     )]
@@ -675,7 +745,7 @@ get_rmats_post_di <- function(input,
       inc = .collapse3(.fmt_pair(upES[idx],upEE[idx]),
                        .fmt_pair(dnES[idx],dnEE[idx]),
                        rep("", sum(idx))),
-      exc = .fmt_pair(upEE[idx], dnES[idx])
+      exc = .fmt_pair(upEE[idx] + 1L, dnES[idx] - 1L)
     )]
   }
   dup_remover <- cbind(INC, EXC)
@@ -736,7 +806,6 @@ get_rmats_post_di <- function(input,
                                 "delta_psi", "padj")]
   return(out)
 }
-
 
 
 

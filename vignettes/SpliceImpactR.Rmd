@@ -187,6 +187,14 @@ exon_features <- get_exon_features(
 )
 ```
 
+For a full reference, `get_annotation(load = "link")` and `load = "path"`
+default to TSL 1, 2, and 3. Set `filter_tsl = NULL` to retain transcripts
+regardless of their support level, including missing or unknown TSL values.
+Use `filter_tsl = NULL` again with `load = "cached"` to retrieve that reference;
+it is stored separately from TSL-filtered references. Gene-biotype and
+incomplete-CDS tag filters still apply. The bundled test reference is loaded
+as stored.
+
 ```{r feature-summary}
 table(protein_feature_total$database)
 ```
@@ -392,10 +400,17 @@ This matching is done through a strict hierarchy:
 3. Remove candidates that overlap exclusion (`exc`) coordinates.
 4. Prioritize transcript/exon choices by event-type-consistent exon class
    (`first`, `internal`, `last`), then reciprocal overlap and intersection
-   width; protein-linked transcripts are preferred when available.
+   width; protein-coding status and then TSL only break remaining ties.
 5. Build case/control pairs in `get_pairs(source = "multi")` by joining all
    positive `delta_psi` rows (case) with all negative rows (control) for each
    `event_id`, then ordering by strongest `|delta_psi|`.
+   For an event with several sites, such as an AFE with three first exons,
+   each rising x falling pair of sites is its own comparison, so a site can
+   appear in several rows. `keep_sig_pairs()` keeps every site of an event in
+   which any site passes; `site_significant_case`/`_control` show which sites
+   passed themselves, and `n_event_comparisons` gives the number of
+   comparisons the event defines. Pair counts, including domain enrichment,
+   count comparisons rather than events.
 
 ```{r matching-and-pairs}
 matched <- get_matched_events_chunked(
@@ -431,6 +446,8 @@ Key labels used downstream:
 - `noPC`: neither side has a protein ID.
 - `Match`: protein sequences are identical.
 - `FrameShift`: frame is disrupted between paired isoforms.
+- `NMD`: an isoform is annotated as nonsense-mediated decay, so it is taken to
+  make no protein (`frame_call` still shows the frameshift that usually causes it).
 
 ```{r sequence-compare}
 seq_compare <- compare_sequence_frame(pairs, annotation_df$annotations)
@@ -448,7 +465,10 @@ length_plot
 
 # Domain-Level Changes and Domain Enrichment
 Background transcript pairs are derived from annotations and compared
-against observed event-linked domain changes. 
+against observed event-linked domain changes. `source = "annotated"` is the
+default. A HIT-index background (`source = "hit_index"`) keeps one transcript
+per observed exon, so it usually lacks the matched pairs and domain enrichment
+rejects it; its gene universes still work for gene-level enrichment.
 
 ```{r domain-background-and-hits}
 bg <- get_background(
@@ -559,7 +579,8 @@ has_needed <- all(vapply(
 if (has_needed) {
   enrichment_di <- get_enrichment(
     foreground = fg_domain,
-    background = bg$gene_id,
+    background = intersect(attr(bg, "feature_gene_universe"),
+                           res$gene_id[is.finite(res$padj)]),
     species = "human",
     gene_id_type = "ensembl",
     sources = "GO:BP",
@@ -934,6 +955,13 @@ head(user_res)
 
 ## Post-DI rMATS Import
 Use `get_rmats_post_di()` to ingest already-computed rMATS result tables.
+rMATS reports `IncLevelDifference` as mean(`IncLevel1`) - mean(`IncLevel2`),
+where group 1 holds the `--b1` samples. SpliceImpactR reads it as case - control,
+so by default rMATS group 1 is the case. If your case samples were `--b2`, set
+`case_group = 2`; with a file table you can also name the case group, for example
+`case_group = "KO"`. Each import reports which group it treated as the case.
+In this example inclusion is higher in group 1, the case, so the inclusion form
+gets `delta_psi = 1`.
 
 ```{r custom-rmats-post-di}
 rmats_df <- data.frame(
@@ -949,16 +977,16 @@ rmats_df <- data.frame(
   flankingES = 45505357L,
   flankingEE = 45505431L,
   ID.2 = 2L,
-  IJC_SAMPLE_1 = "1,1,1",
-  SJC_SAMPLE_1 = "1,1,1",
-  IJC_SAMPLE_2 = "1,1,1",
-  SJC_SAMPLE_2 = "1,1,1",
+  IJC_SAMPLE_1 = "5,5,5",
+  SJC_SAMPLE_1 = "0,0,0",
+  IJC_SAMPLE_2 = "0,0,0",
+  SJC_SAMPLE_2 = "5,5,5",
   IncFormLen = 52L,
   SkipFormLen = 49L,
   PValue = 0.6967562,
   FDR = 1,
-  IncLevel1 = "0.0,0.0,0.0",
-  IncLevel2 = "1.0,1.0,1.0",
+  IncLevel1 = "1.0,1.0,1.0",
+  IncLevel2 = "0.0,0.0,0.0",
   IncLevelDifference = 1.0,
   stringsAsFactors = FALSE
 )
@@ -994,6 +1022,6 @@ head(user_matched)
 ```
 
 # Session Info
-```{r}
+```{r session-information}
 sessionInfo()
 ```

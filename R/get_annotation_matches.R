@@ -1,3 +1,17 @@
+#' Rank transcript support levels (internal)
+#' @param x Transcript support levels, e.g. `"1"` or Ensembl's
+#'   `"1 (assigned to previous version 5)"`.
+#' @return Integer ranks 1-5; missing or unrecognised values rank 6.
+#' @noRd
+#' @keywords internal
+.si_tsl_rank <- function(x) {
+  rank <- suppressWarnings(as.integer(
+    sub("^\\s*([1-5])(?:\\s.*)?$", "\\1", as.character(x), perl = TRUE)
+  ))
+  rank[is.na(rank) | !rank %in% seq_len(5L)] <- 6L
+  rank
+}
+
 #' Build exon and transcript tables from a parsed annotation
 #'
 #' Constructs standardized exon and transcript data tables from a
@@ -10,7 +24,9 @@
 #'   \code{strand}, \code{gene_id}, \code{gene_name},
 #'   \code{transcript_id}, \code{transcript_name},
 #'   \code{transcript_type}, \code{protein_id},
-#'   \code{exon_id}, and \code{exon_number}.
+#'   \code{exon_id}, and \code{exon_number}. An optional
+#'   \code{transcript_support_level} column only breaks ties between equally
+#'   well-matched transcripts; when absent, support is treated as unknown.
 #'
 #' @return A named list with three components:
 #' \describe{
@@ -18,8 +34,8 @@
 #'     `classification` (`"first"`, `"last"`, or `"internal"`)
 #'     determined per transcript.}
 #'   \item{`transcripts`}{A `data.table` of transcript records.}
-#'   \item{`protein_tx`}{Character vector of transcript IDs
-#'     annotated as protein-coding (non-NA `protein_id`).}
+#'   \item{`protein_tx`}{Character vector of transcript IDs whose
+#'     `transcript_type` is `"protein_coding"`.}
 #' }
 #'
 #' @details
@@ -39,6 +55,14 @@ build_from_annotations <- function(ann) {
               gene_id, gene_name,
               transcript_id, transcript_name, transcript_type,
               protein_id)]
+  # TSL is optional (e.g. RefSeq or custom GTFs); unknown support ranks last.
+  tsl <- if ("transcript_support_level" %in% names(ann)) {
+    ann[type == "transcript", transcript_support_level]
+  } else {
+    NA_character_
+  }
+  tx[, transcript_support_level := tsl]
+  tx[, tsl_rank := .si_tsl_rank(transcript_support_level)]
   data.table::setkey(tx, transcript_id)
 
   ex <- ann[type == "exon",
@@ -54,6 +78,7 @@ build_from_annotations <- function(ann) {
                data.table::fifelse(!is.na(exon_number) & exon_number == max_ex, "last", "internal"))]
   ex[is.na(exon_number) | is.na(max_ex), classification := NA_character_]
   ex[, max_ex := NULL]
+  ex <- tx[, .(transcript_id, transcript_support_level, tsl_rank)][ex, on = "transcript_id"]
 
   protein_tx <- unique(na.omit(tx[transcript_type == 'protein_coding' & !is.na(transcript_type), transcript_id]))
   list(exons = ex, transcripts = tx, protein_tx = protein_tx)
@@ -86,8 +111,10 @@ explode_coords <- function(ev, which = c("inc","exc")) {
   # make sure ev has an integer row id
   if (!(".__row__" %chin% names(ev))) ev[, .__row__ := .I]
   # split strings; empty -> no rows
+  # fifelse keeps the character type when there are no rows.
+  coords <- as.character(ev[[col]])
   split_vec <- strsplit(
-    ifelse(is.na(ev[[col]]) | !nzchar(ev[[col]]), "", ev[[col]]),
+    data.table::fifelse(is.na(coords) | !nzchar(coords), "", coords),
     ";", fixed = TRUE)
 
   # build long rows
@@ -135,8 +162,8 @@ explode_coords <- function(ev, which = c("inc","exc")) {
 #'
 #' Performs vectorized overlap mapping between event coordinates (e.g. inclusion
 #' or exclusion intervals) and exons from an annotation resource. Returns the
-#' best-matching transcript and exon set per event based on coverage, exon
-#' classification, and protein-coding preference.
+#' best-matching transcript and exon set per event based on coverage and exon
+#' classification, with protein-coding status as a tie-breaker.
 #'
 #' @param events A `data.frame` or `data.table` containing splicing events with
 #'   columns `chr`, `strand`, `gene_id`, and coordinate fields `inc` and `exc`
@@ -146,6 +173,8 @@ explode_coords <- function(ev, which = c("inc","exc")) {
 #'   to [build_from_annotations()].
 #' @param minOverlap Minimum fractional overlap (0-1) required between an
 #'   inclusion segment and an annotated exon to count as a hit. Default `0.05`.
+#' @param .annotation_index Optional index from [build_from_annotations()] for
+#'   reuse across chunks. Internal callers must use the same annotation table.
 #'
 #' @return A `data.table` containing one row per input event with the following
 #'   appended columns:
@@ -163,9 +192,14 @@ explode_coords <- function(ev, which = c("inc","exc")) {
 #' intervals to exons. Candidate transcripts are filtered to ensure sufficient
 #' coverage and absence of overlaps with exclusion coordinates.
 #'
-#' The algorithm prioritizes exon classification (`first`, `internal`, `last`)
-#' consistent with the event type (AFE, ALE, SE, etc.), followed by reciprocal
-#' overlap fractions, intersection width, and protein-coding status.
+#' Transcripts that pass these checks are ranked by structural fit: exon
+#' classification (`first`, `internal`, `last`) consistent with the event type
+#' (AFE, ALE, SE, etc.), then reciprocal overlap fraction and intersection
+#' width. Protein-coding status and then transcript support level (TSL; 1 best
+#' through 5 worst) only break remaining ties, so neither outranks a better
+#' structural match. The exon class is a preference, not a requirement: an AFE
+#' site with no annotated transcript starting there can still match an internal
+#' exon.
 #'
 #' @importFrom data.table as.data.table setkey setorder rbindlist uniqueN
 #' @importFrom data.table setnames %chin%
@@ -175,19 +209,20 @@ explode_coords <- function(ev, which = c("inc","exc")) {
 #' @keywords internal
 match_events_to_annotations_vec <- function(events,
                                             annotations,
-                                            minOverlap = 0.05) {
+                                            minOverlap = 0.05,
+                                            .annotation_index = NULL) {
 
   eps <- 1e-9  # numerical guard
   want_cols <- c("event_id","event_type","form", "gene_id","chr","strand",
                  "inc","exc","delta_psi","p.value","padj",
-                 "n_samples","n_control","n_case")
+                 "n_samples","n_control","n_case","site_significant")
 
-  AA <- build_from_annotations(annotations)
+  AA <- if (is.null(.annotation_index)) build_from_annotations(annotations) else .annotation_index
   EX <- AA$exons
   TX <- AA$transcripts
   protein_tx <- AA$protein_tx
   # 1) events id + meta
-  ev <- data.table::as.data.table(events)
+  ev <- data.table::copy(data.table::as.data.table(events))
   if (!(".__row__" %chin% names(ev))) ev[, .__row__ := .I]
   meta_cols <- intersect(want_cols, names(ev))
   ev_meta   <- ev[, c(".__row__", meta_cols), with = FALSE]
@@ -265,7 +300,8 @@ match_events_to_annotations_vec <- function(events,
   wI <- IRanges::width(GenomicRanges::pintersect(q, s))
   rq <- as.numeric(wI / IRanges::width(q))
   rs <- as.numeric(wI / IRanges::width(s))
-  keep <- which(rq + eps >= minOverlap)
+  keep <- which(rq + eps >= minOverlap &
+                  inc_long$gene_id[queryHits(H)] == EX_sub$gene_id[subjectHits(H)])
   if (!length(keep)) return(ev_meta[, `:=`(transcript_id = NA_character_, exons = "", inc_exons_by_idx = "", inc_rows_by_idx = "")][order(event_row)])
 
   # 6) candidates (inc_hits)
@@ -281,10 +317,13 @@ match_events_to_annotations_vec <- function(events,
     exon_id        = EX_sub$exon_id[subjectHits(H)[keep]],
     classification = EX_sub$classification[subjectHits(H)[keep]],
     transcript_id  = EX_sub$transcript_id[subjectHits(H)[keep]],
+    transcript_support_level = EX_sub$transcript_support_level[subjectHits(H)[keep]],
+    tsl_rank       = EX_sub$tsl_rank[subjectHits(H)[keep]],
     recip_q        = rq[keep],
     recip_s        = rs[keep],
     int_w          = wI[keep]
   )
+  inc_hits[is.na(tsl_rank), tsl_rank := 6L]
   inc_hits[, protein_link := transcript_id %chin% protein_tx]
 
 
@@ -348,12 +387,6 @@ match_events_to_annotations_vec <- function(events,
   good_cov  <- cov_by_tx[covered == ninc_map[as.character(event_row)]]
   inc_hits  <- inc_hits[good_cov, on = .(event_row, transcript_id), nomatch = 0L]
 
-  grp_has_pro <- inc_hits[, .(has_pro = any(protein_link)), by = .(event_row, transcript_id)]
-  data.table::setkey(grp_has_pro, event_row, transcript_id)
-  data.table::setkey(inc_hits,     event_row, transcript_id)
-  inc_hits <- inc_hits[grp_has_pro][ has_pro == FALSE | protein_link == TRUE ]
-  inc_hits[, has_pro := NULL]
-
   data.table::setorder(inc_hits, event_row, transcript_id, -class_pref_hit, -recip_q, -int_w)
   best_per_tx <- inc_hits[, .SD[1L], by = .(event_row, transcript_id)]
 
@@ -367,7 +400,9 @@ match_events_to_annotations_vec <- function(events,
   data.table::setkey(best_per_tx, event_row, transcript_id)
   best_per_tx <- best_per_tx[supp]
 
-  data.table::setorder(best_per_tx, event_row, -protein_link, -class_pref_hit, -recip_q, -int_w)
+  # Structural fit decides; protein-coding status and then TSL only break ties,
+  # so a coding transcript cannot win on an exon that does not fit the event.
+  data.table::setorder(best_per_tx, event_row, -class_pref_hit, -recip_q, -int_w, -protein_link, tsl_rank)
   final <- best_per_tx[, .SD[1L], by = event_row]
 
   # 10) per-INC mapping for the chosen transcript
@@ -411,7 +446,8 @@ match_events_to_annotations_vec <- function(events,
   }
 
   data.table::setkey(simple_core, event_row)
-  out <- ev_meta[simple_core]                 # keep all events
+  out <- simple_core[ev_meta]                 # keep all events
+  data.table::setcolorder(out, names(ev_meta))  # event columns first, as before
   out <- inc_exons_by_idx[out]
   out <- inc_rows_by_idx[out]
   out[is.na(exons), `:=`(exons = "", transcript_id = NA_character_,
@@ -436,9 +472,12 @@ match_events_to_annotations_vec <- function(events,
 #' overlap to consider a match
 #' @param return_class Character. Output mode: `"data.table"`, `"S4"`, or
 #'   `"auto"` (default). In `auto`, S4 input returns updated S4 output.
+#' @param verbose Logical; if `TRUE` (default), report each chunk's rows with
+#'   [message()].
 #'
-#' @return A data.table with matched transcripts and exons for all events.
-#'   The output order matches the original event order.
+#' @return A data.table with matched transcripts and exons for all events,
+#'   including each matched transcript's annotated `transcript_type` (`NA`
+#'   when unmatched). The output order matches the original event order.
 #'
 #' @details
 #' This function is intended for large-scale event matching across many
@@ -462,16 +501,17 @@ get_matched_events_chunked <- function(events,
                                  annotations,
                                  chunk_size = 50000,
                                  minOverlap = 0.05,
-                                 return_class = c("auto", "data.table", "S4")
+                                 return_class = c("auto", "data.table", "S4"),
+                                 verbose = TRUE
 ) {
   return_class <- match.arg(return_class)
   .spi_obj <- NULL
   if (methods::is(events, "SpliceImpactResult")) {
     .spi_obj <- events
     ev <- as_dt_from_s4(events, "res_di")
-    if (!nrow(ev)) ev <- as_dt_from_s4(events, "di_events")
+    if (!ncol(ev)) ev <- as_dt_from_s4(events, "di_events")
   } else {
-    ev <- data.table::as.data.table(events)
+    ev <- data.table::copy(data.table::as.data.table(events))
   }
 
   .muffle_empty_key_warning <- function(expr) {
@@ -489,20 +529,22 @@ get_matched_events_chunked <- function(events,
 
   # indices per chunk
   n <- nrow(ev)
-  if (n == 0L) return(.return_splice_output(data.table::data.table(), obj = .spi_obj, what = "matched", return_class = return_class))
   chunk_id <- ceiling(seq_len(n) / chunk_size)
-  idx_list <- split(seq_len(n), chunk_id)
+  # No events still runs one empty chunk, so the output keeps its columns.
+  idx_list <- if (n) split(seq_len(n), chunk_id) else list(integer())
+  annotation_index <- build_from_annotations(annotations)
 
   # run chunk-by-chunk
   out_list <- vector("list", length(idx_list))
   for (k in seq_along(idx_list)) {
     ii <- idx_list[[k]]
-    cat(sprintf("Chunk %d/%d: rows %d..%d\n", k, length(idx_list), min(ii), max(ii)))
+    if (verbose && length(ii)) message(sprintf("Chunk %d/%d: rows %d..%d", k, length(idx_list), min(ii), max(ii)))
     out_list[[k]] <- .muffle_empty_key_warning(
       match_events_to_annotations_vec(
         events      = ev[ii],
         annotations = annotations,
-        minOverlap = minOverlap
+        minOverlap = minOverlap,
+        .annotation_index = annotation_index
       )
     )
   }
@@ -518,6 +560,9 @@ get_matched_events_chunked <- function(events,
       "exons" := inc_exons_by_idx
     ][, "inc_exons_by_idx" := NULL]
   )
+  # The biotype is a label only, for example to show NMD-annotated transcripts.
+  tx_index <- annotation_index$transcripts
+  ans[, transcript_type := tx_index$transcript_type[match(transcript_id, tx_index$transcript_id)]]
   .return_splice_output(ans, obj = .spi_obj, what = "matched", return_class = return_class)
 }
 

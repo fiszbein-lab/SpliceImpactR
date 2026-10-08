@@ -22,7 +22,7 @@ overview_spicing_comparison(
 \item{sample_df}{Metadata `data.frame` with sample-level paths and conditions.}
 
 \item{depth_norm}{Normalization mode: `'exon_files'` (compute from read files)
-or `'user-given'` (use provided size factors).}
+or `'user-given'` (use a positive `sizeFactor` column in `sample_df`).}
 
 \item{event_type}{Character string specifying the event class (e.g., `"AFE"`, `"ALE"`).}
 

@@ -348,6 +348,26 @@ build_coding_index <- function(ann) {
   outE
 }
 
+#' Drop the exons covering an A5SS partner interval (internal)
+#'
+#' An A5SS form lists its variable exon and the partner exon downstream of it.
+#' Removing the partner keeps the frame test at the variable exon, as for a
+#' form defined by the variable exon alone.
+#' @keywords internal
+#' @noRd
+.drop_partner_exon <- function(annotations, tx, exons_vec, inc, strand) {
+  if (length(exons_vec) < 2L || is.na(inc) || !nzchar(inc) || !strand %in% c("+", "-")) {
+    return(exons_vec)
+  }
+  iv <- tryCatch(.si_rank_intervals(inc), error = function(e) IRanges::IRanges())
+  if (length(iv) < 2L) return(exons_vec)
+  partner <- if (strand == "+") iv[length(iv)] else iv[1L]
+  cand <- annotations[type == "exon" & transcript_id == tx & exon_id %chin% exons_vec]
+  partner_ids <- cand[start <= IRanges::end(partner) & end >= IRanges::start(partner), exon_id]
+  keep <- setdiff(exons_vec, partner_ids)
+  if (length(keep)) keep else exons_vec
+}
+
 #' Compare reading frames at the exon start boundary
 #' @param E `data.table` from [build_coding_index()], containing exon-level
 #'   frame information (`start_frame`, `stop_frame`, `strand`).
@@ -472,6 +492,10 @@ build_coding_index <- function(ann) {
   Y <- E[transcript_id == tx2]
   if (!nrow(X) || !nrow(Y)) return(FALSE)
 
+  # The main index is keyed by exon ID, not biological transcript order.
+  data.table::setorder(X, t_ord)
+  data.table::setorder(Y, t_ord)
+
   i <- which(X$exon_id == e1)[1]
   j <- which(Y$exon_id == e2)[1]
   if (is.na(i) || is.na(j)) return(FALSE)
@@ -566,12 +590,15 @@ compare_frames <- function(hits,
                            allow_ale_fs = FALSE) {
   print(paste0("[Processing] Identifying frame shifts and rescues"))
   H <- as.data.table(hits)
+  has_inc <- all(c("inc_case", "inc_control", "strand") %in% names(H))
 
-  E <- build_coding_index(annotations)
+  # Without rows nothing is looked up, so no annotation is needed.
+  E <- if (nrow(H)) build_coding_index(annotations) else NULL
 
-  # compute per-row
+  # compute per-row; with zero rows, data.table still evaluates this once on
+  # empty columns to type the result, so the test must accept length zero.
   res <- H[, {
-    if (pc_class == "protein_coding") {
+    if (isTRUE(pc_class == "protein_coding")) {
 
       et <- as.character(event_type)
       tx1 <- as.character(transcript_id_case)
@@ -584,6 +611,12 @@ compare_frames <- function(hits,
         e1 <- pick$exon1
         e2 <- pick$exon2
       } else {
+        if (et == "A5SS" && has_inc) {
+          # The frame is tested at the variable exon, not the partner after it
+          # (A3SS's variable exon is already the last event exon).
+          e1 <- .drop_partner_exon(annotations, tx1, e1, as.character(inc_case), as.character(strand))
+          e2 <- .drop_partner_exon(annotations, tx2, e2, as.character(inc_control), as.character(strand))
+        }
         e1 <- .pick_last_exon(annotations, tx1, e1)
         e2 <- .pick_last_exon(annotations, tx2, e2)
       }
@@ -668,10 +701,16 @@ compare_frames <- function(hits,
 #' table suitable for downstream summarization or visualization.
 #'
 #' The summary label `summary_classification` follows this precedence:
-#' 1. `"Match"` - identical protein sequences.
-#' 2. `"FrameShift"` - frame disrupted.
+#' 1. `"NMD"` - a member is annotated as nonsense-mediated decay
+#'    (`transcript_type`). It is taken to make no protein; `frame_call` still
+#'    records the frameshift that usually causes the decay.
+#' 2. `"Match"` - identical protein sequences.
 #' 3. `"Rescue"` - frame restored downstream.
-#' 4. Otherwise, inherited from `pc_class`.
+#' 4. `"FrameShift"` - frame disrupted.
+#' 5. Otherwise, inherited from `pc_class`.
+#'
+#' Biotypes are taken from `transcript_type_case`/`transcript_type_control`
+#' when the pairs carry them (both matchers add them), otherwise from `ann`.
 #'
 #' @param complete_hits `data.frame`, `data.table`, or `SpliceImpactResult`
 #'   containing complete event information for inclusion/exclusion transcript
@@ -687,8 +726,10 @@ compare_frames <- function(hits,
 #' \describe{
 #'   \item{frame_call}{Result from [compare_frames()].}
 #'   \item{rescue}{Rescue classification.}
-#'   \item{summary_classification}{One of `"FrameShift"`, `"Rescue"`,
+#'   \item{summary_classification}{One of `"NMD"`, `"FrameShift"`, `"Rescue"`,
 #'   `"Match"`, or the original `pc_class`.}
+#'   \item{transcript_type_case, transcript_type_control}{Annotated biotypes,
+#'   added from `ann` when the input lacks them.}
 #' }
 #'
 #' @seealso [compare_frames()], [compare_sequences_alignment()]
@@ -718,6 +759,25 @@ compare_sequence_frame <- function(complete_hits, ann, return_class = c("auto", 
   hits_compare_frame[frame_call == 'FrameShift', summary_classification := 'FrameShift']
   hits_compare_frame[rescue != 'noRescue' & !is.na(rescue), summary_classification := 'Rescue']
   hits_compare_frame[protein_seq_control == protein_seq_case & !is.na(protein_seq_case), summary_classification := "Match"]
+
+  # Biotypes come from the matchers' pairs, otherwise from the annotation.
+  biotype_cols <- c("transcript_type_case", "transcript_type_control")
+  if (!all(biotype_cols %in% names(hits_compare_frame))) {
+    A <- data.table::as.data.table(ann)
+    if (all(c("type", "transcript_id", "transcript_type") %in% names(A))) {
+      bt <- unique(A[type == "transcript", .(transcript_id, transcript_type)])
+      hits_compare_frame[, (biotype_cols) := list(
+        bt$transcript_type[match(transcript_id_case, bt$transcript_id)],
+        bt$transcript_type[match(transcript_id_control, bt$transcript_id)])]
+    }
+  }
+  # An NMD-annotated transcript is taken to make no protein; frame_call still
+  # shows the frameshift that usually causes the decay.
+  if (all(biotype_cols %in% names(hits_compare_frame))) {
+    hits_compare_frame[transcript_type_case %chin% "nonsense_mediated_decay" |
+                         transcript_type_control %chin% "nonsense_mediated_decay",
+                       summary_classification := "NMD"]
+  }
 
   return(.return_splice_output(hits_compare_frame, obj = .spi_obj, what = "paired_hits", return_class = return_class))
 }

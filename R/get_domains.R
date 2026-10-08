@@ -63,6 +63,7 @@ domains_on_exons <- function(Dexon, tx, exons_vec) {
 #' @return Character vector of domain identifiers.
 #' @keywords internal
 domains_on_protein <- function(Dtx, tx) {
+  if (!length(tx)) return(character(0))
   row <- Dtx[list(tx)]
   if (!nrow(row)) return(character(0))
   unique(unlist(row$doms, use.names = FALSE))
@@ -209,10 +210,10 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE, retur
   return_class <- match.arg(return_class)
   .spi_in <- .resolve_splice_input(hits, what = "paired_hits")
   .spi_obj <- .spi_in$obj
-  LU <- build_domain_lookup(exon_features)
-  Dexon <- LU$Dexon; Dtx <- LU$Dtx
-
   H <- as.data.table(.spi_in$dt)
+  # Without rows nothing is looked up, so no exon features are needed.
+  LU <- if (nrow(H)) build_domain_lookup(exon_features) else list(Dexon = NULL, Dtx = NULL)
+  Dexon <- LU$Dexon; Dtx <- LU$Dtx
 
   res <- H[, {
 
@@ -229,8 +230,9 @@ get_domains <- function(hits, exon_features, show_protein_domains = FALSE, retur
     # event class
     et <- as.character(event_type %||% event_type %||% "")
 
+    # isTRUE: with zero rows, data.table evaluates this once on empty columns.
     term <- et %chin% c("AFE","ALE","HFE","HLE")
-    if (term) {
+    if (isTRUE(term)) {
       dei_dt <- .parse_domain_coords(dei)
       dpe_dt <- .parse_domain_coords(dpe)
       dee_dt <- .parse_domain_coords(dee)

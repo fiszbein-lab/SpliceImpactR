@@ -18,7 +18,9 @@ import_di_table(
 
 \item{colmap}{A named list mapping required fields in `df` to standard
 names (`gene_id`, `chr`, `strand`, `inc`, `exc`, `delta_psi`, `pvalue`,
-and optionally `event_type`).}
+and optionally `event_type`, `event_id`, `form`, and `padj`). Canonically
+named optional columns are preserved automatically. Forms belonging to
+the same event must share an event ID; grouping is never inferred by gene.}
 
 \item{default_event_type}{Character. Default `event_type` to assign if none
 provided (default `"SITE"`).}
@@ -31,7 +33,8 @@ to [stats::p.adjust()] (default `"fdr"`).}
 \value{
 A standardized `data.table` with columns:
   `site_id`, `event_type`, `gene_id`, `chr`, `strand`, `inc`, `exc`,
-  `delta_psi`, `p.value`, `padj`, and `form`.
+  `delta_psi`, `p.value`, `padj`, `form`, and `event_id`. Missing sample counts
+  are represented by `NA`. Without an event ID, each site is its own event.
 }
 \description{
 Converts an arbitrary differential inclusion result table into the
@@ -40,7 +43,9 @@ standardized column format expected by SpliceImpactR functions.
 \details{
 This function provides a uniform interface for importing external DI results
 (e.g. from rMATS, MAJIQ, or SUPPA2) so they can be compared or plotted
-alongside SpliceImpactR outputs.
+alongside SpliceImpactR outputs. Strands must be `+` or `-`; other values
+(such as `*` or `.`) are an error naming the affected events, since guessing
+a strand would mismatch minus-strand events.
 }
 \examples{
 df <- data.frame(

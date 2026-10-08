@@ -56,6 +56,18 @@
 #'   \item \code{k} = foreground count of pairs containing the domain.
 #' }
 #' P-values are Benjamini-Hochberg adjusted (`padj`).
+#' Foreground and background pairs without a tested domain change are excluded,
+#' so both are drawn from the same conditional population. With `db_filter`,
+#' that population is pairs with a change in the selected databases. When
+#' transcript IDs are supplied in both tables, repeated unordered pairs are
+#' counted once. Foreground pairs and their changed domains must belong to the
+#' corresponding background pairs.
+#' Odds ratios compare foreground pairs with the rest of the background.
+#' Without transcript IDs, rows must already be distinct pair observations and
+#' the caller is responsible for membership; impossible counts are rejected.
+#' Counts are per transcript pair, not per event: a multi-site event (for
+#' example an AFE with several first exons) can contribute one pair per
+#' comparison, which `n_event_comparisons` in the hits identifies.
 #'
 #' Optionally, analyses can be restricted by event type or database
 #' prefix (e.g. `"Pfam"`, `"SMART"`) and domains with fewer than
@@ -79,7 +91,8 @@
 #' @param min_fg_count Minimum number of foreground hits required to
 #'   test a domain (default `2`).
 #' @param delim Regular expression describing the delimiters in string
-#'   list columns (default `[,;|[:space:]]+`).
+#'   list columns (default `\\|`). Semicolons and spaces within a domain ID
+#'   are preserved; a list column is preferred.
 #'
 #' @return A `data.table` with one row per domain, including:
 #' \describe{
@@ -119,8 +132,7 @@
 #'
 #' hits_domain <- get_domains(seq_compare, exon_features)
 #'
-#' bg <- get_background(source = "hit_index",
-#'                      input = sample_frame,
+#' bg <- get_background(source = "annotated",
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
 #'
@@ -137,11 +149,22 @@ enrich_domains_hypergeo <- function(
     event_filter  = NULL,                  # e.g. c("A5SS","A3SS") or "AFE"
     db_filter     = NULL,                  # e.g. "Pfam" | c("Pfam","SMART")
     min_fg_count  = 2,                     # minimum foreground hits to test a domain
-    delim         = "[,;|[:space:]]+"
+    delim         = "\\|"
 ) {
   .spi_in <- .resolve_splice_input(hits, what = "paired_hits")
-  FG <- as.data.table(.spi_in$dt)
-  BG <- as.data.table(background)
+  FG <- data.table::copy(as.data.table(.spi_in$dt))
+  BG <- data.table::copy(as.data.table(background))
+  if (!domain_col_fg %in% names(FG) || !domain_col_bg %in% names(BG)) {
+    stop("Requested foreground/background domain columns are missing.")
+  }
+  if (length(min_fg_count) != 1L || !is.finite(min_fg_count) || min_fg_count < 0) {
+    stop("min_fg_count must be a non-negative number.")
+  }
+  empty_result <- function() data.table::data.table(
+    domain_id = character(), db = character(), k = integer(), K = integer(),
+    M = integer(), B = integer(), fg_prop = numeric(), bg_prop = numeric(),
+    OR = numeric(), pval = numeric(), padj = numeric(), events = character()
+  )
 
   # Optional event filtering
   if (!is.null(event_col) && !is.null(event_filter) && event_col %in% names(FG)) {
@@ -149,8 +172,49 @@ enrich_domains_hypergeo <- function(
   }
 
   # Parse list columns -> list of unique domain ids per row (presence/absence)
-  FG[, .fg_domains := .parse_listcol(either_domains_list, delim = delim)]
-  BG[, .bg_domains := .parse_listcol(total_sd_domains, delim = delim)]
+  FG[, .fg_domains := .parse_listcol(get(domain_col_fg), delim = delim)]
+  BG[, .bg_domains := .parse_listcol(get(domain_col_bg), delim = delim)]
+
+  # The supplied background represents domain-changing transcript pairs.
+  # Use the same conditional population for the foreground.
+  FG <- FG[lengths(.fg_domains) > 0L]
+  if (!"event_id" %in% names(FG)) FG[, event_id := as.character(seq_len(.N))]
+  pair_key <- function(x, choices) {
+    cols <- Filter(function(z) all(z %in% names(x)), choices)
+    if (!length(cols)) return(NULL)
+    a <- as.character(x[[cols[[1L]][1L]]])
+    b <- as.character(x[[cols[[1L]][2L]]])
+    if (anyNA(c(a, b)) || any(!nzchar(c(a, b)))) {
+      stop("Transcript-pair identifiers must be non-missing and non-empty.")
+    }
+    paste(pmin(a, b), pmax(a, b), sep = "|")
+  }
+  fg_key <- pair_key(FG, list(c("transcript_id_case", "transcript_id_control")))
+  bg_key <- pair_key(BG, list(c("transcript_id_1", "transcript_id_2"),
+                              c("transcript_id", "i.transcript_id")))
+  if (xor(is.null(fg_key), is.null(bg_key))) {
+    stop("Provide transcript-pair identifiers in both foreground and background, or neither.")
+  }
+  if (!is.null(fg_key)) {
+    FG[, .pair_key := fg_key]
+    BG[, .pair_key := bg_key]
+    FG <- FG[, .(.fg_domains = list(unique(unlist(.fg_domains))),
+                 event_id = paste(unique(event_id), collapse = "|")), by = .pair_key]
+    BG <- BG[, .(.bg_domains = list(unique(unlist(.bg_domains)))), by = .pair_key]
+    absent <- FG$.pair_key[!FG$.pair_key %chin% BG$.pair_key]
+    if (length(absent)) {
+      stop(sprintf(paste0(
+        "%d of %d foreground transcript pairs are absent from the background (e.g. %s). ",
+        "Supply a universe containing all tested pairs, such as get_background(source = \"annotated\"); ",
+        "a source = \"hit_index\" background keeps one transcript per observed exon and rarely contains them."),
+        length(absent), nrow(FG), paste(utils::head(absent, 3L), collapse = ", ")))
+    }
+    bg_for_fg <- BG[FG, on = ".pair_key"]
+    if (any(!vapply(Map(function(a, b) all(a %in% b),
+                       bg_for_fg$.fg_domains, bg_for_fg$.bg_domains), isTRUE, logical(1)))) {
+      stop("Foreground domain changes are absent from the corresponding background pair. Use matching feature definitions.")
+    }
+  }
 
   # Optional DB filter (keep only domains whose prefix matches db_filter)
   if (!is.null(db_filter)) {
@@ -163,10 +227,16 @@ enrich_domains_hypergeo <- function(
     BG[, .bg_domains := lapply(.bg_domains, keep_db)]
   }
 
+  # Condition both populations on at least one tested domain change.
+  FG <- FG[lengths(.fg_domains) > 0L]
+  BG <- BG[lengths(.bg_domains) > 0L]
+
   # Foreground totals
   K <- nrow(FG)  # number of FG pairs
   # Background totals
   B <- nrow(BG)  # number of BG pairs
+  if (K > B) stop("Foreground pair count exceeds the background population.")
+  if (!K) return(empty_result())
 
   # Explode to long (presence), counting once per pair
   fg_long <- FG[, .(domain_id = unlist(.fg_domains),
@@ -181,16 +251,15 @@ enrich_domains_hypergeo <- function(
   tallies <- merge(bg_counts, fg_counts, by = "domain_id", all = TRUE)
   tallies[is.na(M), M := 0L]
   tallies[is.na(k), k := 0L]
+  if (any(tallies$k > tallies$M | K - tallies$k > B - tallies$M)) {
+    stop("Foreground counts are not a subset of the background population.")
+  }
 
   # Drop ultra-rare in FG if requested
   tallies <- tallies[k >= as.integer(min_fg_count)]
 
   if (!nrow(tallies)) {
-    return(data.table(
-      domain_id = character(), db = character(), K = integer(), B = integer(),
-      k = integer(), M = integer(), fg_prop = numeric(), bg_prop = numeric(),
-      OR = numeric(), pval = numeric(), padj = numeric()
-    ))
+    return(empty_result())
   }
 
   # Hypergeometric: P(X >= k) with X~Hyper(M, B-M, K)
@@ -206,13 +275,13 @@ enrich_domains_hypergeo <- function(
   tallies[, `:=`(
     a = k + 0.5,
     b = (K - k) + 0.5,
-    c = M + 0.5,
-    d = (B - M) + 0.5
+    c = (M - k) + 0.5,
+    d = (B - M - K + k) + 0.5
   )]
 
   tallies[, `:=`(
     OR = (a * d) / (b * c),
-    pval = stats::phyper(pmax(k - 1L, 0L), M, pmax(B - M, 0L), K, lower.tail = FALSE)
+    pval = stats::phyper(k - 1L, M, B - M, K, lower.tail = FALSE)
   )]
   tallies[, padj := p.adjust(pval, method = "BH")]
   # Adjust p-values (BH)
@@ -261,8 +330,7 @@ enrich_domains_hypergeo <- function(
 #'
 #' hits_domain <- get_domains(seq_compare, exon_features)
 #'
-#' bg <- get_background(source = "hit_index",
-#'                      input = sample_frame,
+#' bg <- get_background(source = "annotated",
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
 #'
@@ -309,8 +377,7 @@ enrich_by_event <- function(hits, background, events, ...) {
 #'
 #' hits_domain <- get_domains(seq_compare, exon_features)
 #'
-#' bg <- get_background(source = "hit_index",
-#'                      input = sample_frame,
+#' bg <- get_background(source = "annotated",
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
 #'
@@ -372,8 +439,7 @@ enrich_by_db <- function(hits, background, dbs, ...) {
 #' exon_features <- get_exon_features(annotation_df$annotations, protein_feature_total)
 #'
 #' hits_domain <- get_domains(seq_compare, exon_features)
-#' bg <- get_background(source = "hit_index",
-#'                      input = sample_frame,
+#' bg <- get_background(source = "annotated",
 #'                      annotations = annotation_df$annotations,
 #'                      protein_features = protein_feature_total)
 #' enriched_domains <- enrich_domains_hypergeo(hits_domain, bg, db_filter = 'interpro')
@@ -400,7 +466,7 @@ plot_enriched_domains_counts <- function(enriched_domains,
 
   # count event_ids from the pipe-separated 'events' column
   DT[, n_events := vapply(strsplit(as.character(events), "\\|"),
-                          function(v) sum(nzchar(v)), integer(1))]
+                          function(v) length(unique(v[nzchar(v)])), integer(1))]
 
   # convenience metrics for color/tooltip
   if ("padj" %in% names(DT)) DT[, ml10 := -log10(padj)]
@@ -410,6 +476,10 @@ plot_enriched_domains_counts <- function(enriched_domains,
   ORD <- order(DT$padj, decreasing = FALSE, na.last = NA)
 
   keep <- DT[ORD][seq_len(min(top_n, .N))]
+  if (!nrow(keep)) {
+    return(ggplot2::ggplot() + ggplot2::theme_void() +
+             ggplot2::labs(title = "No enriched domains at the selected cutoff"))
+  }
 
   # factor for display order
   keep[, label := as.character(domain_id)]

@@ -95,6 +95,20 @@ Or to load from cached annotations previously loaded:
 annotation_df <- get_annotation(load="cached", base_dir="./path/")
 ```
 
+By default, reference preparation keeps transcripts with TSL 1, 2, or 3.
+To retain transcripts regardless of TSL, including missing or unknown values,
+set `filter_tsl = NULL`:
+
+```r
+annotation_df <- get_annotation(load = "link", filter_tsl = NULL)
+annotation_df <- get_annotation(load = "cached", filter_tsl = NULL)
+```
+
+TSL-filtered and unfiltered references have separate processed cache entries.
+Use the same setting when preparing and reloading a reference. This option
+disables only the TSL filter; gene-biotype and incomplete-CDS tag filters still
+apply. The bundled test reference is loaded as stored.
+
 ### Load protein features (BioMart / ELM / manual)
 `get_protein_features()` supports:
 - `interpro`: integrated domain/family/superfamily signatures.
@@ -340,10 +354,17 @@ This matching is done through a strict hierarchy:
 3. Remove candidates that overlap exclusion (`exc`) coordinates.
 4. Prioritize transcript/exon choices by event-type-consistent exon class
    (`first`, `internal`, `last`), then reciprocal overlap and intersection
-   width; protein-linked transcripts are preferred when available.
+   width; protein-coding status and then TSL only break remaining ties.
 5. Build case/control pairs in `get_pairs(source = "multi")` by joining all
    positive `delta_psi` rows (case) with all negative rows (control) for each
    `event_id`, then ordering by strongest `|delta_psi|`.
+   For an event with several sites, such as an AFE with three first exons,
+   each rising x falling pair of sites is its own comparison, so a site can
+   appear in several rows. `keep_sig_pairs()` keeps every site of an event in
+   which any site passes; `site_significant_case`/`_control` show which sites
+   passed themselves, and `n_event_comparisons` gives the number of
+   comparisons the event defines. Pair counts, including domain enrichment,
+   count comparisons rather than events.
 
 ```r
 matched <- get_matched_events_chunked(res_di, annotation_df$annotations, chunk_size = 2000)
@@ -388,6 +409,8 @@ Key labels used in sequence/frame outputs:
 - `noPC`: neither isoform has a protein ID.
 - `Match`: protein sequences are identical.
 - `FrameShift`: reading frame is disrupted between isoforms.
+- `NMD`: an isoform is annotated as nonsense-mediated decay, so it is taken to
+  make no protein (`frame_call` still shows the frameshift that usually causes it).
 
 We can also perform analysis looking at how events impact protein length
 ```r
@@ -397,7 +420,10 @@ length_output
 
 ## Get background
 We next must get a background set for domain enrichment analysis. We can do this through 
-all annotated transcripts, a given set of possible transcripts, or the hit-index's .exon files
+all annotated transcripts (the default), a given set of possible transcripts, or the hit-index's .exon files.
+Use the annotated background for domain enrichment: a hit-index background keeps one transcript
+per observed exon, so it usually lacks the matched pairs and `enrich_domains_hypergeo()` rejects it.
+Its gene universes still work for gene-level enrichment.
 ```r
 bg <- get_background(source = "annotated",
                      annotations = annotation_df$annotations,
@@ -462,7 +488,8 @@ increase foreground size (relax DI cutoffs), broaden background, and/or lower
 ```r
 enrichment_di <- get_enrichment(
   foreground = fg_di,
-  background = bg$gene_id,
+  background = intersect(attr(bg, "gene_universe"),
+                         res$gene_id[is.finite(res$padj)]),
   species = "human",
   gene_id_type = "ensembl",
   sources = "GO:BP",
@@ -864,18 +891,27 @@ user_res <- get_user_data_post_di(example_user_data)
 ```
 
 ### Import rMATS post-DI results directly
+rMATS reports `IncLevelDifference` as mean(`IncLevel1`) - mean(`IncLevel2`),
+where group 1 holds the `--b1` samples. SpliceImpactR reads it as case - control,
+so by default rMATS group 1 is the case. If your case samples were `--b2`, set
+`case_group = 2`; with a file table you can also name the case group, for example
+`case_group = "KO"`. Each import reports which group it treated as the case.
+
 Multiple files:
 ```r
 input <- data.frame(
   path = c("/path/A3SS.MATS.JC.txt", "/path/A5SS.MATS.JC.txt"),
+  grp1 = c("WT", "WT"),
+  grp2 = c("KO", "KO"),
   event_type = c("A3SS", "A5SS"),
   stringsAsFactors = FALSE
 )
 
-# res_rmats_di <- get_rmats_post_di(input)
+# res_rmats_di <- get_rmats_post_di(input, case_group = "KO")
 ```
 
-Single preloaded rMATS table:
+Single preloaded rMATS table. Inclusion is higher in group 1, the case, so the
+inclusion form gets `delta_psi = 1`:
 ```r
 rmats_df <- data.frame(
   ID = 1L,
@@ -890,16 +926,16 @@ rmats_df <- data.frame(
   flankingES = 45505357L,
   flankingEE = 45505431L,
   ID.2 = 2L,
-  IJC_SAMPLE_1 = "1,1,1",
-  SJC_SAMPLE_1 = "1,1,1",
-  IJC_SAMPLE_2 = "1,1,1",
-  SJC_SAMPLE_2 = "1,1,1",
+  IJC_SAMPLE_1 = "5,5,5",
+  SJC_SAMPLE_1 = "0,0,0",
+  IJC_SAMPLE_2 = "0,0,0",
+  SJC_SAMPLE_2 = "5,5,5",
   IncFormLen = 52L,
   SkipFormLen = 49L,
   PValue = 0.6967562,
   FDR = 1,
-  IncLevel1 = "0.0,0.0,0.0",
-  IncLevel2 = "1.0,1.0,1.0",
+  IncLevel1 = "1.0,1.0,1.0",
+  IncLevel2 = "0.0,0.0,0.0",
   IncLevelDifference = 1.0,
   stringsAsFactors = FALSE
 )
@@ -941,3 +977,25 @@ SpliceImpactR maps alternative RNA processing events driving protein functional 
 https://www.biorxiv.org/content/10.1101/2025.06.20.660706v1
 https://github.com/fiszbein-lab/SpliceImpactR
 ```
+
+
+## Alternate transcript-pair matching (opt-in)
+
+`get_ranked_pairs(res_di, annotation_df$annotations, annotation_df$sequences)`
+checks event-specific structure and ranks compatible pairs jointly using
+coding status (an annotated CDS, so NMD-annotated transcripts count), TSL tiers
+and how much coding-region structure the two transcripts share outside the
+event (a comparison that does not penalise a frameshifted isoform for its early
+stop). When no structural pair exists, a
+labelled `approximate` pair is chosen with the legacy overlap rules
+(`fallback = FALSE` disables this). The returned list includes selected
+`pairs`, candidate eligibility, complete pair rankings and unresolved
+comparisons. The existing matcher remains the default; use `matching = "orf"`
+in `get_splicing_impact()` to opt into the alternate pipeline.
+
+See `vignette("transcript_pair_ranking", package = "SpliceImpactR")` for the
+step-by-step protocol, the exact ordering of the ranking criteria, and its
+tradeoffs. Event-defining boundaries must match exactly (outer flank ends and
+TSS/PAS ends may differ, with a `relaxed` label), so some events stay
+unresolved; scores and ties are descriptive diagnostics, not expression
+probabilities.

@@ -44,9 +44,8 @@ queries.
 }
 \details{
 The function queries the Ensembl BioMart service using
-\pkg{biomaRt::getBM()} with filters \code{"chromosome_name"} and
-\code{"transcript_biotype"}, restricted to
-\code{"protein_coding"} transcripts. Queries are executed in chunks
-per chromosome group to avoid API timeouts.
+\pkg{biomaRt::getBM()} with the \code{"ensembl_transcript_id"} filter,
+restricted to protein-coding transcript IDs in the supplied annotation.
+Every request contains at most \code{max_accession_size} transcript IDs.
 }
 \keyword{internal}
