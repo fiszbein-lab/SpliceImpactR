@@ -15,103 +15,72 @@ split_into_bits <- function(gtf_df, max_group_size) {
   split(ids, ceiling(seq_along(ids) / as.integer(max_group_size)))
 }
 
-#' Create a biomaRt Ensembl connection with explicit mirror fallback (internal)
+#' Ensembl BioMart archive hosts by release (internal)
+#'
+#' Ensembl 116 (June 2026) is the last release with BioMart, and
+#' www.ensembl.org no longer serves it: each release is queried at its own
+#' archive host.
+#' @noRd
+.si_ensembl_archives <- c(
+  "105" = "https://dec2021.archive.ensembl.org",
+  "106" = "https://apr2022.archive.ensembl.org",
+  "107" = "https://jul2022.archive.ensembl.org",
+  "108" = "https://oct2022.archive.ensembl.org",
+  "109" = "https://feb2023.archive.ensembl.org",
+  "110" = "https://jul2023.archive.ensembl.org",
+  "111" = "https://jan2024.archive.ensembl.org",
+  "112" = "https://may2024.archive.ensembl.org",
+  "113" = "https://oct2024.archive.ensembl.org",
+  "114" = "https://may2025.archive.ensembl.org",
+  "115" = "https://sep2025.archive.ensembl.org",
+  "116" = "https://jun2026.archive.ensembl.org"
+)
+
+#' Whether biomaRt queries the Ensembl 116 archive itself (internal)
+#'
+#' Earlier versions send queries for the newest archive to www.ensembl.org.
+#' @noRd
+.si_biomart_supports_final_release <- function() {
+  utils::packageVersion("biomaRt") >= "2.70.0"
+}
+
+#' Connect to an Ensembl BioMart archive (internal)
 #'
 #' @param dataset Ensembl dataset (e.g. `"hsapiens_gene_ensembl"`).
-#' @param version Ensembl release version.
+#' @param version Ensembl release; its archive host is used unless `host` is
+#'   given.
 #' @param biomart Biomart name, default `"genes"`.
-#' @param ensembl_mirror Optional mirror (`"www"`, `"useast"`, `"asia"`).
+#' @param host Optional BioMart host, used as given.
 #' @param verbose Logical passed to `biomaRt::useEnsembl()`.
 #' @return A `Mart` object.
 #' @keywords internal
 .si_use_ensembl_mart <- function(dataset,
                                  version,
                                  biomart = "genes",
-                                 ensembl_mirror = NULL,
+                                 host = NULL,
                                  verbose = FALSE) {
-  valid_mirrors <- c("useast", "www", "asia")
-  if (!is.null(ensembl_mirror) && !(ensembl_mirror %in% valid_mirrors)) {
-    stop(
-      "Invalid ensembl_mirror='", ensembl_mirror,
-      "'. Use one of: ", paste(valid_mirrors, collapse = ", "),
-      call. = FALSE
-    )
-  }
-
-  # biomaRt does not support mirror + version/GRCh together.
-  # When a specific release is requested, connect directly by version.
-  if (!is.null(version) && !is.na(version)) {
-    if (!is.null(ensembl_mirror)) {
-      message(
-        "[PROCESSING] Ignoring ensembl_mirror='", ensembl_mirror,
-        "' because biomaRt does not combine mirror with version/GRCh."
-      )
-    }
-    mart <- tryCatch(
-      biomaRt::useEnsembl(
-        biomart = biomart,
-        dataset = dataset,
-        version = version,
-        verbose = verbose
-      ),
-      error = function(e) {
-        stop(
-          "Unable to connect to Ensembl release ",
-          version,
-          " for dataset '",
-          dataset,
-          "': ",
-          conditionMessage(e),
-          call. = FALSE
-        )
-      }
-    )
-    return(mart)
-  }
-
-  if (is.null(ensembl_mirror)) {
-    mirrors <- valid_mirrors
-  } else {
-    mirrors <- c(ensembl_mirror, setdiff(valid_mirrors, ensembl_mirror))
-  }
-
-  errs <- character(0)
-  for (m in mirrors) {
-    attempt <- tryCatch(
-      list(
-        mart = biomaRt::useEnsembl(
-          biomart = biomart,
-          dataset = dataset,
-          version = version,
-          mirror = m,
-          verbose = verbose
-        ),
-        err = NULL
-      ),
-      error = function(e) {
-        list(
-          mart = NULL,
-          err = paste0("mirror=", m, ": ", conditionMessage(e))
-        )
-      }
-    )
-    if (!is.null(attempt$err)) errs <- c(errs, attempt$err)
-    mart <- attempt$mart
-    if (!is.null(mart)) {
-      if (!identical(m, mirrors[1])) {
-        message("[PROCESSING] Ensembl mirror fallback succeeded on: ", m)
-      }
-      return(mart)
+  if (is.null(host)) {
+    host <- unname(.si_ensembl_archives[as.character(version)])
+    if (length(host) != 1L || is.na(host)) {
+      stop("Ensembl BioMart is available for releases 105 to 116 only (not ",
+           version, "). Choose a release in that range or pass `ensembl_host`.",
+           call. = FALSE)
     }
   }
-
-  stop(
-    paste0(
-      "Unable to connect to any Ensembl mirror.\n",
-      "Tried: ", paste(mirrors, collapse = ", "), "\n",
-      paste(errs, collapse = "\n")
-    ),
-    call. = FALSE
+  if (identical(sub("/+$", "", tolower(host)), .si_ensembl_archives[["116"]]) &&
+      !.si_biomart_supports_final_release()) {
+    stop("Ensembl 116 needs biomaRt 2.70 or later; earlier versions send its ",
+         "queries to www.ensembl.org, which no longer serves BioMart. Update ",
+         "biomaRt or use release 115 or earlier.", call. = FALSE)
+  }
+  tryCatch(
+    biomaRt::useEnsembl(biomart = biomart, dataset = dataset, host = host, verbose = verbose),
+    error = function(e) {
+      stop("Unable to connect to Ensembl BioMart at ", host, " for dataset '",
+           dataset, "': ", conditionMessage(e), "\nEnsembl archives are ",
+           "sometimes temporarily unavailable (HTTP 500/503 or time-outs); ",
+           "try again later or choose another release.", call. = FALSE)
+    }
   )
 }
 
@@ -131,9 +100,10 @@ split_into_bits <- function(gtf_df, max_group_size) {
 #' @param species_dataset Character string giving the Ensembl BioMart
 #'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 #'   \code{"mmusculus_gene_ensembl"}.
-#' @param release Release version from Ensembl associated with the GENCODE
-#'   version used in [get_annotation()]. See the GENCODE human release listing
-#'   to map GENCODE and Ensembl versions.
+#' @param release Ensembl release whose BioMart archive is queried (105 to
+#'   116), matching the GENCODE release used in [get_annotation()].
+#' @param ensembl_host Optional BioMart host, used instead of the archive of
+#'   \code{release}.
 #'
 #' @return A \code{data.table} containing protein feature annotations
 #'   including transcript and peptide IDs, feature start/end positions,
@@ -151,14 +121,14 @@ get_biomart_protein_features <- function(protein_features = c("interpro"),
                                          gtf_df,
                                          max_accession_size = 3500,
                                          species_dataset = "hsapiens_gene_ensembl",
-                                         release = 109,
-                                         ensembl_mirror = NULL) {
+                                         release = 111,
+                                         ensembl_host = NULL) {
   old_options <- options(biomaRt.cache = FALSE)
   on.exit(options(old_options), add = TRUE)
   mart <- .si_use_ensembl_mart(
     dataset = species_dataset,
     version = release,
-    ensembl_mirror = ensembl_mirror
+    host = ensembl_host
   )
   atts <- c("ensembl_transcript_id", "ensembl_peptide_id",
             if ("interpro" %in% protein_features) c("interpro", "interpro_short_description", "interpro_description", "interpro_start", "interpro_end"),
@@ -466,6 +436,7 @@ add_user_features <- function(x, default_database = "user") {
 #' @param species Character species dataset string.
 #' @param release Ensembl release.
 #' @param combine_overlaps Logical merge behavior.
+#' @param ensembl_host Optional BioMart host; recorded in the key when given.
 #' @return Character cache key.
 #' @keywords internal
 .si_pf_cache_key <- function(biomaRt_databases,
@@ -473,7 +444,8 @@ add_user_features <- function(x, default_database = "user") {
                              sequences,
                              species,
                              release,
-                             combine_overlaps) {
+                             combine_overlaps,
+                             ensembl_host = NULL) {
   dbs <- sort(unique(as.character(biomaRt_databases)))
   db_tag <- if (length(dbs)) paste(dbs, collapse = ",") else "none"
   db_tag <- gsub("[^A-Za-z0-9,._-]+", "_", db_tag)
@@ -488,6 +460,8 @@ add_user_features <- function(x, default_database = "user") {
     "protein_features/schema-2/v", pkg_ver,
     "/species-", species,
     "/release-", release,
+    # Keys without an explicit host are unchanged.
+    if (!is.null(ensembl_host)) paste0("/host-", gsub("[^a-z0-9.-]+", "_", sub("/+$", "", tolower(ensembl_host)))),
     "/db-", db_tag,
     "/combine-", as.character(isTRUE(combine_overlaps)),
     "/gtf-", gtf_sig,
@@ -507,11 +481,11 @@ add_user_features <- function(x, default_database = "user") {
 #' @param species Character string giving the Ensembl BioMart
 #'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 #'   \code{"mmusculus_gene_ensembl"}.
-#' @param release Release version from Ensembl associated with the GENCODE
-#'   version used in [get_annotation()]. See the GENCODE human release listing
-#'   to map GENCODE and Ensembl versions.
-#' @param ensembl_mirror Optional Ensembl mirror passed to the BioMart
-#'   connector.
+#' @param release Ensembl release whose BioMart archive maps UniProt to
+#'   Ensembl IDs (105 to 116), matching the GENCODE release used in
+#'   [get_annotation()].
+#' @param ensembl_host Optional BioMart host, used instead of the archive of
+#'   \code{release}.
 #'
 #' @return A \code{data.table} containing protein feature annotations
 #'   including transcript and peptide IDs, feature start/end positions,
@@ -527,8 +501,8 @@ add_user_features <- function(x, default_database = "user") {
 get_linear_motifs <- function(gtf_df,
                               protein_seqs,
                               species = c("hsapiens_gene_ensembl", "mmusculus_gene_ensembl"),
-                              release = 109,
-                              ensembl_mirror = NULL) {
+                              release = 111,
+                              ensembl_host = NULL) {
   
   species <- match.arg(species)
   if (!is.numeric(release) || length(release) != 1L || is.na(release)) {
@@ -543,7 +517,7 @@ get_linear_motifs <- function(gtf_df,
   mart <- .si_use_ensembl_mart(
     dataset = species,
     version = release,
-    ensembl_mirror = ensembl_mirror
+    host = ensembl_host
   )
   atts <- c("uniprotswissprot", "ensembl_transcript_id", "ensembl_peptide_id")
   swiss_ids <- data.table(biomaRt::getBM(attributes = atts,
@@ -607,20 +581,31 @@ get_linear_motifs <- function(gtf_df,
 #' @param force_refresh Logical; if `TRUE`, recompute and overwrite any
 #'   existing BiocFileCache entry for this parameter/input signature.
 #' @param timeout ability to extend timeout if biomaRt is not cooperating
-#' @param ensembl_mirror Optional Ensembl mirror to try first for BioMart
-#'   connections; one of `"useast"`, `"www"`, or `"asia"`. If `NULL`,
-#'   mirrors are tried in fallback order when `release = NULL`. If a
-#'   specific `release` is provided, biomaRt ignores mirror selection.
+#' @param ensembl_mirror Deprecated and ignored. Ensembl retired its BioMart
+#'   mirrors; queries go to the archive of `release` (or `ensembl_host`).
 #' @param species Character string giving the Ensembl BioMart
 #' dataset (default \code{"human"}). For mouse, use
 #' \code{"mouse"}.
-#' @param release Release version from Ensembl associated with the GENCODE
-#'   version used in [get_annotation()]. See the GENCODE human/mouse release
-#'   listings to map GENCODE and Ensembl versions.
+#' @param release Ensembl release whose BioMart archive is queried, 105 to 116
+#'   (default 111). Use the release that matches the GENCODE annotation from
+#'   [get_annotation()]; GENCODE lists the Ensembl release of each of its
+#'   releases (human v45, the [get_annotation()] default, and mouse M34 are
+#'   Ensembl 111).
 #' @param test Logical; bool for whether to load from reduced test set.
 #' @param combine_overlaps simplifies protein feature output and combines
 #' protein features with the same ID and overlapping coords. Sometimes not 
 #' desireable
+#' @param ensembl_host Optional BioMart host, for example
+#'   `"https://jan2024.archive.ensembl.org"`, used instead of the archive of
+#'   `release` (for example, if Ensembl moves an archive).
+#'
+#' @details
+#' Ensembl 116 (June 2026) is the last release with BioMart, and
+#' www.ensembl.org no longer serves it, so features are fetched from the
+#' Ensembl archive of `release`. Archives are sometimes temporarily unavailable
+#' (HTTP 500/503 or time-outs); retry later or choose another release. Release
+#' 116 needs biomaRt 2.70 or later. `elm` motifs come from the ELM database and
+#' are mapped to transcripts through the same BioMart archive.
 #'
 #' @importFrom data.table rbindlist rleid
 #' @examples
@@ -642,10 +627,19 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
                                  timeout = 600,
                                  ensembl_mirror = NULL,
                                  species = c("human", "mouse"),
-                                 release = 109,
+                                 release = 111,
                                  test = FALSE,
-                                 combine_overlaps = FALSE) {
+                                 combine_overlaps = FALSE,
+                                 ensembl_host = NULL) {
   species <- match.arg(species)
+  if (!is.null(ensembl_mirror)) {
+    warning("`ensembl_mirror` is deprecated and ignored: Ensembl retired its ",
+            "BioMart mirrors. Use `release` or `ensembl_host`.", call. = FALSE)
+  }
+  if (!is.null(ensembl_host) && (!is.character(ensembl_host) || length(ensembl_host) != 1L ||
+                                 is.na(ensembl_host) || !nzchar(ensembl_host))) {
+    stop("`ensembl_host` must be NULL or a single BioMart host URL.")
+  }
   if (!is.numeric(release) || length(release) != 1L || is.na(release)) {
     stop("`release` must be a single numeric value.")
   }
@@ -680,7 +674,8 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
       sequences = sequences,
       species = species,
       release = release,
-      combine_overlaps = combine_overlaps
+      combine_overlaps = combine_overlaps,
+      ensembl_host = ensembl_host
     )
     if (!isTRUE(force_refresh)) {
       pf_cached <- .si_bfc_get_rds(bfc, cache_key)
@@ -700,14 +695,14 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
       sequences,
       species,
       release,
-      ensembl_mirror = ensembl_mirror
+      ensembl_host = ensembl_host
     )
   } else {
     pf <- get_biomart_protein_features(protein_features = biomaRt_databases[biomaRt_databases != 'elm'],
                                        gtf_df = gtf_df,
                                        species_dataset = species,
                                        release = release,
-                                       ensembl_mirror = ensembl_mirror)
+                                       ensembl_host = ensembl_host)
 
     pf <- to_long_features(ipr = pf, 
                            features = biomaRt_databases[biomaRt_databases != 'elm'],
@@ -719,7 +714,7 @@ get_protein_features <- function(biomaRt_databases = c("interpro", "mobidblite",
         sequences,
         species,
         release,
-        ensembl_mirror = ensembl_mirror
+        ensembl_host = ensembl_host
       )
       pf <- rbind(pf, linear_motifs)
     }

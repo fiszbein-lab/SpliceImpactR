@@ -1,3 +1,23 @@
+# SpliceImpactR 1.1.3
+
+## Breaking changes and changed results
+
+* `get_protein_features()` queries Ensembl 111 by default (was 109), the
+  Ensembl release of the default GENCODE v45 annotation from
+  `get_annotation()`. Features from full runs change, and cached features are
+  fetched again once.
+* `ensembl_mirror` is deprecated and ignored: Ensembl retired its BioMart
+  mirrors.
+
+## Bug fixes
+
+* BioMart queries go to the Ensembl archive of `release` by its explicit host
+  (releases 105 to 116). Ensembl 116 (June 2026) is the last release with
+  BioMart, and www.ensembl.org no longer serves it. The new `ensembl_host`
+  argument selects another host. Release 116 needs biomaRt 2.70 or later
+  (earlier versions send its queries to www.ensembl.org), and connection errors
+  name the host.
+
 # SpliceImpactR 1.1.2
 
 ## Breaking changes and changed results

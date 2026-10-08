@@ -120,13 +120,21 @@ apply. The bundled test reference is loaded as stored.
 - `ncoils`: coiled-coil predictions.
 - `seg`: low-complexity regions.
 - `mobidblite`: intrinsically disordered regions.
-- `elm`: short linear motifs (SLiMs; loaded from ELM, not BioMart).
+- `elm`: short linear motifs (SLiMs; loaded from ELM and mapped to transcripts through BioMart).
 
 For BioMart-backed features, attributes must follow:
 `{feature}`, `{feature}_start`, `{feature}_end` (for example
 `pfam`, `pfam_start`, `pfam_end`).
 Additional custom sources can be added with `get_manual_features()`
 (described in more detail in the custom input section below).
+
+Full runs query Ensembl BioMart for `release` (default 111, the Ensembl release
+of the default GENCODE v45 annotation); pass the Ensembl release that matches
+your `get_annotation()` release. Ensembl 116 (June 2026) is the last release
+with BioMart, so each release is queried at its archive (for example
+`https://jan2024.archive.ensembl.org` for 111), and `ensembl_host` selects
+another BioMart host. Release 116 needs biomaRt 2.70 or later. Archives are
+sometimes temporarily unavailable; try again later or choose another release.
 
 We're loading test data here, but set test = FALSE to get the full set.
 ```r

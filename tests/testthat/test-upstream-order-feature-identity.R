@@ -82,7 +82,7 @@ test_that("co-located distinct features survive while exact duplicates collapse"
   # in memory so this regression does not need a network or a user cache.
   legacy_key <- paste0(
     "protein_features/v", utils::packageVersion("SpliceImpactR"),
-    "/species-hsapiens_gene_ensembl/release-109/db-interpro,pfam",
+    "/species-hsapiens_gene_ensembl/release-", formals(get_features)$release, "/db-interpro,pfam",
     "/combine-FALSE/gtf-", SpliceImpactR:::.si_pf_fingerprint_gtf(ann),
     "/seq-no_elm.rds"
   )

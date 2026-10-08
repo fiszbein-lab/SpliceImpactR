@@ -8,8 +8,8 @@ get_linear_motifs(
   gtf_df,
   protein_seqs,
   species = c("hsapiens_gene_ensembl", "mmusculus_gene_ensembl"),
-  release = 109,
-  ensembl_mirror = NULL
+  release = 111,
+  ensembl_host = NULL
 )
 }
 \arguments{
@@ -23,12 +23,12 @@ annotations; used to derive chromosome groups for batching.}
 dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 \code{"mmusculus_gene_ensembl"}.}
 
-\item{release}{Release version from Ensembl associated with the GENCODE
-version used in [get_annotation()]. See the GENCODE human release listing
-to map GENCODE and Ensembl versions.}
+\item{release}{Ensembl release whose BioMart archive maps UniProt to
+Ensembl IDs (105 to 116), matching the GENCODE release used in
+[get_annotation()].}
 
-\item{ensembl_mirror}{Optional Ensembl mirror passed to the BioMart
-connector.}
+\item{ensembl_host}{Optional BioMart host, used instead of the archive of
+\code{release}.}
 }
 \value{
 A \code{data.table} containing protein feature annotations

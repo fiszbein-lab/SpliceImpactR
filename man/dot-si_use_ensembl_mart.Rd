@@ -2,24 +2,25 @@
 % Please edit documentation in R/get_protein_features.R
 \name{.si_use_ensembl_mart}
 \alias{.si_use_ensembl_mart}
-\title{Create a biomaRt Ensembl connection with explicit mirror fallback (internal)}
+\title{Connect to an Ensembl BioMart archive (internal)}
 \usage{
 .si_use_ensembl_mart(
   dataset,
   version,
   biomart = "genes",
-  ensembl_mirror = NULL,
+  host = NULL,
   verbose = FALSE
 )
 }
 \arguments{
 \item{dataset}{Ensembl dataset (e.g. `"hsapiens_gene_ensembl"`).}
 
-\item{version}{Ensembl release version.}
+\item{version}{Ensembl release; its archive host is used unless `host` is
+given.}
 
 \item{biomart}{Biomart name, default `"genes"`.}
 
-\item{ensembl_mirror}{Optional mirror (`"www"`, `"useast"`, `"asia"`).}
+\item{host}{Optional BioMart host, used as given.}
 
 \item{verbose}{Logical passed to `biomaRt::useEnsembl()`.}
 }
@@ -27,6 +28,6 @@
 A `Mart` object.
 }
 \description{
-Create a biomaRt Ensembl connection with explicit mirror fallback (internal)
+Connect to an Ensembl BioMart archive (internal)
 }
 \keyword{internal}

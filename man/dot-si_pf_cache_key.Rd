@@ -10,7 +10,8 @@
   sequences,
   species,
   release,
-  combine_overlaps
+  combine_overlaps,
+  ensembl_host = NULL
 )
 }
 \arguments{
@@ -25,6 +26,8 @@
 \item{release}{Ensembl release.}
 
 \item{combine_overlaps}{Logical merge behavior.}
+
+\item{ensembl_host}{Optional BioMart host; recorded in the key when given.}
 }
 \value{
 Character cache key.

@@ -138,7 +138,8 @@ devtools::install_github("fiszbein-lab/SpliceImpactR")
 - `ncoils`: coiled-coil region predictions.
 - `seg`: low-complexity segments.
 - `mobidblite`: intrinsically disordered region calls.
-- `elm`: short linear motifs (SLiMs; retrieved from ELM, not BioMart).
+- `elm`: short linear motifs (SLiMs; retrieved from ELM and mapped to
+  transcripts through BioMart).
 
 For BioMart-backed sources, each feature must provide three attributes:
 `{feature}`, `{feature}_start`, and `{feature}_end` (for example
@@ -147,12 +148,20 @@ with `get_manual_features()` (explained further down in the
 Custom Input Entry Points section) and merge everything through
 `get_comprehensive_annotations()`.
 
+Full runs query Ensembl BioMart for `release` (default 111, the Ensembl release
+of the default GENCODE v45 annotation); pass the Ensembl release that matches
+your `get_annotation()` release. Ensembl 116 (June 2026) is the last release
+with BioMart, so each release is queried at its archive (for example
+`https://jan2024.archive.ensembl.org` for 111), and `ensembl_host` selects
+another BioMart host. Release 116 needs biomaRt 2.70 or later.
+
 We load test annotations and three representative feature sources
 (`interpro`, `signalp`, `elm`) and combine them. Loading multiple databases in
 one call is possible, but not recommended due to timeouts. These are 
 automatically cached and loaded from cache if the correct signature (organism,
-version, etc) is found. BiomaRt can give difficulties in loading these, so this
-procedure will sometimes take a few tries. If this is unsuccessful, restart R 
+version, etc) is found. Ensembl archives are sometimes temporarily unavailable
+(HTTP 500/503 or time-outs), so this procedure will sometimes take a few tries.
+If this is unsuccessful, try again later, choose another release, restart R
 and/or try suggested methods related to this issue (eg: `httr::reset_config()`)
 
 ```{r load-resources}

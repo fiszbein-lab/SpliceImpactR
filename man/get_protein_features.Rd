@@ -17,9 +17,10 @@ get_protein_features(
   timeout = 600,
   ensembl_mirror = NULL,
   species = c("human", "mouse"),
-  release = 109,
+  release = 111,
   test = FALSE,
-  combine_overlaps = FALSE
+  combine_overlaps = FALSE,
+  ensembl_host = NULL
 )
 }
 \arguments{
@@ -46,24 +47,28 @@ existing BiocFileCache entry for this parameter/input signature.}
 
 \item{timeout}{ability to extend timeout if biomaRt is not cooperating}
 
-\item{ensembl_mirror}{Optional Ensembl mirror to try first for BioMart
-connections; one of `"useast"`, `"www"`, or `"asia"`. If `NULL`,
-mirrors are tried in fallback order when `release = NULL`. If a
-specific `release` is provided, biomaRt ignores mirror selection.}
+\item{ensembl_mirror}{Deprecated and ignored. Ensembl retired its BioMart
+mirrors; queries go to the archive of `release` (or `ensembl_host`).}
 
 \item{species}{Character string giving the Ensembl BioMart
 dataset (default \code{"human"}). For mouse, use
 \code{"mouse"}.}
 
-\item{release}{Release version from Ensembl associated with the GENCODE
-version used in [get_annotation()]. See the GENCODE human/mouse release
-listings to map GENCODE and Ensembl versions.}
+\item{release}{Ensembl release whose BioMart archive is queried, 105 to 116
+(default 111). Use the release that matches the GENCODE annotation from
+[get_annotation()]; GENCODE lists the Ensembl release of each of its
+releases (human v45, the [get_annotation()] default, and mouse M34 are
+Ensembl 111).}
 
 \item{test}{Logical; bool for whether to load from reduced test set.}
 
 \item{combine_overlaps}{simplifies protein feature output and combines
 protein features with the same ID and overlapping coords. Sometimes not 
 desireable}
+
+\item{ensembl_host}{Optional BioMart host, for example
+`"https://jan2024.archive.ensembl.org"`, used instead of the archive of
+`release` (for example, if Ensembl moves an archive).}
 }
 \value{
 A `data.table` with one row per protein feature and transcript coupling
@@ -74,6 +79,14 @@ We also add the genomic location to the name of the protein feature for
 downstream safeguarding and precision. This is to prevent different occurences
 of the same domain being called as the same in domain identification and
 enrichment.
+}
+\details{
+Ensembl 116 (June 2026) is the last release with BioMart, and
+www.ensembl.org no longer serves it, so features are fetched from the
+Ensembl archive of `release`. Archives are sometimes temporarily unavailable
+(HTTP 500/503 or time-outs); retry later or choose another release. Release
+116 needs biomaRt 2.70 or later. `elm` motifs come from the ELM database and
+are mapped to transcripts through the same BioMart archive.
 }
 \examples{
 annotation_df <- load_example_data("annotation_df")$annotation_df
