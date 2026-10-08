@@ -28,7 +28,9 @@ splicing event information.}
 \value{
 A \link[data.table]{data.table} (or updated `SpliceImpactResult`
 when `return_class` resolves to S4) where each row represents an
-inclusion-exclusion pair of the same event.
+inclusion-exclusion pair of the same event. S4 output sets
+`metadata$matching` to `"legacy"` and removes `matching_diagnostics` left by
+[get_ranked_pairs()].
 }
 \description{
 Builds paired tables of inclusion/exclusion forms for splicing events from

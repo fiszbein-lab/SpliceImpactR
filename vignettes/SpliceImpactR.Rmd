@@ -118,7 +118,7 @@ devtools::install_github("fiszbein-lab/SpliceImpactR")
 4. Read splicing events for stepwise analysis.
 5. Run QC summaries and plots.
 6. Run differential inclusion.
-7. Match DI events to transcript/protein sequences and build pairs.
+7. Select case/control transcript pairs for DI events (`get_ranked_pairs()`).
 8. Quantify sequence and domain impacts.
 9. Infer PPI rewiring.
 10. Build enrichment foreground gene sets from table or S4 inputs.
@@ -272,6 +272,11 @@ out_s4 <- get_splicing_impact(
 )
 ```
 
+The wrapper selects transcript pairs with the ORF-aware matcher by default
+(`matching = "orf"`, described under transcript pairs below); `matching = "legacy"`
+runs the previous matcher. With the ORF matcher, `out_dt$matching` holds the
+candidate, ranking and unresolved-comparison diagnostics.
+
 # Read Splicing Events
 For the stepwise workflow in this vignette, load event data explicitly:
 
@@ -389,9 +394,66 @@ plot_di_volcano_dt(res)
 ```
 
 # Match Events to Sequences and Build Transcript Pairs
-Significant DI events are mapped to annotation and sequence data, then
-collapsed into case/control transcript pairs.
-This matching is done through a strict hierarchy:
+For each significant comparison, `get_ranked_pairs()` selects one case and one
+control transcript that represent the two forms and differ as little as
+possible outside the event (the default matcher in `get_splicing_impact()`):
+
+1. Validate the input: missing metadata, strands other than `+`/`-`, unknown
+   forms and malformed intervals stop the run, naming the affected events.
+2. Pair forms: positive `delta_psi` rows are the case and negative rows the
+   control, for each `event_id`.
+3. Keep, for each form, same-gene transcripts that use the event's defining
+   splice sites exactly and have no exon in the excluded region. Outer flank
+   ends and TSS/PAS ends may differ (labelled `relaxed`). A form with more than
+   `max_candidates` (100) candidates keeps the best supported, and the number
+   dropped is reported.
+4. Rank candidate pairs by coding status (an annotated CDS, so NMD-annotated
+   transcripts count), transcript support tier (TSL 1-3, 4-5, unknown), how much
+   coding-region structure the two transcripts share outside the event (a
+   frameshifted isoform is not penalised for its early stop), and then exact
+   TSL. A transcript is never paired with itself.
+5. When no structural pair exists, choose a pair with the legacy overlap rules
+   and label it `approximate` (`fallback = FALSE` disables this). Comparisons
+   still without a pair are listed in `unmatched` with a reason.
+
+For an event with several sites, such as an AFE with three first exons,
+each rising x falling pair of sites is its own comparison, so a site can
+appear in several rows. `keep_sig_pairs()` keeps every site of an event in
+which any site passes; `site_significant_case`/`_control` show which sites
+passed themselves, and `n_event_comparisons` gives the number of
+comparisons the event defines. Pair counts, including domain enrichment,
+count comparisons rather than events.
+
+```{r matching-and-pairs}
+ranked <- get_ranked_pairs(
+  res_di,
+  annotation_df$annotations,
+  annotation_df$sequences
+)
+pairs <- ranked$pairs
+hits_sequences <- ranked$matched
+
+pairs[, .(
+  n_pairs = .N,
+  n_events = data.table::uniqueN(event_id)
+)]
+table(pairs$matching_tier)
+```
+
+With the small test annotation, many comparisons lack a transcript with the
+exact event structure, so about half the pairs are `approximate`; with a full
+GENCODE annotation most pairs are `structural`.
+
+`ranked` also holds every candidate with its eligibility, every scored pair,
+the unresolved comparisons and the settings. The
+`transcript_pair_ranking` vignette describes the protocol step by step; scores
+and ties are descriptive diagnostics, not expression probabilities.
+
+## Legacy matcher
+The previous matcher (`matching = "legacy"` in `get_splicing_impact()`) picks
+each form's transcript independently. It is faster, but it does not check the
+event's exact structure and can pair a transcript with itself. It works through
+a strict hierarchy:
 
 1. Prefilter by `chr`, `strand`, and `gene_id` to keep only compatible
    annotation intervals.
@@ -403,29 +465,17 @@ This matching is done through a strict hierarchy:
    width; protein-coding status and then TSL only break remaining ties.
 5. Build case/control pairs in `get_pairs(source = "multi")` by joining all
    positive `delta_psi` rows (case) with all negative rows (control) for each
-   `event_id`, then ordering by strongest `|delta_psi|`.
-   For an event with several sites, such as an AFE with three first exons,
-   each rising x falling pair of sites is its own comparison, so a site can
-   appear in several rows. `keep_sig_pairs()` keeps every site of an event in
-   which any site passes; `site_significant_case`/`_control` show which sites
-   passed themselves, and `n_event_comparisons` gives the number of
-   comparisons the event defines. Pair counts, including domain enrichment,
-   count comparisons rather than events.
+   `event_id`, then ordering by strongest `|delta_psi|`. Forms that match no
+   transcript are left out.
 
-```{r matching-and-pairs}
+```{r legacy-matching, eval=FALSE}
 matched <- get_matched_events_chunked(
   res_di,
   annotation_df$annotations,
   chunk_size = 2000
 )
-
 hits_sequences <- attach_sequences(matched, annotation_df$sequences)
 pairs <- get_pairs(hits_sequences, source = "multi")
-
-pairs[, .(
-  n_pairs = .N,
-  n_events = data.table::uniqueN(event_id)
-)]
 ```
 
 Once pairing is done, we can probe whether there is a proximal/distal shift
@@ -824,7 +874,11 @@ spliceimpact_s4_schema()
 
 ## S4-first Main Workflow (Code Only)
 This mirrors the table workflow, but keeps everything in a single
-`SpliceImpactResult` object.
+`SpliceImpactResult` object. `get_ranked_pairs()` stores the selected pairs and
+form rows in the object and its diagnostics in
+`metadata$matching_diagnostics`. For the legacy matcher, replace that step with
+`get_matched_events_chunked()`, `attach_sequences()` and
+`get_pairs(source = "multi")`, each with `return_class = "S4"`.
 
 ```{r s4-main-workflow-code-only, eval=FALSE}
 obj_flow <- as_splice_impact_result(
@@ -841,18 +895,12 @@ obj_flow <- get_differential_inclusion(
 )
 obj_flow <- keep_sig_pairs(obj_flow, return_class = "S4")
 
-obj_flow <- get_matched_events_chunked(
+obj_flow <- get_ranked_pairs(
   obj_flow,
   annotation_df$annotations,
-  chunk_size = 2000,
-  return_class = "S4"
-)
-obj_flow <- attach_sequences(
-  obj_flow,
   annotation_df$sequences,
   return_class = "S4"
 )
-obj_flow <- get_pairs(obj_flow, source = "multi", return_class = "S4")
 obj_flow <- compare_sequence_frame(
   obj_flow,
   annotation_df$annotations,

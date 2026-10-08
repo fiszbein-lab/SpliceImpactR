@@ -19,7 +19,9 @@
 #'
 #' @return A \link[data.table]{data.table} (or updated `SpliceImpactResult`
 #' when `return_class` resolves to S4) where each row represents an
-#' inclusion-exclusion pair of the same event.
+#' inclusion-exclusion pair of the same event. S4 output sets
+#' `metadata$matching` to `"legacy"` and removes `matching_diagnostics` left by
+#' [get_ranked_pairs()].
 #' @details
 #' In \code{source="paired"} mode, only events with exactly one INC and one EXC
 #' row are retained. When delta PSI is supplied, the positive form is the case
@@ -164,5 +166,11 @@ get_pairs <- function(x,
   out <- out[, ..cols_old]
   data.table::setnames(out, cols_old, cols_new)
   out[, n_event_comparisons := n_comparisons$n[match(event_id, n_comparisons$event_id)]]
-  .return_splice_output(out[], obj = .spi_obj, what = "paired_hits", return_class = return_class)
+  out <- .return_splice_output(out[], obj = .spi_obj, what = "paired_hits", return_class = return_class)
+  # These pairs replace any from get_ranked_pairs(), so their provenance does too.
+  if (methods::is(out, "SpliceImpactResult")) {
+    out@metadata$matching <- "legacy"
+    out@metadata$matching_diagnostics <- NULL
+  }
+  out
 }

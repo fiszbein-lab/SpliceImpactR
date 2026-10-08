@@ -11,7 +11,8 @@ get_ranked_pairs(
   source = c("multi", "paired"),
   max_candidates = 100L,
   fallback = TRUE,
-  verbose = TRUE
+  verbose = TRUE,
+  return_class = c("list", "S4")
 )
 }
 \arguments{
@@ -51,6 +52,12 @@ dropped is reported in `candidates_dropped_case` and
 Set `FALSE` to leave such comparisons unresolved.}
 
 \item{verbose}{Emit progress messages.}
+
+\item{return_class}{`"list"` (default) returns the list described below.
+`"S4"` returns a [SpliceImpactResult]: the input object, or a new one for
+table input, with the selected form rows in `matched`, the pairs in
+`paired_hits` and the other tables in `metadata$matching_diagnostics`,
+with `metadata$matching = "orf"`, as [get_splicing_impact()] stores them.}
 }
 \value{
 A list with `pairs` (one selected pair per positive/negative form
@@ -67,13 +74,15 @@ A list with `pairs` (one selected pair per positive/negative form
   `pair_rejections` (self-pairs, combinations unable to distinguish the forms,
   and approximate combinations without an event difference), and `settings`.
   Ties and context-score margins are descriptive diagnostics, not statistical
-  confidence or probabilities.
+  confidence or probabilities. With `return_class = "S4"`, a
+  [SpliceImpactResult] holding the same tables (see `return_class`).
 }
 \description{
-An opt-in alternative to independent transcript selection. Candidates must
-represent the supplied AS form before coding status, transcript support and
-coding-region similarity are considered. The legacy matcher is unchanged as
-the default in [get_splicing_impact()].
+The default transcript-pair selection in [get_splicing_impact()]; the legacy
+matcher, which selects each form's transcript independently, remains
+available with `matching = "legacy"`. Candidates must represent the supplied
+AS form before coding status, transcript support and coding-region
+similarity are considered.
 }
 \details{
 Ranking is lexicographic: number of coding transcripts (descending),

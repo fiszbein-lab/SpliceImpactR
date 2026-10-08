@@ -354,7 +354,7 @@ test_that("ties, indistinguishable forms and multiple opposing forms are explici
   expect_false(anyDuplicated(out$pairs$matching_pair_id) > 0L)
 })
 
-test_that("the opt-in wrapper returns diagnostics and complete consequences", {
+test_that("the ORF wrapper (the default) returns diagnostics and complete consequences", {
   x <- rank_test_reference()
   pf <- data.table::data.table(ensembl_transcript_id = x$sequences$transcript_id,
     ensembl_peptide_id = x$sequences$protein_id, database = "pfam", clean_name = "Test",
@@ -386,6 +386,12 @@ test_that("the opt-in wrapper returns diagnostics and complete consequences", {
   expect_equal(nrow(fit(matching_fallback = FALSE)$hits_final), 0L)
   expect_identical(fit()$hits_final$matching_tier, "approximate")
   expect_identical(formals(get_splicing_impact)$matching_fallback, formals(get_ranked_pairs)$fallback)
+  # ORF matching is the wrapper default.
+  default <- get_splicing_impact(res = x$events,
+    annotation_df = x[c("annotations", "sequences")], protein_feature_total = pf,
+    exon_features = ef, ppi = ppi, verbose = FALSE)
+  expect_identical(unique(default$hits_final$matching_method), "orf")
+  expect_false(is.null(default$matching))
 
   # Re-running on an S4 result replaces earlier provenance instead of appending.
   run <- function(matching, data = NULL, res = NULL) get_splicing_impact(
@@ -415,3 +421,36 @@ test_that("S4 input uses significance-filtered events when present", {
   expect_setequal(unique(all_events$pairs$event_id), c("E", "E_nonsig"))
 })
 
+
+test_that("S4 output stores the ORF result where the wrapper does", {
+  x <- rank_test_reference()
+  ranked <- get_ranked_pairs(x$events, x$annotations, x$sequences, verbose = FALSE)
+  input <- as_splice_impact_result(res = x$events)
+  obj <- get_ranked_pairs(input, x$annotations, x$sequences, return_class = "S4", verbose = FALSE)
+  expect_true(methods::validObject(obj))
+  expect_equal(as_dt_from_s4(obj, "paired_hits"), ranked$pairs, ignore_attr = TRUE)
+  expect_equal(as_dt_from_s4(obj, "matched"), ranked$matched, ignore_attr = TRUE)
+  expect_identical(obj@metadata$matching, "orf")
+  expect_equal(obj@metadata$matching_diagnostics, ranked[setdiff(names(ranked), c("pairs", "matched"))])
+  expect_equal(as_dt_from_s4(obj, "di_events"), as_dt_from_s4(input, "di_events"))
+  # Later S4 steps continue from the stored pairs.
+  compare <- compare_sequence_frame(obj, x$annotations, return_class = "S4")
+  expect_identical(as_dt_from_s4(compare, "paired_hits")$transcript_id_case, "Z_INC_close")
+  # The default still returns the list; table input gives a new object.
+  expect_identical(names(get_ranked_pairs(input, x$annotations, x$sequences, verbose = FALSE)), names(ranked))
+  new <- get_ranked_pairs(x$events, x$annotations, x$sequences, return_class = "S4", verbose = FALSE)
+  expect_equal(as_dt_from_s4(new, "paired_hits"), ranked$pairs, ignore_attr = TRUE)
+  expect_identical(new@metadata$matching, "orf")
+  # Unresolved comparisons give an object without pairs.
+  unmatched <- data.table::copy(x$events)[form == "INC", inc := "101-500"]
+  none <- get_ranked_pairs(as_splice_impact_result(res = unmatched), x$annotations, x$sequences,
+                           fallback = FALSE, return_class = "S4", verbose = FALSE)
+  expect_true(methods::validObject(none))
+  expect_length(none@paired_hits, 0L)
+  expect_equal(nrow(none@metadata$matching_diagnostics$unmatched), 1L)
+  # Legacy pairing on the same object replaces the ORF provenance.
+  legacy <- get_pairs(obj, source = "multi", return_class = "S4")
+  expect_identical(legacy@metadata$matching, "legacy")
+  expect_null(legacy@metadata$matching_diagnostics)
+  expect_identical(anyDuplicated(names(legacy@metadata)), 0L)
+})

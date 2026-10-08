@@ -1,3 +1,30 @@
+# SpliceImpactR 1.1.2
+
+## Breaking changes and changed results
+
+* `get_splicing_impact()` selects transcript pairs with the ORF-aware matcher
+  (`matching = "orf"`) by default; `matching = "legacy"` restores the previous
+  matcher. The ORF matcher checks each form's exact event structure, never
+  pairs a transcript with itself, labels pairs without a structural match as
+  `approximate`, and returns unresolved comparisons in `matching`. Selected
+  transcripts and pair counts change, and matching is slower.
+
+## New features
+
+* `get_ranked_pairs(return_class = "S4")` stores the selected pairs, form rows
+  and diagnostics in a `SpliceImpactResult`, where `get_splicing_impact()`
+  stores them, so the stepwise S4 workflow uses the ORF matcher. The default
+  still returns the list. `get_pairs()` S4 output sets
+  `metadata$matching = "legacy"` and drops earlier ORF diagnostics.
+
+## Documentation
+
+* The README and vignettes describe the ORF matcher as the default, including
+  in the stepwise S4 workflow. The README also covers one-based rMATS
+  coordinates, the domain-enrichment population, gene universes, new output
+  columns and input requirements. The matching vignette notes that diagnostics
+  are empty tables, not `NULL`, when no forms are significant.
+
 # SpliceImpactR 1.1.1
 
 ## Breaking changes and changed results

@@ -1,4 +1,4 @@
-#' Parse closed event intervals for the alternate matcher (internal)
+#' Parse closed event intervals for the ORF matcher (internal)
 #' @keywords internal
 #' @noRd
 .si_rank_intervals <- function(x) {
@@ -256,10 +256,11 @@
 
 #' Jointly rank compatible transcript pairs by coding-region structure
 #'
-#' An opt-in alternative to independent transcript selection. Candidates must
-#' represent the supplied AS form before coding status, transcript support and
-#' coding-region similarity are considered. The legacy matcher is unchanged as
-#' the default in [get_splicing_impact()].
+#' The default transcript-pair selection in [get_splicing_impact()]; the legacy
+#' matcher, which selects each form's transcript independently, remains
+#' available with `matching = "legacy"`. Candidates must represent the supplied
+#' AS form before coding status, transcript support and coding-region
+#' similarity are considered.
 #'
 #' @param events Canonical differential event table, or a [SpliceImpactResult]
 #'   with differential events (its significance-filtered `res_di` events when
@@ -291,6 +292,11 @@
 #'   `approximate` pair with the legacy matcher's overlap rules (default `TRUE`).
 #'   Set `FALSE` to leave such comparisons unresolved.
 #' @param verbose Emit progress messages.
+#' @param return_class `"list"` (default) returns the list described below.
+#'   `"S4"` returns a [SpliceImpactResult]: the input object, or a new one for
+#'   table input, with the selected form rows in `matched`, the pairs in
+#'   `paired_hits` and the other tables in `metadata$matching_diagnostics`,
+#'   with `metadata$matching = "orf"`, as [get_splicing_impact()] stores them.
 #'
 #' @details
 #' Ranking is lexicographic: number of coding transcripts (descending),
@@ -362,7 +368,8 @@
 #'   `pair_rejections` (self-pairs, combinations unable to distinguish the forms,
 #'   and approximate combinations without an event difference), and `settings`.
 #'   Ties and context-score margins are descriptive diagnostics, not statistical
-#'   confidence or probabilities.
+#'   confidence or probabilities. With `return_class = "S4"`, a
+#'   [SpliceImpactResult] holding the same tables (see `return_class`).
 #'
 #' @seealso [get_matched_events_chunked()], [get_pairs()], [get_splicing_impact()]
 #' @examples
@@ -383,8 +390,10 @@ get_ranked_pairs <- function(events, annotations, sequences,
                              source = c("multi", "paired"),
                              max_candidates = 100L,
                              fallback = TRUE,
-                             verbose = TRUE) {
+                             verbose = TRUE,
+                             return_class = c("list", "S4")) {
   source <- match.arg(source)
+  return_class <- match.arg(return_class)
   if (!is.numeric(max_candidates) || length(max_candidates) != 1L ||
       is.na(max_candidates) || max_candidates < 1) {
     stop("max_candidates must be a positive scalar.")
@@ -804,14 +813,24 @@ get_ranked_pairs <- function(events, annotations, sequences,
     context_coverage_case = numeric(), context_coverage_control = numeric(),
     context_compared_nt = integer(), n_inexact = integer(), tsl_worst = integer(),
     tsl_sum = integer(), pair_rank = integer(), selected = logical(), tied_best = logical())
-  list(pairs = pairs, matched = matched, candidates = candidates, rankings = rankings,
-       pair_rejections = rejections, events = ev, unmatched = unmatched,
-       settings = list(method = "orf", protocol_version = 5L, source = source,
-                       coding = "annotated CDS; biotype not used",
-                       outer_boundaries = "relaxed; terminal TSS/PAS only without an exact match",
-                       similarity = "exonic base-pair Jaccard in the coding window, outside the event mask",
-                       fallback = fallback, fallback_min_overlap = 0.05,
-                       max_candidates = max_candidates,
-                       candidate_cut = "annotated CDS, TSL tier, exact structure, TSL, transcript ID",
-                       tsl_tiers = list(high = seq_len(3L), lower = 4:5, unknown = 6L)))
+  out <- list(pairs = pairs, matched = matched, candidates = candidates, rankings = rankings,
+              pair_rejections = rejections, events = ev, unmatched = unmatched,
+              settings = list(method = "orf", protocol_version = 5L, source = source,
+                              coding = "annotated CDS; biotype not used",
+                              outer_boundaries = "relaxed; terminal TSS/PAS only without an exact match",
+                              similarity = "exonic base-pair Jaccard in the coding window, outside the event mask",
+                              fallback = fallback, fallback_min_overlap = 0.05,
+                              max_candidates = max_candidates,
+                              candidate_cut = "annotated CDS, TSL tier, exact structure, TSL, transcript ID",
+                              tsl_tiers = list(high = seq_len(3L), lower = 4:5, unknown = 6L)))
+  if (identical(return_class, "list")) return(out)
+  # Store the result where get_splicing_impact() does.
+  md <- list(matching = "orf", matching_diagnostics = out[setdiff(names(out), c("pairs", "matched"))])
+  if (is.null(input$obj)) {
+    return(as_splice_impact_result(matched = matched, hits_final = pairs, metadata = md))
+  }
+  obj <- add_splice_part(input$obj, matched = matched)
+  obj <- add_splice_part(obj, hits_final = pairs)
+  obj@metadata[names(md)] <- md
+  obj
 }

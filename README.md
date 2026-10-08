@@ -20,7 +20,7 @@ Integration with existing bioinformatics tools and databases for comprehensive a
 Holistic analysis of how the use of different RNA processing events differs.
 
 ## Installation
-Choose one installation path below.
+SpliceImpactR requires R (>= 4.5.0). Choose one installation path below.
 
 BiocManager
 ```r
@@ -66,8 +66,8 @@ The standard analysis path is:
 4. Read splicing events for stepwise analysis.
 5. Run QC summaries and plots.
 6. Run differential inclusion (`get_differential_inclusion`) and significance filtering (`keep_sig_pairs`).
-7. Match significant events to annotation and sequences (`get_matched_events_chunked`, `attach_sequences`).
-8. Build case/control transcript pairs (`get_pairs`).
+7. Match significant events to annotated transcripts (`get_ranked_pairs`, the default; or the legacy `get_matched_events_chunked` and `attach_sequences`).
+8. Build case/control transcript pairs (returned by `get_ranked_pairs`; `get_pairs` in the legacy route).
 9. Compute sequence/frame consequences (`compare_sequence_frame`).
 10. Call domain changes (`get_domains`) and optional enrichment (`enrich_*`).
 11. Infer PPI rewiring (`get_ppi_switches`) and summarize (`integrated_event_summary`, `plot_*`).
@@ -135,29 +135,19 @@ signalp_features <- get_protein_features(c("signalp"), annotation_df$annotations
 elm_features <- get_protein_features(c("elm"), annotation_df$annotations, test = TRUE)
 ```
 
-We can also load user-defined protein features by transcript/protein ensembl ids and the location of the protein feature within 
+We can also load user-defined protein features by transcript or peptide Ensembl ID,
+with the feature's amino-acid start and stop. These illustrative features sit on
+transcripts in the test annotation; the last is given by its peptide ID only.
 ```r
 user_df <- data.frame(
- ensembl_transcript_id = c(
-   "ENST00000511072","ENST00000374900","ENST00000373020","ENST00000456328",
-   "ENST00000367770","ENST00000331789","ENST00000335137","ENST00000361567",
-   NA,                    "ENST00000380152"
- ),
- ensembl_peptide_id = c(
-   "ENSP00000426975", NA,                   "ENSP00000362048","ENSP00000407743",
-   "ENSP00000356802","ENSP00000326734", NA,                  "ENSP00000354587",
-   "ENSP00000364035", NA
- ),
- name = c(
-   "Low complexity","Transmembrane helix","Coiled-coil","Signal peptide",
-   "Transmembrane helix","Low complexity","Coiled-coil","Transmembrane helix",
-   "Signal peptide","Low complexity"
- ),
- start = c(80L, 201L, 35L, 1L, 410L, 150L, 220L, 30L, 1L, 300L),
- stop  = c(120L,223L, 80L, 20L, 430L, 190L, 260L, 55L, 24L, 360L),
- database   = c("seg","tmhmm","ncoils","signalp","tmhmm","seg","ncoils","tmhmm","signalp", NA),
- alt_name   = c(NA,"TMhelix",NA,"SignalP-noTM", "TMhelix", NA, NA, "TMhelix", "SignalP-TAT", NA),
- feature_id = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+  ensembl_transcript_id = c("ENST00000253925", "ENST00000297268",
+                            "ENST00000371730", NA),
+  ensembl_peptide_id = c("ENSP00000253925", "ENSP00000297268",
+                         "ENSP00000360795", "ENSP00000305503"),
+  name = c("Coiled-coil", "Signal peptide", "Low complexity", "Low complexity"),
+  start = c(100L, 1L, 600L, 1L),
+  stop  = c(400L, 22L, 650L, 300L),
+  database = c("ncoils", "signalp", "seg", "seg")
 )
 user_features <- get_manual_features(user_df, gtf_df = annotation_df$annotations)
 ```
@@ -174,7 +164,7 @@ exon_features <- get_exon_features(annotation_df$annotations, protein_feature_to
 For the standard workflow, each row in `sample_frame` represents one sample.
 The sample directory should contain outputs from `rMATS` and/or `HITindex`.
 `rMATS` readers look for `{AS}.MATS.JC/JCEC.txt`, and HITindex readers look
-for `.AFEPSI`, `.ALEPSI`, and `.exon` files.
+for `.AFEPSI`, `.ALEPSI`, and `.exon` files (`.gz`-compressed copies are read too).
 
 Required sample manifest columns:
 - `path`: per-sample directory path.
@@ -236,6 +226,11 @@ obj <- get_splicing_impact(
 )
 ```
 
+The wrapper selects transcript pairs with the ORF-aware matcher by default
+(`matching = "orf"`, described under Matching and pairing); `matching = "legacy"`
+runs the previous matcher. With the ORF matcher, `out$matching` holds the
+candidate, ranking and unresolved-comparison diagnostics.
+
 ## Read splicing events (rmats + hit index example)
 If you want stepwise control, load splicing events directly:
 
@@ -252,6 +247,12 @@ DT[, .(
   n_genes = data.table::uniqueN(gene_id)
 )]
 ```
+
+Coordinates are one-based and closed, as in GENCODE: rMATS's 0-based starts are
+shifted by +1, the retained-intron (`RI`) interval excludes the flanking exon ends,
+and `A3SS`/`A5SS` forms list the variable exon together with its partner (flanking)
+exon. Differential-inclusion tables saved with versions before 1.1.1 used the old
+conversion and should be regenerated.
 
 Alternative when `rMATS` and `HITindex` are in separate directory trees:
 ```r
@@ -344,8 +345,58 @@ volcano_plot
 
 
 ## Matching and pairing
-Then we match the significant output to annotation. Here, we attach associated transcript and protein sequences and then extract pairs of 'swapping' events.
-This matching is done through a strict hierarchy:
+Then we select, for each significant comparison, one case and one control
+transcript that represent the two forms and differ as little as possible outside
+the event. `get_ranked_pairs()` does this in one step (the default matcher in
+`get_splicing_impact()`):
+
+1. Validate the input: missing metadata, strands other than `+`/`-`, unknown
+   forms and malformed intervals stop the run, naming the affected events.
+2. Pair forms: positive `delta_psi` rows are the case and negative rows the
+   control, for each `event_id`.
+3. Keep, for each form, same-gene transcripts that use the event's defining
+   splice sites exactly and have no exon in the excluded region. Outer flank
+   ends and TSS/PAS ends may differ (labelled `relaxed`). A form with more than
+   `max_candidates` (100) candidates keeps the best supported, and the number
+   dropped is reported.
+4. Rank candidate pairs by coding status (an annotated CDS, so NMD-annotated
+   transcripts count), transcript support tier (TSL 1-3, 4-5, unknown), how much
+   coding-region structure the two transcripts share outside the event (a
+   frameshifted isoform is not penalised for its early stop), and then exact
+   TSL. A transcript is never paired with itself.
+5. When no structural pair exists, choose a pair with the legacy overlap rules
+   and label it `approximate` (`fallback = FALSE` disables this). Comparisons
+   still without a pair are listed in `unmatched` with a reason.
+
+For an event with several sites, such as an AFE with three first exons,
+each rising x falling pair of sites is its own comparison, so a site can
+appear in several rows. `keep_sig_pairs()` keeps every site of an event in
+which any site passes; `site_significant_case`/`_control` show which sites
+passed themselves, and `n_event_comparisons` gives the number of
+comparisons the event defines. Pair counts, including domain enrichment,
+count comparisons rather than events.
+
+```r
+ranked <- get_ranked_pairs(res_di, annotation_df$annotations, annotation_df$sequences)
+pairs <- ranked$pairs
+table(pairs$matching_tier)   # "structural" or "approximate"
+head(ranked$unmatched)       # comparisons without a pair, with reasons
+```
+
+With the small test annotation, many comparisons lack a transcript with the
+exact event structure, so about half the pairs are `approximate`; with a full
+GENCODE annotation most pairs are `structural`.
+
+`ranked` also holds every candidate with its eligibility, every scored pair and
+the settings. See `vignette("transcript_pair_ranking", package = "SpliceImpactR")`
+for the step-by-step protocol and its tradeoffs; scores and ties are descriptive
+diagnostics, not expression probabilities.
+
+### Legacy matcher
+The previous matcher (`matching = "legacy"` in `get_splicing_impact()`) picks each
+form's transcript independently. It is faster, but it does not check the event's
+exact structure and can pair a transcript with itself. It works through a strict
+hierarchy:
 
 1. Prefilter by `chr`, `strand`, and `gene_id` to keep only compatible
    annotation intervals.
@@ -357,14 +408,8 @@ This matching is done through a strict hierarchy:
    width; protein-coding status and then TSL only break remaining ties.
 5. Build case/control pairs in `get_pairs(source = "multi")` by joining all
    positive `delta_psi` rows (case) with all negative rows (control) for each
-   `event_id`, then ordering by strongest `|delta_psi|`.
-   For an event with several sites, such as an AFE with three first exons,
-   each rising x falling pair of sites is its own comparison, so a site can
-   appear in several rows. `keep_sig_pairs()` keeps every site of an event in
-   which any site passes; `site_significant_case`/`_control` show which sites
-   passed themselves, and `n_event_comparisons` gives the number of
-   comparisons the event defines. Pair counts, including domain enrichment,
-   count comparisons rather than events.
+   `event_id`, then ordering by strongest `|delta_psi|`. Forms that match no
+   transcript are left out.
 
 ```r
 matched <- get_matched_events_chunked(res_di, annotation_df$annotations, chunk_size = 2000)
@@ -445,6 +490,12 @@ domain_plot <- plot_enriched_domains_counts(enriched_domains, top_n = 20)
 domain_plot
 ```
 
+Enrichment counts transcript pairs that change a tested domain: in both the
+foreground and the background, only pairs whose domain differences include a
+domain from `db_filter` count, and repeated transcript pairs count once. The odds
+ratio compares the foreground with the rest of the background. Every foreground
+pair and its domains must be in the background, so use the annotated background.
+
 And we're able to search for A) specific events enrichment (AFE, ALE, etc)
 or by database (Interpro, SignalP, etc)
 ```r
@@ -485,10 +536,26 @@ Ensembl-to-Entrez mapping relative to the selected background. In practice,
 increase foreground size (relax DI cutoffs), broaden background, and/or lower
 `min_size` in `get_enrichment()`.
 
+The background carries two gene universes: `attr(bg, "gene_universe")` holds the
+genes with eligible transcript pairs, and `attr(bg, "feature_gene_universe")` the
+genes with at least one eligible pair whose features differ. Intersect them with
+the genes actually tested; use `gene_universe` for DI foregrounds and
+`feature_gene_universe` for domain and PPI foregrounds.
+
 ```r
 enrichment_di <- get_enrichment(
   foreground = fg_di,
   background = intersect(attr(bg, "gene_universe"),
+                         res$gene_id[is.finite(res$padj)]),
+  species = "human",
+  gene_id_type = "ensembl",
+  sources = "GO:BP",
+  min_size = 5
+)
+
+enrichment_domain <- get_enrichment(
+  foreground = fg_domain,
+  background = intersect(attr(bg, "feature_gene_universe"),
                          res$gene_id[is.finite(res$padj)]),
   species = "human",
   gene_id_type = "ensembl",
@@ -570,6 +637,7 @@ Use this table for biological interpretation and downstream plotting.
 - `protein_id_case`, `protein_id_control`: paired protein IDs (if protein-coding).
 - `form_case`, `form_control`: row form labels used during pairing.
 - `exons_case`, `exons_control`: event exon IDs used for case/control mapping.
+- `transcript_type_case`, `transcript_type_control`: annotated transcript biotypes (for example `nonsense_mediated_decay`).
 
 **2) Event coordinates and differential statistics**
 - `inc_case`, `inc_control`: inclusion coordinate strings for each isoform.
@@ -580,6 +648,8 @@ Use this table for biological interpretation and downstream plotting.
 - `n_samples_case`, `n_samples_control`: total samples used.
 - `n_case_case`, `n_case_control`: case sample counts.
 - `n_control_case`, `n_control_control`: control sample counts.
+- `site_significant_case`, `site_significant_control`: whether each site passed the significance cutoffs itself.
+- `n_event_comparisons`: number of case/control comparisons the event defines.
 
 **3) Sequence content and coding context**
 - `transcript_seq_case`, `transcript_seq_control`: transcript nucleotide sequences.
@@ -603,6 +673,13 @@ Use this table for biological interpretation and downstream plotting.
 - Partners: `case_ppi`, `control_ppi` (list-columns).
 - Counts: `n_case_ppi`, `n_control_ppi`, `n_ppi`.
 - Feature drivers: `case_ppi_drivers`, `control_ppi_drivers` (merged PFAM/ELM tokens, prefixed as `pfam;...` or `elm;...`).
+
+**7) Transcript-pair selection (ORF matcher)**
+- `matching_method`, `matching_tier`: matcher used and tier (`structural` or `approximate`).
+- `structural_match_case`, `structural_match_control`: `exact`, `relaxed` or `approximate`.
+- Ranking components: `coding_count`, `tsl_tier`, `tsl_worst`, `context_similarity`, `orf_similarity`, `event_agreement` (approximate pairs).
+- Ambiguity: `n_candidate_pairs`, `n_tied_best`, `context_score_margin`; candidates removed by the cap: `candidates_dropped_case`, `candidates_dropped_control`.
+- `matching_pair_id`: stable pair key.
 
 #### `data` (raw sample-level input table)
 Use `data` to inspect per-sample evidence feeding differential inclusion.
@@ -630,6 +707,7 @@ Core columns:
 - `p.value`, `padj`: statistical significance.
 - `cooks_max`: maximum Cook's distance seen for the fitted site.
 - `n`, `n_used`: total rows and rows retained after model filtering.
+- `site_significant` (added by `keep_sig_pairs()`): whether the site itself passed the cutoffs.
 
 ## S4 Applications and Accessors
 You can run the full pipeline with `get_splicing_impact()` and choose either compact `data.table` outputs or a single S4 object.
@@ -774,6 +852,10 @@ int_summary_focus$plot
 This mirrors the table workflow but keeps all updates inside one
 `SpliceImpactResult` object. The same core functions accept S4 input and
 return an updated S4 object when `return_class = "S4"` is set.
+`get_ranked_pairs()` stores the selected pairs and form rows in the object and
+its diagnostics in `metadata$matching_diagnostics`. For the legacy matcher,
+replace that step with `get_matched_events_chunked()`, `attach_sequences()` and
+`get_pairs(source = "multi")`, each with `return_class = "S4"`.
 
 ```r
 obj_flow <- as_splice_impact_result(
@@ -790,18 +872,12 @@ obj_flow <- get_differential_inclusion(
 )
 obj_flow <- keep_sig_pairs(obj_flow, return_class = "S4")
 
-obj_flow <- get_matched_events_chunked(
+obj_flow <- get_ranked_pairs(
   obj_flow,
   annotation_df$annotations,
-  chunk_size = 2000,
-  return_class = "S4"
-)
-obj_flow <- attach_sequences(
-  obj_flow,
   annotation_df$sequences,
   return_class = "S4"
 )
-obj_flow <- get_pairs(obj_flow, source = "multi", return_class = "S4")
 obj_flow <- compare_sequence_frame(
   obj_flow,
   annotation_df$annotations,
@@ -826,6 +902,10 @@ Use these entry points when your data starts outside the default
 `get_rmats_hit()` to `get_differential_inclusion()` flow.
 
 ### Add user-defined protein features (`get_manual_features`)
+Rows may give `ensembl_transcript_id`, or only `ensembl_peptide_id`, which is
+placed through the annotation's protein IDs. Rows that cannot be placed (an ID not
+in the annotation, or a transcript without an annotated CDS) are dropped and
+reported in a message.
 ```r
 ann_dt <- data.table::as.data.table(annotation_df$annotations)
 coding_tx <- unique(ann_dt[type == "exon" & cds_has == TRUE, transcript_id])
@@ -874,6 +954,9 @@ user_data <- get_user_data(example_df)
 ```
 
 ### Bring your own post-DI table
+`event_id` is required: it groups each event's forms, which must be `INC` and
+`EXC`, or `SITE` alone. Events without a valid set of forms stop with an error
+that names them.
 ```r
 example_user_data <- data.frame(
   event_id = rep("A3SS:1", 8),
@@ -896,6 +979,8 @@ where group 1 holds the `--b1` samples. SpliceImpactR reads it as case - control
 so by default rMATS group 1 is the case. If your case samples were `--b2`, set
 `case_group = 2`; with a file table you can also name the case group, for example
 `case_group = "KO"`. Each import reports which group it treated as the case.
+Events are numbered across files, and an event type listed under two different
+`grp1`/`grp2` comparisons stops with an error.
 
 Multiple files:
 ```r
@@ -967,7 +1052,7 @@ Contributions to SpliceImpactR are welcome, including bug reports, feature reque
 ## Support
 If you encounter any problems or have suggestions, please file an issue on the GitHub issue tracker. Or contact zachpw@bu.edu
 
-##Citation
+## Citation
 If you use SpliceImpactR in your research, please cite:
 
 ```bibtex
@@ -978,24 +1063,3 @@ https://www.biorxiv.org/content/10.1101/2025.06.20.660706v1
 https://github.com/fiszbein-lab/SpliceImpactR
 ```
 
-
-## Alternate transcript-pair matching (opt-in)
-
-`get_ranked_pairs(res_di, annotation_df$annotations, annotation_df$sequences)`
-checks event-specific structure and ranks compatible pairs jointly using
-coding status (an annotated CDS, so NMD-annotated transcripts count), TSL tiers
-and how much coding-region structure the two transcripts share outside the
-event (a comparison that does not penalise a frameshifted isoform for its early
-stop). When no structural pair exists, a
-labelled `approximate` pair is chosen with the legacy overlap rules
-(`fallback = FALSE` disables this). The returned list includes selected
-`pairs`, candidate eligibility, complete pair rankings and unresolved
-comparisons. The existing matcher remains the default; use `matching = "orf"`
-in `get_splicing_impact()` to opt into the alternate pipeline.
-
-See `vignette("transcript_pair_ranking", package = "SpliceImpactR")` for the
-step-by-step protocol, the exact ordering of the ranking criteria, and its
-tradeoffs. Event-defining boundaries must match exactly (outer flank ends and
-TSS/PAS ends may differ, with a `relaxed` label), so some events stay
-unresolved; scores and ties are descriptive diagnostics, not expression
-probabilities.

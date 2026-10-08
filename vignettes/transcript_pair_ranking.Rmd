@@ -1,9 +1,9 @@
 ---
-title: "An alternate protocol for transcript-pair selection"
+title: "ORF-aware transcript-pair selection"
 author: "SpliceImpactR"
 output: BiocStyle::html_document
 vignette: >
-  %\VignetteIndexEntry{An alternate protocol for transcript-pair selection}
+  %\VignetteIndexEntry{ORF-aware transcript-pair selection}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,11 +22,12 @@ of matching is to select plausible annotated transcripts for the two forms,
 then compare the proteins they encode. A transcript that only overlaps a small
 part of the event is not sufficient evidence for that form.
 
-`get_ranked_pairs()` is an opt-in alternative to the existing independent
-matcher. It first checks AS-form compatibility, then ranks **pairs** of
-compatible transcripts. Coding status (an annotated CDS) and transcript support
-remain priorities. Within a support tier, similarity of coding sequence outside
-the event precedes exact TSL. The existing protocol remains the default.
+`get_ranked_pairs()` is the default matcher in `get_splicing_impact()`; the
+legacy independent matcher remains available with `matching = "legacy"`. It
+first checks AS-form compatibility, then ranks **pairs** of compatible
+transcripts. Coding status (an annotated CDS) and transcript support remain
+priorities. Within a support tier, similarity of coding sequence outside the
+event precedes exact TSL.
 
 This protocol ranks plausible representatives. It does not estimate transcript
 abundance, phase distant splicing events, establish actual isoform expression,
@@ -52,7 +53,7 @@ In `source = "multi"`, each positive-delta-PSI form is compared with each
 negative-delta-PSI form in the same event. Positive is case; negative is control.
 Thus a terminal event with two increasing and three decreasing sites has six
 form comparisons, recorded as `n_event_comparisons` on each selected pair. The
-alternate protocol does not replace those comparisons with a single gene-wide
+ORF protocol does not replace those comparisons with a single gene-wide
 winner. In `source = "paired"`, one INC and one EXC are
 required. If delta PSI is absent entirely, INC is assigned to case, preserving
 the existing form-based convention. Rows without an opposing form are reported.
@@ -249,7 +250,7 @@ The biotype is still reported: both matchers add `transcript_type_case` and
 `transcript_type_control`, and `compare_sequence_frame()` labels a pair with an
 NMD-annotated member `"NMD"`, since that transcript is taken to make no protein.
 
-The 1–3 grouping is a **policy choice for this alternate implementation**,
+The 1–3 grouping is a **policy choice for this implementation**,
 consistent with the package's default reference filter. It deliberately allows
 a TSL-2 or TSL-3 transcript to beat a TSL-1 transcript when its coding background
 fits substantially better. It does not equate their underlying evidence. TSL
@@ -341,15 +342,17 @@ out <- get_splicing_impact(
 names(out$matching)
 ```
 
-In S4 mode, the audit tables are in `out@metadata$matching_diagnostics`.
-`matching_pair_id` includes the selected transcript IDs and is preserved as the
-S4 pair key. Legacy results keep their established key convention. The wrapper
-does not load unused reference resources when no significant forms remain;
-matching diagnostics are `NULL` in that case.
+In S4 mode, the audit tables are in `out@metadata$matching_diagnostics`;
+`get_ranked_pairs(return_class = "S4")` stores its results the same way for a
+stepwise S4 workflow. `matching_pair_id` includes the selected transcript IDs
+and is preserved as the S4 pair key. Legacy results keep their established key
+convention. The wrapper does not load unused reference resources when no
+significant forms remain; the matching diagnostics are then empty tables, or
+`NULL` when no `annotation_df` is given.
 
 ## Differences from the legacy protocol
 
-| Aspect | Legacy | Alternate |
+| Aspect | Legacy | ORF |
 |---|---|---|
 | Eligibility | At least 5% of each required segment overlaps an exon by default; forbidden-overlap veto at the same threshold | Exact event boundaries and structure, any forbidden overlap rejected; outer flank ends may differ (`relaxed`); legacy gates only as a labelled `approximate` fallback |
 | Selection unit | One best transcript independently for each form | One best transcript pair for each form comparison |
@@ -362,7 +365,7 @@ matching diagnostics are `NULL` in that case.
 | Ambiguity | Implicit in ordering | Tied-best counts, comparable score margin and stable IDs |
 | Cost | Overlap search and per-form sorting | Additional candidate cross-products, bounded explicitly; no sequence alignment |
 
-The alternate should reduce cross-context comparisons and prevent structurally
+The ORF protocol should reduce cross-context comparisons and prevent structurally
 incompatible isoforms from winning through TSL or overlap preferences. It also
 makes disagreements inspectable. Its main costs are approximate pairs where
 the annotation lacks a transcript with the exact event boundaries, greater

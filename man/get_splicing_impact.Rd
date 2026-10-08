@@ -33,7 +33,7 @@ get_splicing_impact(
   debug_steps = FALSE,
   metadata = list(),
   verbose = TRUE,
-  matching = c("legacy", "orf"),
+  matching = c("orf", "legacy"),
   matching_max_candidates = 100L,
   matching_fallback = TRUE
 )
@@ -93,7 +93,8 @@ delta-psi cutoff.}
 [BiocParallel::SerialParam()], [BiocParallel::SnowParam()], or
 [BiocParallel::MulticoreParam()]).}
 
-\item{chunk_size_match}{Chunk size for [get_matched_events_chunked()].}
+\item{chunk_size_match}{Chunk size for [get_matched_events_chunked()]
+(`matching = "legacy"` only).}
 
 \item{source_pairs}{Pairing mode for [get_pairs()] (`"multi"` or `"paired"`).}
 
@@ -108,15 +109,17 @@ delta-psi cutoff.}
 
 \item{verbose}{Logical; emit progress messages.}
 
-\item{matching}{Transcript selection protocol: `"legacy"` (default) or
-the alternate `"orf"` protocol in [get_ranked_pairs()].}
+\item{matching}{Transcript selection protocol: `"orf"` (default), the
+ORF-aware protocol in [get_ranked_pairs()], or `"legacy"`, which matches
+each form independently with [get_matched_events_chunked()] and pairs
+them with [get_pairs()].}
 
 \item{matching_max_candidates}{Maximum candidate transcripts per form in the
-alternate protocol (passed to `max_candidates` in [get_ranked_pairs()];
+ORF protocol (passed to `max_candidates` in [get_ranked_pairs()];
 default 100). A form with more keeps the best supported, and the number
 dropped is reported.}
 
-\item{matching_fallback}{Logical; in the alternate protocol, select a labelled
+\item{matching_fallback}{Logical; in the ORF protocol, select a labelled
 `approximate` pair when no structural pair exists (passed to `fallback` in
 [get_ranked_pairs()]; default `TRUE`).}
 }
@@ -127,7 +130,7 @@ raw data. If no events pass the cutoffs or no pairs remain, downstream
 results are zero-row tables with their usual columns, so plotting and
 enrichment helpers return empty results; unused reference/feature resources
 are not loaded.
-With `matching="orf"`, an additional `matching` list contains the candidate,
+With `matching = "orf"` (the default), an additional `matching` list contains the candidate,
 ranking, event and unmatched diagnostics from [get_ranked_pairs()]. In S4 mode
 these are stored in `metadata$matching_diagnostics`.
 
