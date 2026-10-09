@@ -1,3 +1,17 @@
+# SpliceImpactR 1.1.4
+
+## Bug fixes
+
+* BioMart queries for `release` go to `https://e<release>.ensembl.org`, which
+  Ensembl forwards to that release's archive, instead of to the archive host
+  itself. With biomaRt before 2.70, new installations could no longer connect
+  to archive hosts ("Unable to contact any Ensembl mirror"): biomaRt first
+  downloads Ensembl's list of archives, which is no longer available. Release
+  116 now works with any biomaRt version. The data come from the same
+  archives, so results and cached features are unchanged.
+* With biomaRt before 2.70, connection errors for an archive host passed as
+  `ensembl_host` explain this and suggest the e<release> address.
+
 # SpliceImpactR 1.1.3
 
 ## Breaking changes and changed results

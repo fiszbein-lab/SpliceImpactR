@@ -131,10 +131,10 @@ Additional custom sources can be added with `get_manual_features()`
 Full runs query Ensembl BioMart for `release` (default 111, the Ensembl release
 of the default GENCODE v45 annotation); pass the Ensembl release that matches
 your `get_annotation()` release. Ensembl 116 (June 2026) is the last release
-with BioMart, so each release is queried at its archive (for example
-`https://jan2024.archive.ensembl.org` for 111), and `ensembl_host` selects
-another BioMart host. Release 116 needs biomaRt 2.70 or later. Archives are
-sometimes temporarily unavailable; try again later or choose another release.
+with BioMart, so each release is queried at its own address (for example
+`https://e111.ensembl.org`, which Ensembl forwards to the 111 archive), and
+`ensembl_host` selects another BioMart host. Ensembl BioMart is sometimes
+temporarily unavailable; try again later or choose another release.
 
 We're loading test data here, but set test = FALSE to get the full set.
 ```r

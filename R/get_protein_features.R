@@ -15,40 +15,45 @@ split_into_bits <- function(gtf_df, max_group_size) {
   split(ids, ceiling(seq_along(ids) / as.integer(max_group_size)))
 }
 
-#' Ensembl BioMart archive hosts by release (internal)
+#' Ensembl BioMart hosts by release (internal)
 #'
 #' Ensembl 116 (June 2026) is the last release with BioMart, and
-#' www.ensembl.org no longer serves it: each release is queried at its own
-#' archive host.
+#' www.ensembl.org no longer serves it. Each release is queried at its
+#' e<release>.ensembl.org address, which Ensembl forwards to the release's
+#' archive (e111 to jan2024.archive.ensembl.org). biomaRt before 2.70 cannot
+#' use the archive hosts themselves: it first downloads Ensembl's list of
+#' archives, which is no longer available, and it sends queries for the newest
+#' archive to www.ensembl.org.
 #' @noRd
-.si_ensembl_archives <- c(
-  "105" = "https://dec2021.archive.ensembl.org",
-  "106" = "https://apr2022.archive.ensembl.org",
-  "107" = "https://jul2022.archive.ensembl.org",
-  "108" = "https://oct2022.archive.ensembl.org",
-  "109" = "https://feb2023.archive.ensembl.org",
-  "110" = "https://jul2023.archive.ensembl.org",
-  "111" = "https://jan2024.archive.ensembl.org",
-  "112" = "https://may2024.archive.ensembl.org",
-  "113" = "https://oct2024.archive.ensembl.org",
-  "114" = "https://may2025.archive.ensembl.org",
-  "115" = "https://sep2025.archive.ensembl.org",
-  "116" = "https://jun2026.archive.ensembl.org"
+.si_ensembl_hosts <- c(
+  "105" = "https://e105.ensembl.org",
+  "106" = "https://e106.ensembl.org",
+  "107" = "https://e107.ensembl.org",
+  "108" = "https://e108.ensembl.org",
+  "109" = "https://e109.ensembl.org",
+  "110" = "https://e110.ensembl.org",
+  "111" = "https://e111.ensembl.org",
+  "112" = "https://e112.ensembl.org",
+  "113" = "https://e113.ensembl.org",
+  "114" = "https://e114.ensembl.org",
+  "115" = "https://e115.ensembl.org",
+  "116" = "https://e116.ensembl.org"
 )
 
-#' Whether biomaRt queries the Ensembl 116 archive itself (internal)
+#' Whether biomaRt connects to Ensembl archive hosts directly (internal)
 #'
-#' Earlier versions send queries for the newest archive to www.ensembl.org.
+#' Earlier versions need Ensembl's list of archives first and send queries for
+#' the newest archive to www.ensembl.org.
 #' @noRd
-.si_biomart_supports_final_release <- function() {
+.si_biomart_handles_archive_hosts <- function() {
   utils::packageVersion("biomaRt") >= "2.70.0"
 }
 
-#' Connect to an Ensembl BioMart archive (internal)
+#' Connect to Ensembl BioMart for a release (internal)
 #'
 #' @param dataset Ensembl dataset (e.g. `"hsapiens_gene_ensembl"`).
-#' @param version Ensembl release; its archive host is used unless `host` is
-#'   given.
+#' @param version Ensembl release; its e<release>.ensembl.org host is used
+#'   unless `host` is given.
 #' @param biomart Biomart name, default `"genes"`.
 #' @param host Optional BioMart host, used as given.
 #' @param verbose Logical passed to `biomaRt::useEnsembl()`.
@@ -60,26 +65,37 @@ split_into_bits <- function(gtf_df, max_group_size) {
                                  host = NULL,
                                  verbose = FALSE) {
   if (is.null(host)) {
-    host <- unname(.si_ensembl_archives[as.character(version)])
+    host <- unname(.si_ensembl_hosts[as.character(version)])
     if (length(host) != 1L || is.na(host)) {
       stop("Ensembl BioMart is available for releases 105 to 116 only (not ",
            version, "). Choose a release in that range or pass `ensembl_host`.",
            call. = FALSE)
     }
   }
-  if (identical(sub("/+$", "", tolower(host)), .si_ensembl_archives[["116"]]) &&
-      !.si_biomart_supports_final_release()) {
-    stop("Ensembl 116 needs biomaRt 2.70 or later; earlier versions send its ",
-         "queries to www.ensembl.org, which no longer serves BioMart. Update ",
-         "biomaRt or use release 115 or earlier.", call. = FALSE)
+  clean_host <- sub("/+$", "", tolower(host))
+  old_biomart_archive <- grepl("\\.archive\\.ensembl\\.org$", clean_host) &&
+    !.si_biomart_handles_archive_hosts()
+  if (old_biomart_archive && grepl("^https?://jun2026\\.", clean_host)) {
+    stop("biomaRt before 2.70 sends queries for ", host, " to ",
+         "www.ensembl.org, which no longer serves BioMart. Use ",
+         "https://e116.ensembl.org (the default for release 116) or update ",
+         "biomaRt.", call. = FALSE)
   }
   tryCatch(
     biomaRt::useEnsembl(biomart = biomart, dataset = dataset, host = host, verbose = verbose),
     error = function(e) {
+      hint <- if (old_biomart_archive) {
+        paste0("biomaRt before 2.70 must first download Ensembl's list of ",
+               "archives, which is no longer available. Use the release's ",
+               "e<release>.ensembl.org address (the default, for example ",
+               "https://e111.ensembl.org) or update biomaRt.")
+      } else {
+        paste0("Ensembl BioMart is sometimes temporarily unavailable ",
+               "(HTTP 500/503 or time-outs); try again later or choose ",
+               "another release.")
+      }
       stop("Unable to connect to Ensembl BioMart at ", host, " for dataset '",
-           dataset, "': ", conditionMessage(e), "\nEnsembl archives are ",
-           "sometimes temporarily unavailable (HTTP 500/503 or time-outs); ",
-           "try again later or choose another release.", call. = FALSE)
+           dataset, "': ", conditionMessage(e), "\n", hint, call. = FALSE)
     }
   )
 }
@@ -100,10 +116,10 @@ split_into_bits <- function(gtf_df, max_group_size) {
 #' @param species_dataset Character string giving the Ensembl BioMart
 #'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 #'   \code{"mmusculus_gene_ensembl"}.
-#' @param release Ensembl release whose BioMart archive is queried (105 to
-#'   116), matching the GENCODE release used in [get_annotation()].
-#' @param ensembl_host Optional BioMart host, used instead of the archive of
-#'   \code{release}.
+#' @param release Ensembl release whose BioMart is queried (105 to 116),
+#'   matching the GENCODE release used in [get_annotation()].
+#' @param ensembl_host Optional BioMart host, used instead of the default host
+#'   of \code{release}.
 #'
 #' @return A \code{data.table} containing protein feature annotations
 #'   including transcript and peptide IDs, feature start/end positions,
@@ -481,11 +497,10 @@ add_user_features <- function(x, default_database = "user") {
 #' @param species Character string giving the Ensembl BioMart
 #'   dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 #'   \code{"mmusculus_gene_ensembl"}.
-#' @param release Ensembl release whose BioMart archive maps UniProt to
-#'   Ensembl IDs (105 to 116), matching the GENCODE release used in
-#'   [get_annotation()].
-#' @param ensembl_host Optional BioMart host, used instead of the archive of
-#'   \code{release}.
+#' @param release Ensembl release whose BioMart maps UniProt to Ensembl IDs
+#'   (105 to 116), matching the GENCODE release used in [get_annotation()].
+#' @param ensembl_host Optional BioMart host, used instead of the default host
+#'   of \code{release}.
 #'
 #' @return A \code{data.table} containing protein feature annotations
 #'   including transcript and peptide IDs, feature start/end positions,
@@ -582,11 +597,11 @@ get_linear_motifs <- function(gtf_df,
 #'   existing BiocFileCache entry for this parameter/input signature.
 #' @param timeout ability to extend timeout if biomaRt is not cooperating
 #' @param ensembl_mirror Deprecated and ignored. Ensembl retired its BioMart
-#'   mirrors; queries go to the archive of `release` (or `ensembl_host`).
+#'   mirrors; queries go to the host of `release` (or `ensembl_host`).
 #' @param species Character string giving the Ensembl BioMart
 #' dataset (default \code{"human"}). For mouse, use
 #' \code{"mouse"}.
-#' @param release Ensembl release whose BioMart archive is queried, 105 to 116
+#' @param release Ensembl release whose BioMart is queried, 105 to 116
 #'   (default 111). Use the release that matches the GENCODE annotation from
 #'   [get_annotation()]; GENCODE lists the Ensembl release of each of its
 #'   releases (human v45, the [get_annotation()] default, and mouse M34 are
@@ -595,17 +610,21 @@ get_linear_motifs <- function(gtf_df,
 #' @param combine_overlaps simplifies protein feature output and combines
 #' protein features with the same ID and overlapping coords. Sometimes not 
 #' desireable
-#' @param ensembl_host Optional BioMart host, for example
-#'   `"https://jan2024.archive.ensembl.org"`, used instead of the archive of
-#'   `release` (for example, if Ensembl moves an archive).
+#' @param ensembl_host Optional BioMart host, used instead of
+#'   `https://e<release>.ensembl.org` (for example, if Ensembl moves a
+#'   release). Archive hosts such as `"https://jan2024.archive.ensembl.org"`
+#'   need biomaRt 2.70 or later.
 #'
 #' @details
 #' Ensembl 116 (June 2026) is the last release with BioMart, and
-#' www.ensembl.org no longer serves it, so features are fetched from the
-#' Ensembl archive of `release`. Archives are sometimes temporarily unavailable
-#' (HTTP 500/503 or time-outs); retry later or choose another release. Release
-#' 116 needs biomaRt 2.70 or later. `elm` motifs come from the ELM database and
-#' are mapped to transcripts through the same BioMart archive.
+#' www.ensembl.org no longer serves it, so features are fetched from
+#' `https://e<release>.ensembl.org`, which Ensembl forwards to the archive of
+#' `release` (for example `jan2024.archive.ensembl.org` for 111). This works
+#' with every biomaRt version; biomaRt before 2.70 cannot use the archive hosts
+#' directly. Ensembl BioMart is sometimes temporarily unavailable (HTTP 500/503
+#' or time-outs); retry later or choose another release. `elm` motifs come from
+#' the ELM database and are mapped to transcripts through the same BioMart
+#' host.
 #'
 #' @importFrom data.table rbindlist rleid
 #' @examples

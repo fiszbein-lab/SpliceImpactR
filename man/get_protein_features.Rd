@@ -48,13 +48,13 @@ existing BiocFileCache entry for this parameter/input signature.}
 \item{timeout}{ability to extend timeout if biomaRt is not cooperating}
 
 \item{ensembl_mirror}{Deprecated and ignored. Ensembl retired its BioMart
-mirrors; queries go to the archive of `release` (or `ensembl_host`).}
+mirrors; queries go to the host of `release` (or `ensembl_host`).}
 
 \item{species}{Character string giving the Ensembl BioMart
 dataset (default \code{"human"}). For mouse, use
 \code{"mouse"}.}
 
-\item{release}{Ensembl release whose BioMart archive is queried, 105 to 116
+\item{release}{Ensembl release whose BioMart is queried, 105 to 116
 (default 111). Use the release that matches the GENCODE annotation from
 [get_annotation()]; GENCODE lists the Ensembl release of each of its
 releases (human v45, the [get_annotation()] default, and mouse M34 are
@@ -66,9 +66,10 @@ Ensembl 111).}
 protein features with the same ID and overlapping coords. Sometimes not 
 desireable}
 
-\item{ensembl_host}{Optional BioMart host, for example
-`"https://jan2024.archive.ensembl.org"`, used instead of the archive of
-`release` (for example, if Ensembl moves an archive).}
+\item{ensembl_host}{Optional BioMart host, used instead of
+`https://e<release>.ensembl.org` (for example, if Ensembl moves a
+release). Archive hosts such as `"https://jan2024.archive.ensembl.org"`
+need biomaRt 2.70 or later.}
 }
 \value{
 A `data.table` with one row per protein feature and transcript coupling
@@ -82,11 +83,14 @@ enrichment.
 }
 \details{
 Ensembl 116 (June 2026) is the last release with BioMart, and
-www.ensembl.org no longer serves it, so features are fetched from the
-Ensembl archive of `release`. Archives are sometimes temporarily unavailable
-(HTTP 500/503 or time-outs); retry later or choose another release. Release
-116 needs biomaRt 2.70 or later. `elm` motifs come from the ELM database and
-are mapped to transcripts through the same BioMart archive.
+www.ensembl.org no longer serves it, so features are fetched from
+`https://e<release>.ensembl.org`, which Ensembl forwards to the archive of
+`release` (for example `jan2024.archive.ensembl.org` for 111). This works
+with every biomaRt version; biomaRt before 2.70 cannot use the archive hosts
+directly. Ensembl BioMart is sometimes temporarily unavailable (HTTP 500/503
+or time-outs); retry later or choose another release. `elm` motifs come from
+the ELM database and are mapped to transcripts through the same BioMart
+host.
 }
 \examples{
 annotation_df <- load_example_data("annotation_df")$annotation_df

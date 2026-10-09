@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_protein_features.R
 \name{.si_use_ensembl_mart}
 \alias{.si_use_ensembl_mart}
-\title{Connect to an Ensembl BioMart archive (internal)}
+\title{Connect to Ensembl BioMart for a release (internal)}
 \usage{
 .si_use_ensembl_mart(
   dataset,
@@ -15,8 +15,8 @@
 \arguments{
 \item{dataset}{Ensembl dataset (e.g. `"hsapiens_gene_ensembl"`).}
 
-\item{version}{Ensembl release; its archive host is used unless `host` is
-given.}
+\item{version}{Ensembl release; its e<release>.ensembl.org host is used
+unless `host` is given.}
 
 \item{biomart}{Biomart name, default `"genes"`.}
 
@@ -28,6 +28,6 @@ given.}
 A `Mart` object.
 }
 \description{
-Connect to an Ensembl BioMart archive (internal)
+Connect to Ensembl BioMart for a release (internal)
 }
 \keyword{internal}

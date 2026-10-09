@@ -23,12 +23,11 @@ annotations; used to derive chromosome groups for batching.}
 dataset (default \code{"hsapiens_gene_ensembl"}). For mouse, use
 \code{"mmusculus_gene_ensembl"}.}
 
-\item{release}{Ensembl release whose BioMart archive maps UniProt to
-Ensembl IDs (105 to 116), matching the GENCODE release used in
-[get_annotation()].}
+\item{release}{Ensembl release whose BioMart maps UniProt to Ensembl IDs
+(105 to 116), matching the GENCODE release used in [get_annotation()].}
 
-\item{ensembl_host}{Optional BioMart host, used instead of the archive of
-\code{release}.}
+\item{ensembl_host}{Optional BioMart host, used instead of the default host
+of \code{release}.}
 }
 \value{
 A \code{data.table} containing protein feature annotations
