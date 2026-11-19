@@ -1,3 +1,10 @@
+# SpliceImpactR 1.1.5
+
+## Bug fixes
+
+* The annotation cache-path test uses forward slashes on Windows, matching
+  the cache implementation and fixing R CMD check failures.
+
 # SpliceImpactR 1.1.4
 
 ## Bug fixes
