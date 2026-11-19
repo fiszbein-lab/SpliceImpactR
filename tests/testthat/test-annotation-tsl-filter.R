@@ -81,7 +81,9 @@ test_that("NULL TSL filtering retains all support values and isolates processed 
                               filter_tsl = NULL), all_tsl)
 
   cache_paths <- BiocFileCache::bfcinfo(SpliceImpactR:::.si_bfc(files$base_dir))$rpath
-  expect_true(all(startsWith(cache_paths, paste0(normalizePath(files$base_dir), "/"))))
+  # Match the forward slashes used by .si_cache_root(), including on Windows.
+  cache_root <- normalizePath(files$base_dir, winslash = "/", mustWork = TRUE)
+  expect_true(all(startsWith(cache_paths, paste0(cache_root, "/"))))
   expect_true(all(file.exists(cache_paths)))
   load_elsewhere <- function() {
     original_dir <- getwd()
